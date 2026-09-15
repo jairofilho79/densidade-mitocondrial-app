@@ -57,7 +57,7 @@ function FormTreino({ data, aoFechar }: FormTreinoProps) {
   }
 
   return (
-    <form className="painel mini-form" onSubmit={enviar}>
+    <form id="hoje-form-treino" className="painel mini-form" onSubmit={enviar}>
       <div className="ph"><span className="k">Treinei</span></div>
       <div className="grid">
         <div className="field">
@@ -132,7 +132,7 @@ function FormRefeicao({ data, aoFechar }: FormRefeicaoProps) {
   }
 
   return (
-    <form className="painel mini-form" onSubmit={enviar}>
+    <form id="hoje-form-refeicao" className="painel mini-form" onSubmit={enviar}>
       <div className="ph"><span className="k">Comi</span><span className="sub">Só o que souber. Gramas pelo rótulo ou app de dieta.</span></div>
       <div className="grid">
         <div className="field">
@@ -255,8 +255,24 @@ export function Hoje() {
       <section className="secao">
         <h2>Aconteceu agora</h2>
         <div className="eventos">
-          <button type="button" className="botao" aria-pressed={formAberto === 'treino'} onClick={() => setFormAberto(formAberto === 'treino' ? null : 'treino')}>Treinei</button>
-          <button type="button" className="botao" aria-pressed={formAberto === 'refeicao'} onClick={() => setFormAberto(formAberto === 'refeicao' ? null : 'refeicao')}>Comi</button>
+          <button
+            type="button"
+            className="botao"
+            aria-expanded={formAberto === 'treino'}
+            aria-controls="hoje-form-treino"
+            onClick={() => setFormAberto(formAberto === 'treino' ? null : 'treino')}
+          >
+            Treinei
+          </button>
+          <button
+            type="button"
+            className="botao"
+            aria-expanded={formAberto === 'refeicao'}
+            aria-controls="hoje-form-refeicao"
+            onClick={() => setFormAberto(formAberto === 'refeicao' ? null : 'refeicao')}
+          >
+            Comi
+          </button>
           <button type="button" className="botao" onClick={levantei}>Levantei</button>
         </div>
         <p className="levantadas">levantei {dia?.levantadas ?? 0} vez(es) hoje</p>

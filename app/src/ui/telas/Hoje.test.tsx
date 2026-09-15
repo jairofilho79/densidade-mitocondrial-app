@@ -132,6 +132,30 @@ describe('Hoje — eventos', () => {
     await waitFor(async () => expect((await lerDia(hojeISO()))?.proteinaG).toBe(30));
   });
 
+  // fix wave, item 16: Treinei/Comi abrem um formulário — aria-expanded/aria-controls
+  // descrevem isso melhor que aria-pressed (que é para alternar um estado marcado).
+  test('Treinei e Comi usam aria-expanded + aria-controls (não aria-pressed)', async () => {
+    await salvarPerfil(PERFIL);
+    renderizar();
+    const treinei = await screen.findByRole('button', { name: 'Treinei' });
+    const comi = screen.getByRole('button', { name: 'Comi' });
+    expect(treinei).not.toHaveAttribute('aria-pressed');
+    expect(comi).not.toHaveAttribute('aria-pressed');
+    expect(treinei).toHaveAttribute('aria-expanded', 'false');
+    expect(treinei).toHaveAttribute('aria-controls');
+
+    fireEvent.click(treinei);
+    expect(treinei).toHaveAttribute('aria-expanded', 'true');
+    const idTreino = treinei.getAttribute('aria-controls')!;
+    expect(document.getElementById(idTreino)).not.toBeNull();
+
+    fireEvent.click(comi);
+    expect(treinei).toHaveAttribute('aria-expanded', 'false');
+    expect(comi).toHaveAttribute('aria-expanded', 'true');
+    const idRefeicao = comi.getAttribute('aria-controls')!;
+    expect(document.getElementById(idRefeicao)).not.toBeNull();
+  });
+
   test('mostra o contador de dias parado e três ações em foco', async () => {
     await salvarPerfil(PERFIL);
     const { container } = renderizar();

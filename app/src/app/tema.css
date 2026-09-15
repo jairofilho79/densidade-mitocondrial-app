@@ -126,7 +126,7 @@ input[type="checkbox"], input[type="radio"] { width: auto; margin: 0 6px 0 0; ac
 .botao.primario { background: var(--accent); border-color: var(--accent); color: var(--surface); }
 .botao.perigo { color: var(--bad); border-color: var(--bad); }
 .botao.perigo:disabled { opacity: .5; cursor: not-allowed; }
-.botao[aria-pressed="true"] { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+.botao[aria-pressed="true"], .botao[aria-expanded="true"] { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
 .botoes { display: flex; flex-wrap: wrap; gap: 8px; }
 .escolha { display: flex; flex-wrap: wrap; gap: 6px; }
 .escolha .botao { min-width: 40px; padding: 8px 10px; font-family: var(--mono); }
