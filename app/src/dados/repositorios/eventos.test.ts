@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { limparBanco } from '@/dados/testes/banco';
 import { refeicoesEntre, registrarRefeicao, registrarTreino, treinosEntre } from './eventos';
 
@@ -35,6 +35,23 @@ describe('eventos de treino', () => {
       '2026-09-12 07:00',
       '2026-09-10 08:00',
     ]);
+  });
+});
+
+describe('novoId — fallback sem crypto.randomUUID', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('registrarTreino gera id no formato uuid v4 via getRandomValues e ids distintos em duas chamadas', async () => {
+    vi.stubGlobal('crypto', { getRandomValues: crypto.getRandomValues.bind(crypto) });
+
+    const a = await registrarTreino({ data: '2026-09-14', hora: '07:00', tipo: 'forca', minutos: 30 });
+    const b = await registrarTreino({ data: '2026-09-14', hora: '19:00', tipo: 'moderado', minutos: 40 });
+
+    expect(a.id).toMatch(UUID);
+    expect(b.id).toMatch(UUID);
+    expect(a.id).not.toBe(b.id);
   });
 });
 
