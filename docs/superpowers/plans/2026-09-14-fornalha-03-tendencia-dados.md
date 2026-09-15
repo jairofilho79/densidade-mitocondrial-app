@@ -682,14 +682,15 @@ git commit -m "feat: tendência sono × fome × café com fixtures de 7, 14 e 28
 
 **Interfaces:**
 - Consumes: `import type { DataISO, MesISO, SemanaISO } from '@/dominio/tipos'`
-- Produces (contratos + uma adição):
+- Produces (contratos + adições):
   ```ts
   export function hojeISO(agora?: Date): DataISO;          // data LOCAL do aparelho
   export function semanaISO(d: DataISO): SemanaISO;        // ISO 8601, segunda inicia, "YYYY-Www"
   export function mesISO(d: DataISO): MesISO;              // "YYYY-MM"
   export function ontem(d: DataISO): DataISO;
-  export function somarDias(d: DataISO, n: number): DataISO;
+  export function somarDias(d: DataISO, n: number): DataISO;  // reexportado de @/dominio/derivados (mesma função)
   export function segundaDaSemana(s: SemanaISO): DataISO;  // ADIÇÃO deste plano; usada por preencherSemana
+  export function semanaAnteriorISO(hoje: DataISO): SemanaISO;  // ADIÇÃO da fix wave: semana ISO anterior à de `hoje` (semanaISO(somarDias(hoje, -7))); a revisão de segunda (tela Segunda, plano 04) é sempre desta semana, não da corrente — `preencherSemana` continua contando eventos/dias da semana `s` que recebe, seja qual for
   ```
 
 - [ ] **Step 1: Escrever o teste**
@@ -698,11 +699,8 @@ Crie `app/src/dados/datas.test.ts`:
 
 ```ts
 import { describe, expect, it } from 'vitest';
-import { hojeISO, mesISO, ontem, segundaDaSemana, semanaISO, somarDias } from './datas';
-import {
-  semanaISO as semanaISODominio,
-  somarDias as somarDiasDominio,
-} from '@/dominio/metas/_util';
+import { hojeISO, mesISO, ontem, segundaDaSemana, semanaAnteriorISO, semanaISO, somarDias } from './datas';
+import { semanaISO as semanaISODominio } from '@/dominio/metas/_util';
 
 describe('hojeISO', () => {
   it('usa a data local, não UTC', () => {
@@ -752,12 +750,10 @@ describe('semanaISO (ISO 8601, segunda como início)', () => {
   });
 });
 
-describe('concordância com o domínio (plano 02 tem cópia própria em metas/_util.ts)', () => {
-  it('semanaISO e somarDias do domínio dão o mesmo resultado nas datas de borda', () => {
+describe('concordância com o domínio (plano 02 tem cópia própria de semanaISO em metas/_util.ts; somarDias já é o mesmo reexport)', () => {
+  it('semanaISO do domínio dá o mesmo resultado nas datas de borda', () => {
     for (const d of ['2026-09-14', '2026-09-20', '2026-12-31', '2027-01-01', '2027-01-04', '2025-12-29', '2025-12-28', '2024-12-30', '2021-01-03']) {
       expect(semanaISODominio(d)).toBe(semanaISO(d));
-      expect(somarDiasDominio(d, -27)).toBe(somarDias(d, -27));
-      expect(somarDiasDominio(d, 1)).toBe(somarDias(d, 1));
     }
   });
 });
@@ -777,6 +773,14 @@ describe('segundaDaSemana', () => {
     }
   });
 });
+
+describe('semanaAnteriorISO (fix wave: revisão de segunda olha para a semana anterior)', () => {
+  it('é sempre a semana ISO anterior à de hoje, mesmo virando ano', () => {
+    expect(semanaAnteriorISO('2026-09-17')).toBe('2026-W37'); // hoje está na W38
+    expect(semanaAnteriorISO('2026-09-14')).toBe('2026-W37'); // segunda da W38 ainda olha pra trás
+    expect(semanaAnteriorISO('2027-01-04')).toBe('2026-W53'); // segunda da W01/2027 → última semana de 2026
+  });
+});
 ```
 
 - [ ] **Step 2: Rodar e ver falhar**
@@ -792,7 +796,10 @@ Esperado: falha de import (`Failed to resolve import "./datas"`).
 Crie `app/src/dados/datas.ts`:
 
 ```ts
+import { somarDias } from '@/dominio/derivados';
 import type { DataISO, MesISO, SemanaISO } from '@/dominio/tipos';
+
+export { somarDias } from '@/dominio/derivados';
 
 const DIA_MS = 86_400_000;
 
@@ -813,10 +820,6 @@ function isoDe(utcMs: number): DataISO {
 /** Data local do aparelho (o dia que a pessoa vive), não UTC. */
 export function hojeISO(agora: Date = new Date()): DataISO {
   return `${agora.getFullYear()}-${pad2(agora.getMonth() + 1)}-${pad2(agora.getDate())}`;
-}
-
-export function somarDias(d: DataISO, n: number): DataISO {
-  return isoDe(utcDe(d) + n * DIA_MS);
 }
 
 export function ontem(d: DataISO): DataISO {
@@ -848,6 +851,11 @@ export function segundaDaSemana(s: SemanaISO): DataISO {
   const [ano, semana] = s.split('-W').map(Number);
   return isoDe(segundaDaSemana1(ano) + (semana - 1) * 7 * DIA_MS);
 }
+
+/** Semana ISO anterior à de `hoje` — usada pela revisão de segunda (tela Segunda, plano 04). */
+export function semanaAnteriorISO(hoje: DataISO): SemanaISO {
+  return semanaISO(somarDias(hoje, -7));
+}
 ```
 
 - [ ] **Step 4: Rodar e ver passar**
@@ -856,7 +864,7 @@ export function segundaDaSemana(s: SemanaISO): DataISO {
 pnpm vitest run src/dados/datas.test.ts
 ```
 
-Esperado: `8 passed` (se o teste de concordância falhar, corrija `semanaISO`/`somarDias` em `app/src/dominio/metas/_util.ts` — o domínio é a fonte; não ajuste o teste).
+Esperado: `9 passed` (se o teste de concordância falhar, corrija `semanaISO` em `app/src/dominio/metas/_util.ts` — o domínio é a fonte; não ajuste o teste).
 
 - [ ] **Step 5: Commit**
 
@@ -2228,7 +2236,7 @@ git commit -m "feat: detecção de IndexedDB indisponível para a mensagem únic
 
 ## Checklist final do plano 03
 
-- [ ] `pnpm test` verde com estes arquivos novos: `sonoFomeCafe.test.ts` (23), `datas.test.ts` (7), `db.test.ts` (2), `perfilDia.test.ts` (8), `eventos.test.ts` (5), `semanaMesExame.test.ts` (7), `contexto.test.ts` (4), `exportImport.test.ts` (14), `disponibilidade.test.ts` (3).
+- [ ] `pnpm test` verde com estes arquivos novos: `sonoFomeCafe.test.ts` (23), `datas.test.ts` (9), `db.test.ts` (2), `perfilDia.test.ts` (8), `eventos.test.ts` (5), `semanaMesExame.test.ts` (7), `contexto.test.ts` (4), `exportImport.test.ts` (14), `disponibilidade.test.ts` (3).
 - [ ] Nenhum arquivo em `src/dominio/` importa de `src/dados/`, `dexie` ou `react`.
-- [ ] Os nomes exportados batem com os contratos: `sonoFomeCafe`, `Tendencia`, `Frase`, `FraseTipo`; `FornalhaDB`, `db`; `lerPerfil`, `salvarPerfil`, `lerDia`, `salvarDia`, `diasRecentes`, `registrarTreino`, `registrarRefeicao`, `treinosEntre`, `refeicoesEntre`, `lerSemana`, `salvarSemana`, `semanaMaisRecente`, `preencherSemana`, `lerMes`, `salvarMes`, `mesMaisRecente`, `listarExames`, `salvarExame`, `ultimoExame`; `montarContexto`; `Exportacao`, `exportar`, `importar`, `apagarTudo`; `hojeISO`, `semanaISO`, `mesISO`, `ontem`, `somarDias`. Adições (não renomeiam nada): `segundaDaSemana`, `indexedDbDisponivel`, `limparBanco`, `PERFIL_TESTE`.
-- [ ] O plano 04 (UI) pode consumir: `montarContexto` no `useContexto`, `sonoFomeCafe(ctx.dias, ctx.perfil)` na tela Tendências, `preencherSemana(semanaISO(hojeISO()))` na tela Segunda, `exportar`/`importar`/`apagarTudo` em Ajustes e `indexedDbDisponivel()` no shell.
+- [ ] Os nomes exportados batem com os contratos: `sonoFomeCafe`, `Tendencia`, `Frase`, `FraseTipo`; `FornalhaDB`, `db`; `lerPerfil`, `salvarPerfil`, `lerDia`, `salvarDia`, `diasRecentes`, `registrarTreino`, `registrarRefeicao`, `treinosEntre`, `refeicoesEntre`, `lerSemana`, `salvarSemana`, `semanaMaisRecente`, `preencherSemana`, `lerMes`, `salvarMes`, `mesMaisRecente`, `listarExames`, `salvarExame`, `ultimoExame`; `montarContexto`; `Exportacao`, `exportar`, `importar`, `apagarTudo`; `hojeISO`, `semanaISO`, `mesISO`, `ontem`, `somarDias`. Adições (não renomeiam nada): `segundaDaSemana`, `semanaAnteriorISO` (fix wave), `indexedDbDisponivel`, `limparBanco`, `PERFIL_TESTE`.
+- [ ] O plano 04 (UI) pode consumir: `montarContexto` no `useContexto`, `sonoFomeCafe(ctx.dias, ctx.perfil)` na tela Tendências, `preencherSemana(semanaAnteriorISO(hojeISO()))` na tela Segunda (a revisão é sempre da semana anterior — fix wave, item 22), `exportar`/`importar`/`apagarTudo` em Ajustes e `indexedDbDisponivel()` no shell.

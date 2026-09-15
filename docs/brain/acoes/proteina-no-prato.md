@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: forte
 setas: ['faixa-proteina']
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Proteína em todo prato
 

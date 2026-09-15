@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: moderada
 setas: [11]
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Feche a cozinha por 14 horas
 

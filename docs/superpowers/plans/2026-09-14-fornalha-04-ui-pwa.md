@@ -401,7 +401,7 @@ git -C .. commit -m "chore: tema, setup de testes de UI e utilitários de format
 - Test: `app/src/ui/hooks/useContexto.test.tsx`
 
 **Interfaces:**
-- Consumes: `lerPerfil` (`@/dados/repositorios/perfil`), `lerDia` (`@/dados/repositorios/dia`), `montarContexto` (`@/dados/contexto`), `hojeISO` (`@/dados/datas`), `Contexto` (`@/dominio/metas/tipos`), `Perfil`, `Dia`, `DataISO` (`@/dominio/tipos`), `useLiveQuery` (`dexie-react-hooks`).
+- Consumes: `lerPerfil` (`@/dados/repositorios/perfil`), `lerDia` (`@/dados/repositorios/dia`), `montarContexto` (`@/dados/contexto`), `hojeISO`, `somarDias` (`@/dados/datas`), `Contexto` (`@/dominio/metas/tipos`), `Perfil`, `Dia`, `DataISO` (`@/dominio/tipos`), `useLiveQuery` (`dexie-react-hooks`), `useEffect`, `useState` (`react`).
 - Produces:
   ```ts
   export function usePerfil(): Perfil | undefined;                       // undefined = carregando ou sem perfil
@@ -410,26 +410,32 @@ git -C .. commit -m "chore: tema, setup de testes de UI e utilitários de format
   export function useContexto(): EstadoContexto;
   ```
 
-Por que `useLiveQuery(() => montarContexto(hojeISO()), [])` reage a qualquer tabela: `useLiveQuery` observa as consultas Dexie feitas dentro do callback (mesmo através de `await`), e `montarContexto` consulta as sete tabelas. Gravou em qualquer uma, o contexto recalcula.
+Por que `useLiveQuery(() => montarContexto(hojeISO()), [])` reage a qualquer tabela: `useLiveQuery` observa as consultas Dexie feitas dentro do callback (mesmo através de `await`), e `montarContexto` consulta seis tabelas (exame não entra no Contexto). Gravou em qualquer uma, o contexto recalcula.
 
 - [ ] **Step 1: Teste do hook (falha)**
 
 `app/src/ui/hooks/useContexto.test.tsx`:
 
 ```tsx
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useContexto } from './useContexto';
 import { usePerfil } from './usePerfil';
 import { useDia } from './useDia';
+import * as contexto from '@/dados/contexto';
 import { salvarPerfil } from '@/dados/repositorios/perfil';
 import { salvarDia } from '@/dados/repositorios/dia';
 import { apagarTudo } from '@/dados/exportImport';
-import { hojeISO } from '@/dados/datas';
+import { hojeISO, somarDias } from '@/dados/datas';
 import { PERFIL } from '@/test/fixtures';
 
 beforeEach(async () => {
   await apagarTudo();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 describe('useContexto', () => {
@@ -511,6 +517,7 @@ export function useDia(data: DataISO): Dia | undefined {
 `app/src/ui/hooks/useContexto.ts`:
 
 ```ts
+import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { Contexto } from '@/dominio/metas/tipos';
 import { montarContexto } from '@/dados/contexto';
@@ -524,14 +531,54 @@ export interface EstadoContexto {
 
 /**
  * Recalcula sempre que qualquer tabela muda: useLiveQuery observa todas as
- * consultas Dexie feitas dentro do callback, e montarContexto consulta as sete.
+ * consultas Dexie feitas dentro do callback, e montarContexto consulta seis
+ * tabelas (exame não entra no Contexto). Gravou em qualquer uma, o contexto
+ * recalcula.
+ *
+ * Também recalcula quando o dia vira: `hoje` fica em estado (inicializado uma
+ * vez com `hojeISO()`) e só é reavaliado por um listener de `visibilitychange`
+ * — se a aba ficou em segundo plano e a meia-noite passou nesse meio tempo, ao
+ * voltar a ficar visível o listener percebe que `hojeISO()` mudou e atualiza o
+ * estado; `hoje` entra como dependência do `useLiveQuery` para que a consulta
+ * seja refeita com a nova data.
  */
 export function useContexto(): EstadoContexto {
-  const r = useLiveQuery(() => montarContexto(hojeISO()), []);
+  const [hoje, setHoje] = useState(hojeISO());
+
+  useEffect(() => {
+    function verificarData() {
+      if (document.visibilityState !== 'visible') return;
+      const agora = hojeISO();
+      setHoje((atual) => (atual === agora ? atual : agora));
+    }
+    document.addEventListener('visibilitychange', verificarData);
+    return () => document.removeEventListener('visibilitychange', verificarData);
+  }, []);
+
+  const r = useLiveQuery(() => montarContexto(hoje), [hoje]);
   if (r === undefined) return { ctx: undefined, carregando: true, semPerfil: false };
   if ('semPerfil' in r) return { ctx: undefined, carregando: false, semPerfil: true };
   return { ctx: r, carregando: false, semPerfil: false };
 }
+```
+
+Teste adicional para a virada de dia (mesmo Step 1, acrescentado ao describe `useContexto` de `useContexto.test.tsx`, usando o `contexto` importado com `* as` acima para espiar `montarContexto` sem mockar o módulo inteiro):
+
+```tsx
+  test('atualiza hoje quando a aba volta a ficar visível num dia diferente', async () => {
+    await salvarPerfil(PERFIL);
+    const espiao = vi.spyOn(contexto, 'montarContexto');
+    renderHook(() => useContexto());
+    await waitFor(() => expect(espiao).toHaveBeenCalledWith(hojeISO()));
+
+    const amanha = somarDias(hojeISO(), 1);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(`${amanha}T08:00:00`));
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    await waitFor(() => expect(espiao).toHaveBeenCalledWith(amanha));
+  });
 ```
 
 - [ ] **Step 4: Rodar e ver passar**
@@ -540,7 +587,7 @@ export function useContexto(): EstadoContexto {
 pnpm vitest run src/ui/hooks/useContexto.test.tsx
 ```
 
-Esperado: `✓ src/ui/hooks/useContexto.test.tsx (3 tests)`.
+Esperado: `✓ src/ui/hooks/useContexto.test.tsx (4 tests)`.
 
 - [ ] **Step 5: Commit**
 
@@ -567,15 +614,19 @@ git -C .. commit -m "feat: hooks usePerfil, useDia e useContexto com useLiveQuer
 - Test: `app/src/ui/componentes/CartaoMedida.test.tsx`
 
 **Interfaces:**
-- Consumes: `Campo`, `CAMPOS`, `validar` (`@/dominio/campos`); `Zona`, `Meta` (`@/dominio/metas/tipos`); `AcaoCatalogo` (`@/dominio/catalogo/tipos`); `catalogo`, `acaoDoCatalogo` (`@/dominio/catalogo`); `MedidaResultado` (`@/dominio/medidas`); `chaveDe`, `listar`, `ROTULO_ZONA`, `formatarData` (`@/ui/formato`); `Link` (`react-router`).
+- Consumes: `Campo`, `CAMPOS`, `validar` (`@/dominio/campos`); `Zona`, `Meta`, `Faixa`, `interpolar` (`@/dominio/metas/tipos`, `@/dominio/metas/_util`); `AcaoCatalogo` (`@/dominio/catalogo/tipos`); `catalogo`, `acaoDoCatalogo` (`@/dominio/catalogo`); `MedidaResultado` (`@/dominio/medidas`); `chaveDe`, `listar`, `ROTULO_ZONA`, `formatarData` (`@/ui/formato`); `Link` (`react-router`).
 - Produces (props fixas do contrato):
   ```tsx
   <CampoRegistro campo={Campo} valor={unknown} onChange={(v: unknown) => void} />
-  <BarraZona zona={Zona} posicao={number | null} />
-  <ConviteRegistro campos={Campo[]} />
+  <BarraZona zona={Zona} posicao={number | null} faixa={Faixa | null} />
+  <ConviteRegistro campos={Campo[]} semanal?={boolean} />
   <CardAcao acao={AcaoCatalogo} meta={Meta} compacto?={boolean} />
   <CartaoMedida m={MedidaResultado} />
   ```
+
+  Fix wave (item 22): `BarraZona` ganha a prop `faixa` — não assume a meta em 0,5 do desenho, só o marcador em `posicao`; os três segmentos passam a mostrar os valores de `faixa.pouco/meta/demais` como rótulo, formatados por `fmt` (`@/dominio/metas/_util`), não interpolados crus. `CardAcao` renderiza `faixa.pouco/ideal/demais/regra` do catálogo (`acao.faixa`) passados por `interpolar(texto, meta.vals ?? {})`, escondendo a linha quando `meta.zona === 'sem-dado'` e o resultado ainda tem `{placeholder}` aberto (a faixa depende justamente do dado ausente). `ConviteRegistro` ganha `semanal?: boolean`: `CardAcao` deriva de `meta.precisaDe?.some(id => id.startsWith('semana.'))` — quando algum campo que falta é da tabela `Semana` (troque-o-doce, se-beber, tres-tiros, levante-peso, some-150), a frase diz "registre um treino ou a revisão de segunda" em vez de listar campos diários.
+
+  Round 2 (correção crítica): `horasAntesDeDeitar` (`@/dominio/metas/_util`) ganha um terceiro parâmetro `levantar: Hora` — a virada de meia-noite agora é decidida pela janela de sono `[deitar, levantar)`, não por um corte fixo de 12 h.
 
 Regras do `CampoRegistro`, por `campo.tipo`:
 
@@ -695,15 +746,22 @@ import { render, screen } from '@testing-library/react';
 import { BarraZona } from './BarraZona';
 
 describe('BarraZona', () => {
-  test('marcador "você" na posição', () => {
-    const { container } = render(<BarraZona zona="atencao" posicao={0.4} />);
+  test('marcador "você" só na posição — não assume meta em 0,5', () => {
+    const { container } = render(<BarraZona zona="atencao" posicao={0.4} faixa={{ pouco: 2000, meta: 5000, demais: 10000 }} />);
     expect(screen.getByRole('img', { name: 'Zona: perto' })).toBeInTheDocument();
     const voce = container.querySelector('.voce') as HTMLElement;
     expect(voce.style.left).toBe('40%');
   });
 
+  test('três segmentos rotulados pela faixa (pouco/meta/demais)', () => {
+    render(<BarraZona zona="atencao" posicao={0.4} faixa={{ pouco: 2000, meta: 5000, demais: 10000 }} />);
+    expect(screen.getByText('2000')).toBeInTheDocument();
+    expect(screen.getByText('5000')).toBeInTheDocument();
+    expect(screen.getByText('10000')).toBeInTheDocument();
+  });
+
   test('sem-dado: sem marcador e segmentos neutros', () => {
-    const { container } = render(<BarraZona zona="sem-dado" posicao={null} />);
+    const { container } = render(<BarraZona zona="sem-dado" posicao={null} faixa={null} />);
     expect(container.querySelector('.voce')).toBeNull();
     expect(container.querySelectorAll('i.nd')).toHaveLength(3);
   });
@@ -749,7 +807,15 @@ import { acaoDoCatalogo } from '@/dominio/catalogo';
 import type { Meta } from '@/dominio/metas/tipos';
 
 const acao = acaoDoCatalogo('seis-mil-passos');
-const meta: Meta = { zona: 'atencao', valor: 3500, faixa: { pouco: 2000, meta: 5000, demais: 10000 }, posicao: 0.4, texto: '3500 passos/dia', proximoPasso: 'meta desta semana: 4500 passos/dia (+1 mil)' };
+const meta: Meta = {
+  zona: 'atencao',
+  valor: 3500,
+  faixa: { pouco: 2000, meta: 5000, demais: 10000 },
+  posicao: 0.4,
+  texto: '3500 passos/dia',
+  proximoPasso: 'meta desta semana: 4500 passos/dia (+500)',
+  vals: { prox_passos: 4500 },
+};
 
 function renderizar(ui: ReactElement) {
   return render(<MemoryRouter>{ui}</MemoryRouter>);
@@ -767,6 +833,13 @@ describe('CardAcao', () => {
     expect(screen.getByText(acao.evidencia.fontes)).toBeInTheDocument();
   });
 
+  test('faixa.ideal interpolado com meta.vals aparece sem chaves abertas (fix wave, item 19+22)', () => {
+    renderizar(<CardAcao acao={acao} meta={meta} />);
+    // faixa.ideal do catálogo: "5–7 mil/dia; se você está abaixo, a meta desta semana é {prox_passos} (seu baseline + 500 por semana)"
+    expect(screen.getByText(/a meta desta semana é 4500/)).toBeInTheDocument();
+    expect(screen.queryByText(/\{prox_passos\}/)).toBeNull();
+  });
+
   test('seguranca substitui o próximo passo', () => {
     renderizar(<CardAcao acao={acao} meta={{ ...meta, seguranca: 'Você marcou pressão no perfil — converse com quem te acompanha antes de mudar isso.' }} />);
     expect(screen.getByText(/converse com quem te acompanha/)).toBeInTheDocument();
@@ -780,9 +853,22 @@ describe('CardAcao', () => {
     expect(screen.queryByText(acao.evidencia.fontes)).toBeNull();
   });
 
-  test('sem-dado mostra o convite com os campos de precisaDe', () => {
+  test('sem-dado mostra o convite com os campos de precisaDe; esconde a linha de faixa com placeholder aberto', () => {
     renderizar(<CardAcao acao={acao} meta={{ zona: 'sem-dado', valor: null, faixa: null, posicao: null, texto: '', proximoPasso: '', precisaDe: ['dia.passos'] }} />);
     expect(screen.getByText(/^Registre .* e eu te digo onde você está em/)).toBeInTheDocument();
+    // faixa.ideal do catálogo tem {prox_passos}, que depende do dado ausente — sem vals, some.
+    expect(screen.queryByText(/\{prox_passos\}/)).toBeNull();
+    expect(screen.queryByText(/prox_passos/)).toBeNull();
+  });
+
+  test('sem-dado com campo semanal: o convite pede treino ou a revisão de segunda', () => {
+    renderizar(
+      <CardAcao
+        acao={acao}
+        meta={{ zona: 'sem-dado', valor: null, faixa: null, posicao: null, texto: '', proximoPasso: '', precisaDe: ['semana.sessoesTiros'] }}
+      />,
+    );
+    expect(screen.getByText('registre um treino ou a revisão de segunda.')).toBeInTheDocument();
   });
 
   test('deDia aparece quando o valor não é de hoje', () => {
@@ -848,6 +934,7 @@ Esperado: 5 arquivos com `Failed to resolve import`.
 .barra i.p, .barra i.d { background: var(--bad-tint); }
 .barra i.i { background: var(--ok); opacity: .55; }
 .barra i.nd { background: var(--none-tint); }
+.barra i .rotulo { position: absolute; bottom: -16px; font: 9.5px var(--mono); color: var(--muted); }
 .barra .voce { position: absolute; top: -4px; width: 2px; height: 16px; background: var(--fg); border-radius: 1px; transform: translateX(-1px); }
 .barra .voce::after { content: "você"; position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font: 9.5px var(--mono); color: var(--muted); white-space: nowrap; }
 
@@ -866,6 +953,9 @@ Esperado: 5 arquivos com `Failed to resolve import`.
 .card.zona-sem-dado h3 { color: var(--muted); }
 .card-top { padding: 14px 16px 8px; display: grid; gap: 6px; }
 .card .faixa { padding: 8px 16px 12px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.card .faixa-catalogo { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 12px; color: var(--muted); }
+.card .faixa-catalogo b { text-transform: uppercase; font-family: var(--mono); font-size: 10px; margin-right: 4px; }
+.card .faixa-catalogo .regra { font-style: italic; }
 .card .voce-texto { font-size: 13.5px; }
 .card .voce-texto b { font-family: var(--mono); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
 .card .de-dia { color: var(--muted); font-size: 12px; }
@@ -1092,24 +1182,27 @@ export function CampoRegistro({ campo, valor, onChange }: CampoRegistroProps) {
 `app/src/ui/componentes/BarraZona.tsx`:
 
 ```tsx
-import type { Zona } from '@/dominio/metas/tipos';
+import type { Faixa, Zona } from '@/dominio/metas/tipos';
+import { fmt } from '@/dominio/metas/_util';
 import { ROTULO_ZONA } from '@/ui/formato';
 import './componentes.css';
 
 export interface BarraZonaProps {
   zona: Zona;
   posicao: number | null;
+  faixa: Faixa | null;
 }
 
-export function BarraZona({ zona, posicao }: BarraZonaProps) {
+/** Só desenha o marcador em `posicao` — nunca assume a meta no meio da barra (0,5). */
+export function BarraZona({ zona, posicao, faixa }: BarraZonaProps) {
   const semDado = zona === 'sem-dado';
   const mostraMarcador = posicao !== null && !semDado;
   const pct = mostraMarcador ? Math.round(Math.min(1, Math.max(0, posicao)) * 100) : 0;
   return (
     <div className={`barra zona-${zona}`} role="img" aria-label={`Zona: ${ROTULO_ZONA[zona]}`}>
-      <i className={semDado ? 'nd' : 'p'} />
-      <i className={semDado ? 'nd' : 'i'} />
-      <i className={semDado ? 'nd' : 'd'} />
+      <i className={semDado ? 'nd' : 'p'}>{faixa && <span className="rotulo">{fmt(faixa.pouco)}</span>}</i>
+      <i className={semDado ? 'nd' : 'i'}>{faixa && <span className="rotulo">{fmt(faixa.meta)}</span>}</i>
+      <i className={semDado ? 'nd' : 'd'}>{faixa && <span className="rotulo">{fmt(faixa.demais)}</span>}</i>
       {mostraMarcador && <span className="voce" style={{ left: `${pct}%` }} />}
     </div>
   );
@@ -1127,11 +1220,14 @@ import './componentes.css';
 
 export interface ConviteRegistroProps {
   campos: Campo[];
+  /** true quando os campos só desbloqueiam ações semanais (tres-tiros, levante-peso, some-150, troque-o-doce, se-beber). */
+  semanal?: boolean;
 }
 
 /** "Registre X e Y e eu te digo onde você está em A e B." (ADR-002) */
-export function ConviteRegistro({ campos }: ConviteRegistroProps) {
+export function ConviteRegistro({ campos, semanal = false }: ConviteRegistroProps) {
   if (campos.length === 0) return null;
+  if (semanal) return <p className="convite">registre um treino ou a revisão de segunda.</p>;
   const rotulos = campos.map((c) => c.rotulo.toLowerCase());
   const ids: AcaoId[] = [];
   for (const c of campos) for (const id of c.desbloqueia) if (!ids.includes(id)) ids.push(id);
@@ -1151,6 +1247,7 @@ export function ConviteRegistro({ campos }: ConviteRegistroProps) {
 import { Link } from 'react-router';
 import type { AcaoCatalogo } from '@/dominio/catalogo/tipos';
 import type { Meta } from '@/dominio/metas/tipos';
+import { interpolar } from '@/dominio/metas/_util';
 import type { Campo } from '@/dominio/campos';
 import { CAMPOS } from '@/dominio/campos';
 import { BarraZona } from './BarraZona';
@@ -1171,6 +1268,15 @@ export function CardAcao({ acao, meta, compacto = false }: CardAcaoProps) {
     .map((id) => CAMPOS.find((c) => c.id === id))
     .filter((c): c is Campo => c !== undefined);
   const faltaPerfil = precisaDe.some((id) => id.startsWith('perfil.'));
+  // Ação semanal: precisaDe cita um campo `semana.*` (troque-o-doce, se-beber) ou não cita nenhum
+  // dia.* mas depende de revisão semanal via eventos (tres-tiros, levante-peso, some-150 — nesses
+  // três precisaDe é `semana.sessoesTiros`/`semana.sessoesForca`/`semana.minAtiv`, mesmo padrão).
+  const semanal = precisaDe.some((id) => id.startsWith('semana.'));
+  const vals = meta.vals ?? {};
+  // Placeholder aberto ({chave}) só acontece quando a ação está sem-dado e a faixa depende
+  // justamente do dado ausente (ver item 19: prox_passos, jejum_h, delta_peso, jantar, primeira) —
+  // nesse caso a linha não tem informação útil para mostrar, então ela some.
+  const temPlaceholderAberto = (texto: string) => semDado && /\{[a-z_0-9]+\}/.test(interpolar(texto, vals));
 
   return (
     <article className={`card zona-${meta.zona}${compacto ? ' compacto' : ''}`} data-acao={acao.id}>
@@ -1183,10 +1289,18 @@ export function CardAcao({ acao, meta, compacto = false }: CardAcaoProps) {
       </header>
 
       <div className="faixa">
-        <BarraZona zona={meta.zona} posicao={meta.posicao} />
+        <BarraZona zona={meta.zona} posicao={meta.posicao} faixa={meta.faixa} />
+        <ul className="faixa-catalogo">
+          {!temPlaceholderAberto(acao.faixa.pouco) && <li><b>pouco</b> {interpolar(acao.faixa.pouco, vals)}</li>}
+          {!temPlaceholderAberto(acao.faixa.ideal) && <li><b>ideal</b> {interpolar(acao.faixa.ideal, vals)}</li>}
+          {!temPlaceholderAberto(acao.faixa.demais) && <li><b>demais</b> {interpolar(acao.faixa.demais, vals)}</li>}
+          {acao.faixa.regra && !temPlaceholderAberto(acao.faixa.regra) && (
+            <li className="regra">{interpolar(acao.faixa.regra, vals)}</li>
+          )}
+        </ul>
         {semDado ? (
           <>
-            <ConviteRegistro campos={camposFaltando} />
+            <ConviteRegistro campos={camposFaltando} semanal={semanal} />
             {faltaPerfil && (
               <p className="perfil-falta">
                 <Link to="/perfil">Complete o perfil</Link> para esta ação ter meta.
@@ -1289,7 +1403,7 @@ export function CartaoMedida({ m }: CartaoMedidaProps) {
 pnpm vitest run src/ui/componentes
 ```
 
-Esperado: `Test Files 5 passed` (CampoRegistro 8, BarraZona 2, ConviteRegistro 2, CardAcao 5, CartaoMedida 2).
+Esperado: `Test Files 5 passed` (CampoRegistro 8, BarraZona 3, ConviteRegistro 2, CardAcao 7, CartaoMedida 2).
 
 - [ ] **Step 8: Commit**
 
@@ -1698,15 +1812,15 @@ git -C .. commit -m "feat: tela Perfil com medidas ao vivo"
 - Test: `app/src/ui/telas/Hoje.test.tsx`
 
 **Interfaces:**
-- Consumes: `camposDe`, `Campo` (`@/dominio/campos`); `METAS`, `acoesEmFoco`, `metasAplicaveis` (`@/dominio/metas`); `Dia`, `EventoTreino`, `EventoRefeicao` (`@/dominio/tipos`); `AcaoId` (`@/dominio/catalogo/tipos`); `salvarDia` (`@/dados/repositorios/dia`); `registrarTreino`, `registrarRefeicao`, `refeicoesEntre` (`@/dados/repositorios/eventos`); `hojeISO`, `ontem` (`@/dados/datas`); `useContexto`, `useDia`; `CampoRegistro`, `ConviteRegistro`, `CardAcao`; `chaveDe`, `horaAgora`, `formatarData`; `Link` (`react-router`).
+- Consumes: `camposDe`, `Campo`, `CAMPOS_SOBRE_ONTEM` (`@/dominio/campos`); `METAS`, `acoesEmFoco`, `metasAplicaveis` (`@/dominio/metas`); `Dia`, `EventoTreino`, `EventoRefeicao` (`@/dominio/tipos`); `AcaoId` (`@/dominio/catalogo/tipos`); `salvarDia` (`@/dados/repositorios/dia`); `registrarTreino`, `registrarRefeicao`, `refeicoesEntre` (`@/dados/repositorios/eventos`); `hojeISO`, `ontem` (`@/dados/datas`); `useContexto`, `useDia`; `CampoRegistro`, `ConviteRegistro`, `CardAcao`; `chaveDe`, `horaAgora`, `formatarData`; `Link` (`react-router`).
 - Produces: `export function Hoje(): JSX.Element` (rota `/`, heading "Hoje").
 
 Comportamento:
-- **Check-in da manhã** = `camposDe('dia', perfil, 1)`. Os campos falam de ontem / da noite passada (`deitou`, `levantou`, `fome`, `comiSemFome`, `ultimoCafe`, `jantarFim`, `passos`) mas são gravados no `dia` de **hoje** (`hojeISO()`): o cabeçalho da seção diz isso. `dia.moveu` sai da lista se há `EventoTreino` com `data === ontem(hoje)` (única exceção por id na UI; ver Global Constraints). Cada mudança chama `salvarDia(hoje, { [chave]: valor })` na hora — sem botão salvar.
+- **Check-in da manhã** = `camposDe('dia', perfil, 1)` (mais o nível 2 quando expandido). Os campos falam de ontem / da noite passada (`deitou`, `levantou`, `fome`, `comiSemFome`, `ultimoCafe`, `jantarFim`, `passos`, …) mas seguem a convenção de dia-calendário dos contratos (seção "Atribuição de dia"): os 12 campos de `CAMPOS_SOBRE_ONTEM` são gravados no `dia` de **ontem** (`ontem(hoje)`) e os demais no `dia` de **hoje** (`hojeISO()`) — o cabeçalho da seção diz isso. A tela lê o valor atual de cada campo do registro correspondente (`useDia(hoje)` para os campos de hoje, `useDia(ontem(hoje))` para os de `CAMPOS_SOBRE_ONTEM`). `dia.moveu` sai da lista se há `EventoTreino` com `data === ontem(hoje)` (única exceção por id na UI; ver Global Constraints). Cada mudança chama `salvarDia(CAMPOS_SOBRE_ONTEM.includes(c.id) ? ontem(hoje) : hoje, { [chave]: valor })` na hora — sem botão salvar.
 - **Quero registrar mais** expande `camposDe('dia', perfil, 2).filter(c => c.nivel === 2)` precedido por `<ConviteRegistro campos={nivel2} />`.
 - **Treinei / Comi / Levantei**: mini-forms inline. Depois de `registrarRefeicao`, recalcula `dia.proteinaG`/`dia.fibraG` como soma das refeições do dia (`refeicoesEntre(hoje, hoje)`) e grava com `salvarDia`. **Levantei** grava `levantadas + 1`.
 - **Dias parado**: `ctx.derivados.diasParado` com `METAS['nunca-dois-dias'].meta(ctx)` (`texto` + `proximoPasso`).
-- **Em foco**: `acoesEmFoco(ctx, 3)`; se vierem menos de 3, completa com ações `sem-dado` de `metasAplicaveis(ctx)` (excluindo medidas e hábitos), para que o convite apareça (spec §5.2).
+- **Em foco**: `acoesEmFoco(ctx, 3)`; se vierem menos de 3, completa com ações `sem-dado` de `metasAplicaveis(ctx)` (excluindo medidas e hábitos), para que o convite apareça (spec §5.2). A ordem vem inteira de `acoesEmFoco` (fix wave, item 7): zona `atencao` antes de `pouco` e, dentro da zona, a ordem do catálogo — a UI não reordena por `posicao` nem por nenhum outro critério próprio.
 
 - [ ] **Step 1: Teste (falha)**
 
@@ -1782,6 +1896,20 @@ describe('Hoje — check-in', () => {
     await waitFor(async () => expect((await lerDia(hojeISO()))?.comiSemFome).toBe(true));
   });
 
+  test('preencher passos grava no dia de ontem, não no de hoje', async () => {
+    await salvarPerfil(PERFIL);
+    const { container } = renderizar();
+    await esperarCheckin();
+    const el = await waitFor(() => {
+      const x = container.querySelector('[data-campo="dia.passos"]');
+      expect(x).not.toBeNull();
+      return x as HTMLElement;
+    });
+    fireEvent.change(within(el).getByLabelText(/Passos de ontem/), { target: { value: '6200' } });
+    await waitFor(async () => expect((await lerDia(ontem(hojeISO())))?.passos).toBe(6200));
+    expect((await lerDia(hojeISO()))?.passos).toBeUndefined();
+  });
+
   test('Quero registrar mais abre o nível 2 com o convite', async () => {
     const perfil = await salvarPerfil(PERFIL);
     const { container } = renderizar();
@@ -1838,7 +1966,7 @@ Esperado: `Failed to resolve import "./Hoje"`.
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import type { Campo } from '@/dominio/campos';
-import { camposDe } from '@/dominio/campos';
+import { CAMPOS_SOBRE_ONTEM, camposDe } from '@/dominio/campos';
 import { METAS, acoesEmFoco, metasAplicaveis } from '@/dominio/metas';
 import type { Dia, EventoTreino, EventoRefeicao } from '@/dominio/tipos';
 import type { AcaoId } from '@/dominio/catalogo/tipos';
@@ -2001,6 +2129,7 @@ export function Hoje() {
   const { ctx, carregando } = useContexto();
   const hoje = hojeISO();
   const dia = useDia(hoje);
+  const diaOntem = useDia(ontem(hoje));
   const [mais, setMais] = useState(false);
   const [formAberto, setFormAberto] = useState<'treino' | 'refeicao' | null>(null);
 
@@ -2023,12 +2152,20 @@ export function Hoje() {
     : [];
   const emFoco = [...foco, ...semDado];
 
+  // Convenção de dia-calendário (contratos): os 12 campos de CAMPOS_SOBRE_ONTEM
+  // falam do dia anterior e vivem em dia[ontem]; os demais vivem em dia[hoje].
+  function registroDe(c: Campo): Dia | undefined {
+    return CAMPOS_SOBRE_ONTEM.includes(c.id) ? diaOntem : dia;
+  }
+
   function valorDe(c: Campo): unknown {
-    return dia ? (dia as unknown as Record<string, unknown>)[chaveDe(c)] : undefined;
+    const registro = registroDe(c);
+    return registro ? (registro as unknown as Record<string, unknown>)[chaveDe(c)] : undefined;
   }
 
   function gravar(c: Campo, v: unknown) {
-    void salvarDia(hoje, { [chaveDe(c)]: v } as ParcialDia);
+    const data = CAMPOS_SOBRE_ONTEM.includes(c.id) ? ontem(hoje) : hoje;
+    void salvarDia(data, { [chaveDe(c)]: v } as ParcialDia);
   }
 
   async function levantei() {
@@ -2045,7 +2182,7 @@ export function Hoje() {
       <section className="painel">
         <div className="ph">
           <h2>Check-in da manhã</h2>
-          <span className="sub">Sobre a noite passada e o dia de ontem. Fica no registro de hoje.</span>
+          <span className="sub">Sobre a noite passada e o dia de ontem. O que é de ontem fica no registro de ontem; o resto, no de hoje.</span>
         </div>
         <div className="grid">
           {nivel1.map((c) => (
@@ -2111,7 +2248,7 @@ export function Hoje() {
 pnpm vitest run src/ui/telas/Hoje.test.tsx
 ```
 
-Esperado: `✓ src/ui/telas/Hoje.test.tsx (8 tests)`.
+Esperado: `✓ src/ui/telas/Hoje.test.tsx (9 tests)`.
 
 Se o teste "três ações em foco" falhar por vir menos de 3 cards: com perfil recém-criado e nenhum dia, `acoesEmFoco` devolve 0 e o complemento `sem-dado` precisa fornecer 3 — confira se `metasAplicaveis(ctx)` do plano 02 retorna `zona: 'sem-dado'` para ações sem dado (regra do spec §6).
 
@@ -2293,10 +2430,10 @@ git -C .. commit -m "feat: tela Ações agrupada por grupo, com medidas e hábit
 - Test: `app/src/ui/telas/Exames.test.tsx`
 
 **Interfaces:**
-- Consumes: `camposDe`, `Campo` (`@/dominio/campos`); `Semana`, `Mes`, `Exame`, `DataISO` (`@/dominio/tipos`); `lerSemana`, `salvarSemana`, `preencherSemana`, `lerMes`, `salvarMes`, `listarExames`, `salvarExame`, `ultimoExame` (repositórios em `@/dados/repositorios/semana`, `@/dados/repositorios/mes`, `@/dados/repositorios/exame`); `hojeISO`, `semanaISO`, `mesISO` (`@/dados/datas`); `useContexto`, `usePerfil`; `CampoRegistro`; `chaveDe`, `primeiraSegundaDoMes`, `diasEntre`, `formatarData`; `useLiveQuery` (`dexie-react-hooks`); `Link` (`react-router`).
+- Consumes: `camposDe`, `Campo` (`@/dominio/campos`); `Semana`, `Mes`, `Exame`, `DataISO` (`@/dominio/tipos`); `lerSemana`, `salvarSemana`, `preencherSemana`, `lerMes`, `salvarMes`, `listarExames`, `salvarExame`, `ultimoExame` (repositórios em `@/dados/repositorios/semana`, `@/dados/repositorios/mes`, `@/dados/repositorios/exame`); `hojeISO`, `semanaAnteriorISO`, `segundaDaSemana`, `somarDias`, `mesISO` (`@/dados/datas`); `useContexto`, `usePerfil`; `CampoRegistro`; `chaveDe`, `primeiraSegundaDoMes`, `diasEntre`, `formatarData`; `useLiveQuery` (`dexie-react-hooks`); `Link` (`react-router`).
 - Produces: `export function Segunda(): JSX.Element` (rota `/segunda`, heading "Segunda") e `export function Exames(): JSX.Element` (rota `/exames`, heading "Exames").
 
-Comportamento da Segunda: semana ISO atual. Se `lerSemana` não devolve nada, o form nasce com `preencherSemana(s)` (pré-preenchido dos eventos e dias); a pessoa confirma ou corrige e salva com `salvarSemana`. Mostra `derivados.pesoMedioSemana` (só leitura). Se hoje é a primeira segunda-feira do mês **ou** não há `mes` do mês corrente, acrescenta `camposDe('mes', perfil)` com botão próprio → `salvarMes`. Se `ultimoExame()` é undefined ou tem ≥ 84 dias, aviso com link para `/exames`.
+Comportamento da Segunda (fix wave, item 22): a revisão é da **semana anterior** — `sem = semanaAnteriorISO(hojeISO())`, rotulado "Semana passada (dd/mm–dd/mm)" usando `segundaDaSemana(sem)`/`somarDias(…, 6)`. Se `lerSemana` não devolve nada para essa chave, o form nasce com `preencherSemana(sem)` (pré-preenchido dos eventos e dias da semana anterior; `preencherSemana` em si não muda — continua só contando a chave que recebe). Mostra `derivados.pesoMedioSemana` rotulado "média desta semana" — esse derivado continua sendo a média móvel de hoje, não da revisão da semana anterior, e o rótulo deixa isso explícito para não confundir as duas semanas na mesma tela. Se hoje é a primeira segunda-feira do mês **ou** não há `mes` do mês corrente, acrescenta `camposDe('mes', perfil)` com botão próprio → `salvarMes`. Se `ultimoExame()` é undefined ou tem ≥ 84 dias, aviso com link para `/exames`.
 
 Truque com `useLiveQuery`: `undefined` significa "carregando" — para distinguir "carregou e não existe", a consulta devolve `null` nesse caso (`.then(x => x ?? null)`). Só assim a pré-carga não atropela um registro salvo que ainda estava chegando.
 
@@ -2314,7 +2451,7 @@ import { registrarTreino } from '@/dados/repositorios/eventos';
 import { lerSemana } from '@/dados/repositorios/semana';
 import { salvarExame } from '@/dados/repositorios/exame';
 import { apagarTudo } from '@/dados/exportImport';
-import { hojeISO, semanaISO, somarDias } from '@/dados/datas';
+import { hojeISO, semanaAnteriorISO, somarDias } from '@/dados/datas';
 import { PERFIL } from '@/test/fixtures';
 
 beforeEach(async () => {
@@ -2326,9 +2463,10 @@ function renderizar() {
 }
 
 describe('Segunda', () => {
-  test('pré-preenche sessões de tiros a partir dos eventos da semana', async () => {
+  test('pré-preenche sessões de tiros a partir dos eventos da semana passada (não da corrente)', async () => {
     await salvarPerfil(PERFIL);
-    await registrarTreino({ data: hojeISO(), hora: '07:00', tipo: 'tiros', minutos: 8, tiros: 3 });
+    // mesmo dia da semana, 7 dias atrás: garantidamente dentro de semanaAnteriorISO(hoje) (fix wave, item 22).
+    await registrarTreino({ data: somarDias(hojeISO(), -7), hora: '07:00', tipo: 'tiros', minutos: 8, tiros: 3 });
     const { container } = renderizar();
     await screen.findByRole('heading', { name: 'Segunda' });
     await waitFor(() => {
@@ -2338,7 +2476,7 @@ describe('Segunda', () => {
     });
   });
 
-  test('salvar grava a semana', async () => {
+  test('salvar grava a semana anterior (não a corrente)', async () => {
     await salvarPerfil(PERFIL);
     const { container } = renderizar();
     await screen.findByRole('heading', { name: 'Segunda' });
@@ -2349,7 +2487,7 @@ describe('Segunda', () => {
     });
     fireEvent.change(input, { target: { value: '100' } });
     fireEvent.click(screen.getByRole('button', { name: 'Salvar semana' }));
-    await waitFor(async () => expect((await lerSemana(semanaISO(hojeISO())))?.cintura).toBe(100));
+    await waitFor(async () => expect((await lerSemana(semanaAnteriorISO(hojeISO())))?.cintura).toBe(100));
   });
 
   test('sem exames, mostra o aviso com link para /exames', async () => {
@@ -2438,7 +2576,7 @@ import type { Semana, Mes } from '@/dominio/tipos';
 import { lerSemana, salvarSemana, preencherSemana } from '@/dados/repositorios/semana';
 import { lerMes, salvarMes } from '@/dados/repositorios/mes';
 import { ultimoExame } from '@/dados/repositorios/exame';
-import { hojeISO, semanaISO, mesISO } from '@/dados/datas';
+import { hojeISO, semanaAnteriorISO, segundaDaSemana, somarDias, mesISO } from '@/dados/datas';
 import { useContexto } from '@/ui/hooks/useContexto';
 import { CampoRegistro } from '@/ui/componentes/CampoRegistro';
 import { chaveDe, primeiraSegundaDoMes, diasEntre, formatarData } from '@/ui/formato';
@@ -2467,7 +2605,9 @@ function valoresDe(obj: object | null | undefined, campos: Campo[]): Valores {
 export function Segunda() {
   const { ctx, carregando } = useContexto();
   const hoje = hojeISO();
-  const sem = semanaISO(hoje);
+  const sem = semanaAnteriorISO(hoje); // a revisão é sempre da semana anterior (fix wave, item 22)
+  const inicioSem = segundaDaSemana(sem);
+  const fimSem = somarDias(inicioSem, 6);
   const mes = mesISO(hoje);
 
   // null = carregou e não existe; undefined = ainda carregando
@@ -2521,9 +2661,9 @@ export function Segunda() {
   return (
     <section className="tela segunda">
       <header>
-        <p className="eyebrow">revisão semanal · {sem}</p>
+        <p className="eyebrow">Semana passada ({formatarData(inicioSem)}–{formatarData(fimSem)})</p>
         <h1>Segunda</h1>
-        <p className="sub">Pré-preenchido com o que você registrou na semana. Confirme ou corrija.</p>
+        <p className="sub">Pré-preenchido com o que você registrou na semana passada. Confirme ou corrija.</p>
       </header>
 
       {lembrarExame && (
@@ -2543,7 +2683,8 @@ export function Segunda() {
           ))}
         </div>
         <p className="leitura">
-          peso médio da semana: <b>{pesoMedio === null ? '—' : `${pesoMedio} kg`}</b>
+          {/* derivados.pesoMedioSemana continua sendo a média desta semana (hoje), não da revisão — rótulo explícito para não confundir com a semana passada acima */}
+          média desta semana: <b>{pesoMedio === null ? '—' : `${pesoMedio} kg`}</b>
           {ctx.derivados.pesoMedioSemanaAnterior !== null && <> · semana anterior: <b>{ctx.derivados.pesoMedioSemanaAnterior} kg</b></>}
         </p>
         <div className="botoes">
@@ -2676,7 +2817,7 @@ pnpm vitest run src/ui/telas/Segunda.test.tsx src/ui/telas/Exames.test.tsx
 
 Esperado: `✓ Segunda.test.tsx (5 tests)`, `✓ Exames.test.tsx (1 test)`.
 
-Se "pré-preenche sessões de tiros" falhar com valor `''`: `preencherSemana` (plano 03) conta eventos da semana ISO — confira que a data do evento (`hojeISO()`) cai em `semanaISO(hojeISO())`; se o plano 03 devolver a chave com outro nome, o contrato é `sessoesTiros` e o erro está lá, não aqui.
+Se "pré-preenche sessões de tiros" falhar com valor `''`: `preencherSemana` (plano 03) conta eventos da semana que recebe — confira que a data do evento (`somarDias(hojeISO(), -7)`) cai em `semanaAnteriorISO(hojeISO())`, não em `semanaISO(hojeISO())` (a tela agora passa a semana anterior, fix wave item 22); se o plano 03 devolver a chave com outro nome, o contrato é `sessoesTiros` e o erro está lá, não aqui.
 
 - [ ] **Step 6: Commit**
 
@@ -2722,17 +2863,25 @@ function renderizar() {
   return render(<MemoryRouter><Tendencias /></MemoryRouter>);
 }
 
-/** 12 dias com 8 h na cama (≈ 7,7 h de sono), fome 4, três noites curtas. */
+/**
+ * 13 dias consecutivos (do mais antigo, hoje−12, até hoje), 8 h na cama (≈ 7,7 h de sono)
+ * exceto a cada 4 dias uma noite curta (deitou 01:30). Convenção de registro (contratos,
+ * `dominio/tendencias/sonoFomeCafe.ts`): o `fome`/`comiSemFome` do registro de um dia
+ * descreve o dia ANTERIOR — por isso quem marca "dia seguinte a uma noite curta" é o
+ * registro seguinte (`k + 1`), não o próprio dia da noite curta.
+ */
 async function fixtureDias() {
   const hoje = hojeISO();
-  for (let i = 0; i < 12; i++) {
-    const curta = i % 4 === 3;
-    await salvarDia(somarDias(hoje, -i), {
+  const datas = Array.from({ length: 13 }, (_, k) => somarDias(hoje, k - 12));
+  for (let k = 0; k < datas.length; k++) {
+    const curta = k % 4 === 3; // noite curta (deitou → levantou) a cada 4 dias
+    const diaSeguinteACurta = k > 0 && (k - 1) % 4 === 3; // este registro descreve o dia após uma noite curta
+    await salvarDia(datas[k], {
       deitou: curta ? '01:30' : '23:00',
       levantou: '07:00',
-      fome: curta ? 7 : 4,
-      comiSemFome: curta,
-      ultimoCafe: i % 2 === 0 ? '10:00' : '17:00',
+      fome: diaSeguinteACurta ? 7 : 4,
+      comiSemFome: diaSeguinteACurta,
+      ultimoCafe: k % 2 === 0 ? '10:00' : '17:00',
     });
   }
 }
@@ -2744,7 +2893,7 @@ describe('Tendências', () => {
     expect(await screen.findByText(/^Faltam \d+ check-ins/)).toBeInTheDocument();
   });
 
-  test('com 12 dias: mostra frases com n', async () => {
+  test('com 13 dias: mostra frases com o delta real (não só o n)', async () => {
     await salvarPerfil(PERFIL);
     await fixtureDias();
     renderizar();
@@ -2752,7 +2901,8 @@ describe('Tendências', () => {
     await waitFor(() => expect(screen.queryByText(/^Faltam/)).toBeNull());
     const frases = await screen.findAllByRole('listitem');
     expect(frases.length).toBeGreaterThanOrEqual(2);
-    expect(frases[0].textContent).toMatch(/n = \d+/);
+    // 3 noites curtas (fome 7) vs baseline 4 (fome nos dias após noite normal) → delta +3,0.
+    expect(frases[0].textContent).toMatch(/\+3,0 acima do seu normal \(n = 3\)/);
   });
 
   test('perfil sem café explica que a tendência é sono × fome', async () => {
@@ -2849,7 +2999,7 @@ pnpm vitest run src/ui/telas/Tendencias.test.tsx
 
 Esperado: `✓ src/ui/telas/Tendencias.test.tsx (3 tests)`.
 
-Se "com 12 dias" continuar em "Faltam": a fixture dá 12 check-ins com sono e fome, 9 deles com sono ≥ 7 h — satisfaz o pré-requisito do spec §7 (≥ 7 check-ins, ≥ 5 dias de baseline). Se o domínio ainda disser que faltam, o problema é em `sonoFomeCafe` (plano 03), não na tela.
+Se "com 13 dias" continuar em "Faltam": a fixture dá 13 check-ins com sono e fome, 10 deles com sono ≥ 7 h — satisfaz o pré-requisito do spec §7 (≥ 7 check-ins, ≥ 5 dias de baseline). Se o domínio ainda disser que faltam, o problema é em `sonoFomeCafe` (plano 03), não na tela.
 
 - [ ] **Step 5: Commit**
 
@@ -2872,8 +3022,8 @@ git -C .. commit -m "feat: tela Tendências (sono × fome × café)"
 - Produces: `export function Ajustes(): JSX.Element` (rota `/ajustes`, heading "Ajustes"); `fronteira.json` como `Array<{ titulo: string; resumo: string }>`.
 
 Comportamento:
-- **Exportar**: `exportar()` → `JSON.stringify(x, null, 2)` num `<textarea readonly>` selecionável, botão **Copiar** (`navigator.clipboard.writeText`, se existir) e botão **Baixar arquivo** (Blob + `<a download>`, só quando `URL.createObjectURL` existe — no jsdom não existe).
-- **Importar**: `<textarea>` + botão. `JSON.parse` em `try/catch` → motivo "JSON malformado". Senão `importar(obj)`: `{ ok: false, motivo }` mostra o motivo num `role="alert"`; `{ ok: true, contagem }` mostra a contagem por tabela.
+- **Exportar**: `exportar()` → `JSON.stringify(x, null, 2)` num `<textarea readonly>` selecionável, botão **Copiar** (`navigator.clipboard.writeText`, se existir) e botão **Baixar arquivo** (Blob + `<a download>`, só quando `URL.createObjectURL` existe — no jsdom não existe). `exportar()` roda em `try/catch`: uma falha do IndexedDB (quota, bloqueio no meio da sessão) vira "Não foi possível ler os dados neste navegador." num `role="alert"`, sem derrubar a tela.
+- **Importar**: `<textarea>` + botão. `JSON.parse` em `try/catch` → motivo "JSON malformado". Senão `importar(obj)` também em `try/catch`: `{ ok: false, motivo }` mostra o motivo num `role="alert"`; `{ ok: true, contagem }` mostra a contagem por tabela; uma rejeição inesperada da transação (fora do `Resultado` tipado — contratos: `importar` só resolve `{ ok: false }` para inválido, uma falha do Dexie propaga) também vira "Não foi possível gravar os dados neste navegador." no mesmo `role="alert"`.
 - **Apagar tudo**: checkbox "Entendi que isso apaga tudo neste aparelho" habilita o botão → `apagarTudo()`.
 - **Fronteira**: lista estática de `fronteira.json` (curiosidades do brain marcadas `nivel: fronteira` — o que a app *não* afirma).
 - **Sobre**: três linhas (não prescreve; baseline próprio; só o Núcleo vira afirmação) e link para o perfil.
@@ -3029,11 +3179,17 @@ export function Ajustes() {
   const [resultado, setResultado] = useState<{ ok: true; texto: string } | { ok: false; motivo: string } | null>(null);
   const [entendi, setEntendi] = useState(false);
   const [apagado, setApagado] = useState(false);
+  const [erroExportar, setErroExportar] = useState<string | null>(null);
 
   async function gerar() {
-    const x = await exportar();
-    setJson(JSON.stringify(x, null, 2));
-    setCopiado(false);
+    try {
+      const x = await exportar();
+      setJson(JSON.stringify(x, null, 2));
+      setCopiado(false);
+      setErroExportar(null);
+    } catch {
+      setErroExportar('Não foi possível ler os dados neste navegador.');
+    }
   }
 
   async function copiar() {
@@ -3064,13 +3220,17 @@ export function Ajustes() {
       setResultado({ ok: false, motivo: 'JSON malformado: não consegui ler o texto colado.' });
       return;
     }
-    const r = await importar(obj);
-    if (r.ok) {
-      const partes = Object.entries(r.contagem).map(([tabela, n]) => `${tabela}: ${n}`);
-      setResultado({ ok: true, texto: `Importado. ${partes.join(' · ')}` });
-      setEntrada('');
-    } else {
-      setResultado({ ok: false, motivo: r.motivo });
+    try {
+      const r = await importar(obj);
+      if (r.ok) {
+        const partes = Object.entries(r.contagem).map(([tabela, n]) => `${tabela}: ${n}`);
+        setResultado({ ok: true, texto: `Importado. ${partes.join(' · ')}` });
+        setEntrada('');
+      } else {
+        setResultado({ ok: false, motivo: r.motivo });
+      }
+    } catch {
+      setResultado({ ok: false, motivo: 'Não foi possível gravar os dados neste navegador.' });
     }
   }
 
@@ -3101,6 +3261,7 @@ export function Ajustes() {
             <textarea id="aj-export" readOnly value={json} onFocus={(e) => e.currentTarget.select()} />
           </div>
         )}
+        {erroExportar && <p className="erro" role="alert">{erroExportar}</p>}
       </section>
 
       <section className="painel">
@@ -3173,38 +3334,43 @@ git -C .. commit -m "feat: tela Ajustes com exportar, importar, apagar tudo e Fr
 ### Task 10: Shell — `main.tsx`, `App.tsx`, rotas, nav inferior, guarda de perfil, aviso de IndexedDB
 
 **Files:**
-- Create: `app/src/app/indexedDb.ts`
 - Create: `app/src/app/App.tsx`
 - Modify: `app/src/app/main.tsx` (substituir o `main.tsx` do scaffold do plano 01, onde quer que esteja — se ele está em `app/src/main.tsx`, apague-o e aponte o `index.html` para `/src/app/main.tsx`)
 - Modify: `app/index.html` (`<script type="module" src="/src/app/main.tsx">`)
 - Test: `app/src/app/App.test.tsx`
 
 **Interfaces:**
-- Consumes: `useContexto`; as seis telas + Exames; `HashRouter`, `Routes`, `Route`, `NavLink`, `Navigate`, `useLocation` (`react-router`).
+- Consumes: `useContexto`; `indexedDbDisponivel` (`@/dados/disponibilidade`, plano 03 — não existe mais `app/src/app/indexedDb.ts`); as seis telas + Exames; `HashRouter`, `Routes`, `Route`, `NavLink`, `Navigate`, `useLocation` (`react-router`); `useEffect`, `useState` (`react`).
 - Produces:
   ```ts
-  export function indexedDbDisponivel(): boolean;   // app/src/app/indexedDb.ts
   export function App(): JSX.Element;                // app/src/app/App.tsx — HashRouter + rotas + nav
   ```
 - Rotas (contratos): `/` Hoje, `/perfil`, `/acoes`, `/segunda`, `/tendencias`, `/ajustes`, `/exames`. Nav inferior com 5 itens: Hoje, Ações, Segunda, Tendências, Ajustes.
 
-Guarda: enquanto `carregando`, "Carregando…"; se `semPerfil` e a rota não é `/perfil`, `<Navigate to="/perfil" replace />`. Aviso único no topo quando `indexedDbDisponivel()` é falso (spec §9); o app segue — a mensagem é o que o plano entrega; a persistência em memória depende do plano 03 e fica fora deste plano.
+IndexedDB (spec §9, contrato de `@/dados/disponibilidade`): `indexedDbDisponivel()` é assíncrona, então o resultado fica em `useState<boolean | null>(null)` — `null` enquanto verifica (mostra "Carregando…"), `false` mostra a mensagem única explicando que o navegador não permite guardar dados e sugerindo abrir fora do modo privado, e **não renderiza as rotas** (a v1 não tem modo em memória, spec §1), `true` mostra o app normal. A verificação roda uma vez, em `useEffect`.
+
+Guarda de perfil (dentro do ramo `dbOk === true`): enquanto `carregando`, "Carregando…"; se `semPerfil` e a rota não é `/perfil`, `<Navigate to="/perfil" replace />`.
 
 - [ ] **Step 1: Teste de fumaça (falha)**
 
 `app/src/app/App.test.tsx`:
 
 ```tsx
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { App } from './App';
 import { salvarPerfil } from '@/dados/repositorios/perfil';
 import { apagarTudo } from '@/dados/exportImport';
+import * as disponibilidade from '@/dados/disponibilidade';
 import { PERFIL } from '@/test/fixtures';
 
 beforeEach(async () => {
   await apagarTudo();
   window.location.hash = '';
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe('App', () => {
@@ -3223,6 +3389,14 @@ describe('App', () => {
     expect(links).toHaveLength(5);
     expect(Array.from(links).map((a) => a.textContent)).toEqual(['Hoje', 'Ações', 'Segunda', 'Tendências', 'Ajustes']);
   });
+
+  test('IndexedDB indisponível: mensagem única, sem nav nem rotas', async () => {
+    vi.spyOn(disponibilidade, 'indexedDbDisponivel').mockResolvedValue(false);
+    render(<App />);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/não permite guardar dados/);
+    expect(screen.queryByRole('navigation')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Hoje' })).toBeNull();
+  });
 });
 ```
 
@@ -3236,25 +3410,13 @@ Esperado: `Failed to resolve import "./App"`.
 
 - [ ] **Step 3: Implementar**
 
-`app/src/app/indexedDb.ts`:
-
-```ts
-/** false em modo privado de alguns navegadores ou quando a API não existe. */
-export function indexedDbDisponivel(): boolean {
-  try {
-    return typeof indexedDB !== 'undefined' && indexedDB !== null;
-  } catch {
-    return false;
-  }
-}
-```
-
 `app/src/app/App.tsx`:
 
 ```tsx
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { HashRouter, Routes, Route, NavLink, Navigate, useLocation } from 'react-router';
 import { useContexto } from '@/ui/hooks/useContexto';
+import { indexedDbDisponivel } from '@/dados/disponibilidade';
 import { Hoje } from '@/ui/telas/Hoje';
 import { Perfil } from '@/ui/telas/Perfil';
 import { Acoes } from '@/ui/telas/Acoes';
@@ -3262,7 +3424,6 @@ import { Segunda } from '@/ui/telas/Segunda';
 import { Exames } from '@/ui/telas/Exames';
 import { Tendencias } from '@/ui/telas/Tendencias';
 import { Ajustes } from '@/ui/telas/Ajustes';
-import { indexedDbDisponivel } from './indexedDb';
 import './tema.css';
 
 const NAV = [
@@ -3282,16 +3443,33 @@ function Guarda({ children }: { children: ReactNode }) {
 }
 
 export function App() {
-  const semDb = !indexedDbDisponivel();
+  // null = verificando; false = mensagem única, sem rotas (spec §9, a v1 não tem modo em memória); true = app.
+  const [dbOk, setDbOk] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelado = false;
+    indexedDbDisponivel().then((ok) => {
+      if (!cancelado) setDbOk(ok);
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  if (dbOk === null) return <p className="carregando">Carregando…</p>;
+
+  if (!dbOk) {
+    return (
+      <p className="aviso" role="alert">
+        Este navegador não permite guardar dados (modo privado ou bloqueio de armazenamento). Abra fora do modo privado para usar a app.
+      </p>
+    );
+  }
+
   return (
     <HashRouter>
       <div className="app">
         <main className="conteudo">
-          {semDb && (
-            <p className="aviso" role="alert">
-              Este navegador não deixa guardar dados (modo privado?). O que você registrar some ao fechar a aba — exporte em Ajustes antes de sair.
-            </p>
-          )}
           <Guarda>
             <Routes>
               <Route path="/" element={<Hoje />} />
@@ -3365,7 +3543,7 @@ createRoot(document.getElementById('root')!).render(
 pnpm vitest run src/app/App.test.tsx
 ```
 
-Esperado: `✓ src/app/App.test.tsx (2 tests)`.
+Esperado: `✓ src/app/App.test.tsx (3 tests)`.
 
 - [ ] **Step 5: Suíte inteira, lint e build**
 

@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: forte (sono); contestada (curva em J)
 setas: [9, 'faixa-alcool']
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Se beber, pouco e cedo
 

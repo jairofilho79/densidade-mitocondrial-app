@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: instrumento (forte)
 setas: ['instrumento']
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Fita na cintura toda segunda
 

@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: forte
 setas: [8, 'faixa-cafe']
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Último café 9 horas antes de deitar
 

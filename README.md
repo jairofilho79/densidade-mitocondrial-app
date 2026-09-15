@@ -12,4 +12,12 @@ Um diário local de hábitos ligados à densidade mitocondrial — movimento, so
 
 ## Status
 
-Design da v1 aprovado em 2026-09-14. Implementação começando.
+v1 implementada (planos 01–04), em revisão final.
+
+## Rodar
+
+```bash
+cd app && pnpm install && pnpm dev
+```
+
+Veja `app/README.md` para os demais comandos (test, lint, build, preview, instalar como PWA, deploy).

@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: forte
 setas: [2]
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Levante peso duas vezes na semana
 

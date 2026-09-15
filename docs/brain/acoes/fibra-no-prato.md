@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: forte
 setas: ['faixa-fibra']
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Uma planta em todo prato
 

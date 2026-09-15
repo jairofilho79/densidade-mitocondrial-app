@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: forte
 setas: [3]
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Some 150 minutos na semana
 

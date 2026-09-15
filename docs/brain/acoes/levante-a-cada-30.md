@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: forte
 setas: [4]
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Levante a cada 30 minutos
 

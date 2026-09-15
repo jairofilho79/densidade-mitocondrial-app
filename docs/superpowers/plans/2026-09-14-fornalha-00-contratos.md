@@ -46,7 +46,7 @@ export interface Dia {
   levantou?: Hora;
   comoAcordei?: 1 | 2 | 3 | 4 | 5;
   fome?: number;               // 1–10, do dia anterior
-  comiSemFome?: boolean;
+  comiSemFome?: boolean;   // do dia anterior
   ultimoCafe?: Hora | null;    // undefined = não registrou; null = não tomou
   jantarFim?: Hora;
   passos?: number;
@@ -123,6 +123,29 @@ export interface Exame {
 }
 ```
 
+## Atribuição de dia (convenção)
+
+Atribuição de campo a registro segue a **convenção de dia-calendário**: `dia[D]`
+descreve o dia D, exceto `fome` e `comiSemFome` (sobre o dia D−1) e
+`deitou`/`levantou` (a noite D−1→D). Por isso o check-in da manhã grava os
+campos que falam do dia anterior em `dia[ontem]`, e os demais em `dia[hoje]`.
+
+Campos que o check-in da manhã grava em `dia[ontem]` (12, seguem a convenção
+normal — descrevem o dia anterior, então vão para o registro do dia anterior):
+`dia.ultimoCafe, dia.jantarFim, dia.passos, dia.moveu, dia.maiorBloco,
+dia.minPosJantar, dia.copos, dia.proteinaG, dia.fibraG,
+dia.refeicoesCozinhadas, dia.bebidaDoce, dia.alcoolDoses`.
+
+Campos que o check-in da manhã grava em `dia[hoje]` (as exceções da convenção,
+mais os campos que já descrevem o dia de hoje): `deitou, levantou,
+comoAcordei, fome, comiSemFome, primeiraRefeicao, levantadas, peso,
+fcRepouso, notas`.
+
+Ou seja, o check-in da manhã grava esses campos em `dia[ontem]` e os demais em
+`dia[hoje]`. Uma v2 com Health Connect grava `passos` no próprio dia (a
+integração lê o contador do aparelho no fim do dia D e grava em `dia[D]`,
+sem passar pelo check-in da manhã do dia seguinte).
+
 ## `src/dominio/catalogo/tipos.ts`
 
 Espelha `acoes.json` (22 ações, 9 medidas, 28 variáveis). Ids:
@@ -143,7 +166,7 @@ export interface AcaoCatalogo {
   descricao: string;
   faixa: { variaveis: string[]; pouco: string; ideal: string; demais: string; regra?: string };
   afeta: { input: string; processo: string; output: string };
-  registro: [string, string, string];
+  registro: string[];   // sempre 3 na prática; resolveJsonModule infere array
   sinal: { output: string; prazo: string };
   seguranca?: string;
   evidencia: { grau: string; fontes: string };   // texto único separado por ";"
@@ -181,6 +204,7 @@ export interface Campo {
 }
 
 export const CAMPOS: readonly Campo[];
+export const CAMPOS_SOBRE_ONTEM: readonly CampoId[];  // os 12 dia.* que o check-in da manhã grava em dia[ontem] (ver "Atribuição de dia")
 export function campo(id: CampoId): Campo;
 export function camposDe(tabela: 'dia' | 'semana' | 'mes' | 'exame', perfil: Perfil, nivel?: 1 | 2 | 3): Campo[];  // filtra por condicao e nivel (≤ nivel)
 export function validar(c: Campo, valor: unknown): string | null;  // null = ok; string = mensagem ao usuário
@@ -217,6 +241,7 @@ export function horaParaMin(h: Hora): number;            // "23:30" → 1410
 export function minParaHora(m: number): Hora;            // 1410 → "23:30"; normaliza módulo 1440
 export function horasEntre(inicio: Hora, fim: Hora): number;  // ((fim − inicio + 1440) % 1440) / 60
 export function r1(n: number): number;                   // 1 casa decimal
+export function somarDias(data: DataISO, n: number): DataISO;   // atravessa mês/ano/bissexto
 export function mediana(xs: number[]): number | null;
 export function media(xs: number[]): number | null;
 export function pos(v: number, lo: number, hi: number): number;   // posição 0–1 na barra: lo→0.5, hi→0.75 (mesma função da PoC: clamp((v−lo)/(hi−lo)·0.25+0.5, 0.02, 0.98))
@@ -251,6 +276,7 @@ export interface Meta {
   precisaDe?: CampoId[];
   seguranca?: string;
   deDia?: DataISO;             // de que dia é o valor, quando não é hoje
+  vals?: Record<string, string | number>; // placeholders de faixa.pouco/ideal/demais/regra do catálogo (ver `interpolar`)
 }
 
 export interface AcaoMeta {
@@ -260,9 +286,43 @@ export interface AcaoMeta {
 }
 ```
 
-`src/dominio/metas/index.ts`: `export const METAS: Record<AcaoId, AcaoMeta>` e `export function metasAplicaveis(ctx: Contexto): Array<{ acao: AcaoCatalogo; meta: Meta }>` (só `aplica(perfil)`, na ordem do catálogo) e `export function acoesEmFoco(ctx: Contexto, n = 3)` (zona `pouco`/`atencao`, ordenado por `posicao` desc, isto é, mais perto da meta primeiro).
+Cada módulo de `meta()` preenche `vals` com os valores que preenchem os `{placeholders}` da(s) faixa(s) do catálogo daquela ação (extraídos de `faixa.pouco/ideal/demais/regra` em `catalogo/acoes.json`). Placeholders que dependem só do perfil/derivados (ex.: `fc85`, `corte_cafe`, `prot_min`) ficam em `vals` mesmo quando a meta é `sem-dado`; só os que dependem do dado ausente (ex.: `prox_passos`, `jejum_h`, `delta_peso`) ficam de fora.
+
+`src/dominio/metas/index.ts`: `export const METAS: Record<AcaoId, AcaoMeta>` e `export function metasAplicaveis(ctx: Contexto): Array<{ acao: AcaoCatalogo; meta: Meta }>` (só `aplica(perfil)`, na ordem do catálogo) e `export function acoesEmFoco(ctx: Contexto, n = 3)` (zona `pouco`/`atencao`; ordenado por zona — `atencao` antes de `pouco` — e, dentro da zona, pela ordem do catálogo; não depende de `posicao`).
+
+### Regra de precedência (contagens semanais)
+
+Contagens semanais derivadas de eventos/dias (sessões de treino, doces, doses de álcool) usam **janela móvel de 7 dias** (`contarSessoes7`/`somaUltimos7` em `_util.ts`), não "segunda-feira até hoje". A revisão de segunda (`ctx.semana`, tipo `Semana`) refere-se à **semana ISO anterior** (ver `semanaAnteriorISO` no plano 03) e só é usada por `medidas` (cintura) e por ações quando `semanaAtual(ctx)` existir, isto é, quando `ctx.semana.semana` for a semana ISO corrente (edição manual da semana em curso) — quando não, a ação cai para a janela móvel de 7 dias.
 
 Ações **sem módulo de meta** (só registro): `anote-o-sono`, `pergunte-a-fome`, `meca-a-cintura`, `panturrilha-preensao` — mesmo assim existem em `METAS` com `meta()` retornando `zona: 'sem-dado'` quando falta o campo e `zona: 'meta'` com texto "registrado" quando existe. O teste de contrato exige as 22 chaves.
+
+### `src/dominio/metas/_util.ts`
+
+Além dos helpers de data/janela (`dataISO`, `hojeISO`, `semanaISO`, `inicioSemana`, `semDado`, `ultimoDiaCom`, `diasUltimos`, `eventosUltimos`, `semanaAtual`, `deDiaSeNaoHoje`, `aplicarSeguranca`):
+
+```ts
+/** Número com vírgula decimal, sem zeros à direita desnecessários (`fmt(7.5)` → `"7,5"`, `fmt(2)` → `"2"`). */
+export function fmt(n: number, casas = 1): string;
+
+/** Substitui `{chave}` por `vals[chave]` (números via `fmt`); chaves ausentes ficam como estão. */
+export function interpolar(texto: string, vals: Record<string, string | number>): string;
+
+/**
+ * Horas de `hora` até `deitar`, com virada de meia-noite tratada pela janela de sono, não por um
+ * corte fixo de 12 h: se `hora` cai dentro de `[deitar, levantar)`, o valor é negativo — `hora` é
+ * depois de `deitar`; senão é a diferença normal até `deitar`.
+ */
+export function horasAntesDeDeitar(hora: Hora, deitar: Hora, levantar: Hora): number;
+
+/** Move `horaAtual` em direção a `horaAlvo` em no máximo 15 min (o menor entre 15 e o que falta). */
+export function passo15min(horaAtual: Hora, horaAlvo: Hora, direcao: 'antes' | 'depois'): { hora: Hora; minutos: number };
+
+/** Soma dos valores numéricos de `dia[campo]` (não-null/undefined) nos últimos 7 dias; `undefined` se nenhum dia tem o campo registrado. */
+export function somaUltimos7<K extends keyof Dia>(ctx: Contexto, campo: K): number | undefined;
+
+/** Sessões de `tipo` nos últimos 7 dias (janela móvel; substitui a antiga `contarSessoes` segunda→hoje). */
+export function contarSessoes7(ctx: Contexto, tipo: EventoTreino['tipo']): number;
+```
 
 ## `src/dominio/seguranca.ts`
 

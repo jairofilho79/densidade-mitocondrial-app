@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: forte
 setas: ['dano-desuso']
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Nunca dois dias seguidos parado
 

@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: forte
 setas: [1]
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Três tiros fortes, três vezes na semana
 
