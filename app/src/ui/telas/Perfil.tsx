@@ -79,6 +79,7 @@ export function Perfil() {
   const [form, setForm] = useState<Form>(FORM_VAZIO);
   const [carregado, setCarregado] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [pediuSalvar, setPediuSalvar] = useState(false);
 
   useEffect(() => {
     if (salvo && !carregado) {
@@ -86,6 +87,14 @@ export function Perfil() {
       setCarregado(true);
     }
   }, [salvo, carregado]);
+
+  // A Guarda em App.tsx só libera a rota "/" quando `usePerfil()` (via useContexto)
+  // enxerga o perfil salvo — navegar logo após `await salvarPerfil` é cedo demais,
+  // a consulta ainda não recarregou. Esperar `salvo` (o próprio hook) refletir a
+  // gravação garante que a Guarda já deixa passar quando o navigate acontece.
+  useEffect(() => {
+    if (pediuSalvar && salvo) navigate('/');
+  }, [pediuSalvar, salvo, navigate]);
 
   const parcial = paraPerfil(form);
   const perfilTmp: PerfilTipo = parcial ? { ...parcial, atualizadoEm: '' } : PERFIL_BASE;
@@ -109,7 +118,7 @@ export function Perfil() {
     setSalvando(true);
     await salvarPerfil(parcial);
     setSalvando(false);
-    navigate('/');
+    setPediuSalvar(true);
   }
 
   return (
