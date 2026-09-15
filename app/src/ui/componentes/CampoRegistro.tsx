@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ChangeEvent, type ReactNode } from 'react';
 import type { Campo } from '@/dominio/campos';
 import { validar } from '@/dominio/campos';
 import './componentes.css';
@@ -82,6 +82,18 @@ export function CampoRegistro({ campo, valor, onChange, sufixo }: CampoRegistroP
     </>
   );
 
+  function aoMudarNumero(e: ChangeEvent<HTMLInputElement>) {
+    // Um <input type="number"> zera o value ('') para texto que ele não consegue
+    // interpretar como número (ex.: "1,2,3"); sem checar validity.badInput primeiro,
+    // isso cairia no caminho de "apagou o campo" e emitiria undefined em silêncio.
+    if (e.target.validity?.badInput) {
+      setTexto(e.target.value);
+      setErro('Digite um número.');
+      return;
+    }
+    emitirNumero(e.target.value);
+  }
+
   const numero = (
     <input
       id={id}
@@ -91,7 +103,7 @@ export function CampoRegistro({ campo, valor, onChange, sufixo }: CampoRegistroP
       max={campo.max}
       step={campo.tipo === 'decimal' ? 0.1 : 1}
       value={texto}
-      onChange={(e) => emitirNumero(e.target.value)}
+      onChange={aoMudarNumero}
     />
   );
 

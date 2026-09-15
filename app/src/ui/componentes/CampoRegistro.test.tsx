@@ -111,6 +111,18 @@ describe('CampoRegistro', () => {
     expect(screen.getByLabelText(/Copos de água/)).toHaveValue(7);
   });
 
+  test('badInput (ex.: "1,2,3" que o navegador não interpreta) mostra erro e não chama onChange (fix wave, item 7)', () => {
+    const onChange = vi.fn();
+    // Começa com um valor não-vazio: o navegador zera .value para texto inválido em
+    // input[type=number], e o evento só dispara quando o valor realmente muda.
+    render(<CampoRegistro campo={copos} valor={5} onChange={onChange} />);
+    const input = screen.getByLabelText(/Copos de água/);
+    Object.defineProperty(input, 'validity', { value: { badInput: true }, configurable: true });
+    fireEvent.change(input, { target: { value: '' } });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toHaveTextContent('Digite um número.');
+  });
+
   test('sufixo aparece depois do rótulo quando informado (fix wave, item 4)', () => {
     render(<CampoRegistro campo={copos} valor={undefined} onChange={() => {}} sufixo="· ontem" />);
     const label = screen.getByText('Copos de água').closest('label');
