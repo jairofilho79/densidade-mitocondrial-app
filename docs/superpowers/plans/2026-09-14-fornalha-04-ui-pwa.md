@@ -577,7 +577,9 @@ git -C .. commit -m "feat: hooks usePerfil, useDia e useContexto com useLiveQuer
   <CartaoMedida m={MedidaResultado} />
   ```
 
-  Fix wave (item 22): `BarraZona` ganha a prop `faixa` — não assume a meta em 0,5 do desenho, só o marcador em `posicao`; os três segmentos passam a mostrar os valores de `faixa.pouco/meta/demais` como rótulo. `CardAcao` renderiza `faixa.pouco/ideal/demais/regra` do catálogo (`acao.faixa`) passados por `interpolar(texto, meta.vals ?? {})`. `ConviteRegistro` ganha `semanal?: boolean`: quando os `campos` desbloqueiam só ações semanais (`troque-o-doce`, `se-beber`, `tres-tiros`, `levante-peso`, `some-150`), a frase diz "registre um treino ou a revisão de segunda" em vez de listar campos diários.
+  Fix wave (item 22): `BarraZona` ganha a prop `faixa` — não assume a meta em 0,5 do desenho, só o marcador em `posicao`; os três segmentos passam a mostrar os valores de `faixa.pouco/meta/demais` como rótulo, formatados por `fmt` (`@/dominio/metas/_util`), não interpolados crus. `CardAcao` renderiza `faixa.pouco/ideal/demais/regra` do catálogo (`acao.faixa`) passados por `interpolar(texto, meta.vals ?? {})`, escondendo a linha quando `meta.zona === 'sem-dado'` e o resultado ainda tem `{placeholder}` aberto (a faixa depende justamente do dado ausente). `ConviteRegistro` ganha `semanal?: boolean`: `CardAcao` deriva de `meta.precisaDe?.some(id => id.startsWith('semana.'))` — quando algum campo que falta é da tabela `Semana` (troque-o-doce, se-beber, tres-tiros, levante-peso, some-150), a frase diz "registre um treino ou a revisão de segunda" em vez de listar campos diários.
+
+  Round 2 (correção crítica): `horasAntesDeDeitar` (`@/dominio/metas/_util`) ganha um terceiro parâmetro `levantar: Hora` — a virada de meia-noite agora é decidida pela janela de sono `[deitar, levantar)`, não por um corte fixo de 12 h.
 
 Regras do `CampoRegistro`, por `campo.tipo`:
 
@@ -804,9 +806,22 @@ describe('CardAcao', () => {
     expect(screen.queryByText(acao.evidencia.fontes)).toBeNull();
   });
 
-  test('sem-dado mostra o convite com os campos de precisaDe', () => {
+  test('sem-dado mostra o convite com os campos de precisaDe; esconde a linha de faixa com placeholder aberto', () => {
     renderizar(<CardAcao acao={acao} meta={{ zona: 'sem-dado', valor: null, faixa: null, posicao: null, texto: '', proximoPasso: '', precisaDe: ['dia.passos'] }} />);
     expect(screen.getByText(/^Registre .* e eu te digo onde você está em/)).toBeInTheDocument();
+    // faixa.ideal do catálogo tem {prox_passos}, que depende do dado ausente — sem vals, some.
+    expect(screen.queryByText(/\{prox_passos\}/)).toBeNull();
+    expect(screen.queryByText(/prox_passos/)).toBeNull();
+  });
+
+  test('sem-dado com campo semanal: o convite pede treino ou a revisão de segunda', () => {
+    renderizar(
+      <CardAcao
+        acao={acao}
+        meta={{ zona: 'sem-dado', valor: null, faixa: null, posicao: null, texto: '', proximoPasso: '', precisaDe: ['semana.sessoesTiros'] }}
+      />,
+    );
+    expect(screen.getByText('registre um treino ou a revisão de segunda.')).toBeInTheDocument();
   });
 
   test('deDia aparece quando o valor não é de hoje', () => {
@@ -1121,6 +1136,7 @@ export function CampoRegistro({ campo, valor, onChange }: CampoRegistroProps) {
 
 ```tsx
 import type { Faixa, Zona } from '@/dominio/metas/tipos';
+import { fmt } from '@/dominio/metas/_util';
 import { ROTULO_ZONA } from '@/ui/formato';
 import './componentes.css';
 
@@ -1137,9 +1153,9 @@ export function BarraZona({ zona, posicao, faixa }: BarraZonaProps) {
   const pct = mostraMarcador ? Math.round(Math.min(1, Math.max(0, posicao)) * 100) : 0;
   return (
     <div className={`barra zona-${zona}`} role="img" aria-label={`Zona: ${ROTULO_ZONA[zona]}`}>
-      <i className={semDado ? 'nd' : 'p'}>{faixa && <span className="rotulo">{faixa.pouco}</span>}</i>
-      <i className={semDado ? 'nd' : 'i'}>{faixa && <span className="rotulo">{faixa.meta}</span>}</i>
-      <i className={semDado ? 'nd' : 'd'}>{faixa && <span className="rotulo">{faixa.demais}</span>}</i>
+      <i className={semDado ? 'nd' : 'p'}>{faixa && <span className="rotulo">{fmt(faixa.pouco)}</span>}</i>
+      <i className={semDado ? 'nd' : 'i'}>{faixa && <span className="rotulo">{fmt(faixa.meta)}</span>}</i>
+      <i className={semDado ? 'nd' : 'd'}>{faixa && <span className="rotulo">{fmt(faixa.demais)}</span>}</i>
       {mostraMarcador && <span className="voce" style={{ left: `${pct}%` }} />}
     </div>
   );
@@ -1205,7 +1221,15 @@ export function CardAcao({ acao, meta, compacto = false }: CardAcaoProps) {
     .map((id) => CAMPOS.find((c) => c.id === id))
     .filter((c): c is Campo => c !== undefined);
   const faltaPerfil = precisaDe.some((id) => id.startsWith('perfil.'));
+  // Ação semanal: precisaDe cita um campo `semana.*` (troque-o-doce, se-beber) ou não cita nenhum
+  // dia.* mas depende de revisão semanal via eventos (tres-tiros, levante-peso, some-150 — nesses
+  // três precisaDe é `semana.sessoesTiros`/`semana.sessoesForca`/`semana.minAtiv`, mesmo padrão).
+  const semanal = precisaDe.some((id) => id.startsWith('semana.'));
   const vals = meta.vals ?? {};
+  // Placeholder aberto ({chave}) só acontece quando a ação está sem-dado e a faixa depende
+  // justamente do dado ausente (ver item 19: prox_passos, jejum_h, delta_peso, jantar, primeira) —
+  // nesse caso a linha não tem informação útil para mostrar, então ela some.
+  const temPlaceholderAberto = (texto: string) => semDado && /\{[a-z_0-9]+\}/.test(interpolar(texto, vals));
 
   return (
     <article className={`card zona-${meta.zona}${compacto ? ' compacto' : ''}`} data-acao={acao.id}>
@@ -1220,14 +1244,16 @@ export function CardAcao({ acao, meta, compacto = false }: CardAcaoProps) {
       <div className="faixa">
         <BarraZona zona={meta.zona} posicao={meta.posicao} faixa={meta.faixa} />
         <ul className="faixa-catalogo">
-          <li><b>pouco</b> {interpolar(acao.faixa.pouco, vals)}</li>
-          <li><b>ideal</b> {interpolar(acao.faixa.ideal, vals)}</li>
-          <li><b>demais</b> {interpolar(acao.faixa.demais, vals)}</li>
-          {acao.faixa.regra && <li className="regra">{interpolar(acao.faixa.regra, vals)}</li>}
+          {!temPlaceholderAberto(acao.faixa.pouco) && <li><b>pouco</b> {interpolar(acao.faixa.pouco, vals)}</li>}
+          {!temPlaceholderAberto(acao.faixa.ideal) && <li><b>ideal</b> {interpolar(acao.faixa.ideal, vals)}</li>}
+          {!temPlaceholderAberto(acao.faixa.demais) && <li><b>demais</b> {interpolar(acao.faixa.demais, vals)}</li>}
+          {acao.faixa.regra && !temPlaceholderAberto(acao.faixa.regra) && (
+            <li className="regra">{interpolar(acao.faixa.regra, vals)}</li>
+          )}
         </ul>
         {semDado ? (
           <>
-            <ConviteRegistro campos={camposFaltando} />
+            <ConviteRegistro campos={camposFaltando} semanal={semanal} />
             {faltaPerfil && (
               <p className="perfil-falta">
                 <Link to="/perfil">Complete o perfil</Link> para esta ação ter meta.
@@ -1330,7 +1356,7 @@ export function CartaoMedida({ m }: CartaoMedidaProps) {
 pnpm vitest run src/ui/componentes
 ```
 
-Esperado: `Test Files 5 passed` (CampoRegistro 8, BarraZona 2, ConviteRegistro 2, CardAcao 5, CartaoMedida 2).
+Esperado: `Test Files 5 passed` (CampoRegistro 8, BarraZona 3, ConviteRegistro 2, CardAcao 7, CartaoMedida 2).
 
 - [ ] **Step 8: Commit**
 
