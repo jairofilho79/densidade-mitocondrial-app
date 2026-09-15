@@ -32,6 +32,47 @@ function ehObjeto(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
+const HORA_HH_MM = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function numeroFinitoPositivo(v: unknown): boolean {
+  return typeof v === 'number' && Number.isFinite(v) && v > 0;
+}
+
+function listaDeStrings(v: unknown): boolean {
+  return Array.isArray(v) && v.every((x) => typeof x === 'string');
+}
+
+function motivoCampo(campo: string, regra: string): string {
+  return `perfil inválido: campo \`${campo}\` ${regra}`;
+}
+
+/** Forma do perfil (contratos): valida ANTES da transação. undefined = válido. */
+function validarFormaDoPerfil(perfil: Record<string, unknown>): string | undefined {
+  for (const campo of ['peso', 'altura', 'idade'] as const) {
+    if (!numeroFinitoPositivo(perfil[campo])) return motivoCampo(campo, 'deve ser um número maior que zero');
+  }
+  if (perfil.sexo !== 'H' && perfil.sexo !== 'M') return motivoCampo('sexo', "deve ser 'H' ou 'M'");
+  for (const campo of ['levantar', 'deitar'] as const) {
+    if (typeof perfil[campo] !== 'string' || !HORA_HH_MM.test(perfil[campo] as string)) {
+      return motivoCampo(campo, 'deve ser uma hora no formato HH:MM');
+    }
+  }
+  if (!['nao', 'as-vezes', 'diario'].includes(perfil.cafe as string)) {
+    return motivoCampo('cafe', "deve ser 'nao', 'as-vezes' ou 'diario'");
+  }
+  if (!['nao', 'as-vezes', 'regular'].includes(perfil.alcool as string)) {
+    return motivoCampo('alcool', "deve ser 'nao', 'as-vezes' ou 'regular'");
+  }
+  for (const campo of ['remedios', 'examesQueTem'] as const) {
+    if (!listaDeStrings(perfil[campo])) return motivoCampo(campo, 'deve ser uma lista');
+  }
+  if (!['nao', 'sim', 'parou'].includes(perfil.fuma as string)) {
+    return motivoCampo('fuma', "deve ser 'nao', 'sim' ou 'parou'");
+  }
+  if (typeof perfil.atualizadoEm !== 'string') return motivoCampo('atualizadoEm', 'deve ser uma string');
+  return undefined;
+}
+
 /** Valida TUDO e devolve o conteúdo normalizado (tabelas ausentes = []). Nunca toca no banco. */
 function validar(json: unknown): { ok: true; dados: Validado } | { ok: false; motivo: string } {
   if (!ehObjeto(json)) return { ok: false, motivo: 'O arquivo não é um objeto de exportação.' };
@@ -44,6 +85,8 @@ function validar(json: unknown): { ok: true; dados: Validado } | { ok: false; mo
   let perfil: Linha | undefined;
   if (json.perfil !== undefined) {
     if (!ehObjeto(json.perfil)) return { ok: false, motivo: 'O perfil não é um objeto.' };
+    const motivo = validarFormaDoPerfil(json.perfil);
+    if (motivo) return { ok: false, motivo };
     perfil = json.perfil;
   }
 

@@ -154,4 +154,23 @@ describe('importar', () => {
   it('perfil que não é objeto é rejeitado', async () => {
     expect(await importar({ versao: 1, perfil: 'eu' })).toEqual({ ok: false, motivo: 'O perfil não é um objeto.' });
   });
+
+  it('perfil sem o campo remedios é rejeitado antes de abrir a transação', async () => {
+    const antes = await contarTudo();
+    const perfilInvalido: Record<string, unknown> = { ...PERFIL_TESTE, atualizadoEm: '2026-09-14T00:00:00.000Z' };
+    delete perfilInvalido.remedios;
+    const r = await importar({ versao: 1, perfil: perfilInvalido });
+    expect(r.ok).toBe(false);
+    expect(!r.ok && r.motivo).toMatch(/remedios/);
+    expect(await contarTudo()).toEqual(antes);
+    expect(await lerPerfil()).toBeUndefined();
+  });
+
+  it('perfil com sexo inválido é rejeitado', async () => {
+    const r = await importar({
+      versao: 1,
+      perfil: { ...PERFIL_TESTE, sexo: 'X', atualizadoEm: '2026-09-14T00:00:00.000Z' },
+    });
+    expect(r).toEqual({ ok: false, motivo: expect.stringMatching(/sexo/) });
+  });
 });
