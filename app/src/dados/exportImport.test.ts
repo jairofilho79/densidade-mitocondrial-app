@@ -57,7 +57,7 @@ describe('exportar', () => {
     await exportar();
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy.mock.calls[0][0]).toBe('r');
-    expect((spy.mock.calls[0][1] as { name: string }[]).map((t) => t.name).sort()).toEqual(
+    expect((spy.mock.calls[0][1] as unknown as { name: string }[]).map((t) => t.name).sort()).toEqual(
       db.tables.map((t) => t.name).sort(),
     );
     spy.mockRestore();
