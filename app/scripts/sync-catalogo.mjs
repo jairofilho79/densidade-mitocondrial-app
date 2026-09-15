@@ -16,11 +16,14 @@ const arquivoHash = resolve(destinoDir, 'acoes.hash');
 const conteudo = readFileSync(origem);
 const hash = createHash('sha256').update(conteudo).digest('hex');
 
+// Valida antes de gravar: um brain malformado nunca deve deixar uma cópia ou
+// hash inconsistente em disco.
+const json = JSON.parse(conteudo.toString('utf8'));
+
 mkdirSync(destinoDir, { recursive: true });
 writeFileSync(destino, conteudo);
 writeFileSync(arquivoHash, `${hash}\n`);
 
-const json = JSON.parse(conteudo.toString('utf8'));
 console.log(
   `Catálogo sincronizado: ${json.acoes.length} ações, ${json.medidas.length} medidas, ${Object.keys(json.variaveis).length} variáveis.`,
 );
