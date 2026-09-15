@@ -16,6 +16,10 @@ pnpm build        # tsc --noEmit + vite build → dist/
 
 A CI (`.github/workflows/ci.yml`) roda `pnpm install --frozen-lockfile && pnpm lint && pnpm test && pnpm build`.
 
+## Dependências
+
+- react-router 7 (não migrar para 8 sem revisar as rotas).
+
 ## Catálogo de ações (`src/dominio/catalogo/acoes.json`)
 
 A fonte de verdade é `docs/brain/acoes/acoes.json`, no brain. A cópia dentro do app é gerada — **não edite a cópia**. Depois de mudar o brain:
