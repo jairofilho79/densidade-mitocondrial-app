@@ -1,0 +1,47 @@
+import { beforeEach, describe, expect, test } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
+import { Perfil } from './Perfil';
+import { lerPerfil } from '@/dados/repositorios/perfil';
+import { apagarTudo } from '@/dados/exportImport';
+
+beforeEach(async () => {
+  await apagarTudo();
+});
+
+describe('Perfil', () => {
+  test('preencher e salvar grava o perfil', async () => {
+    const { container } = render(<MemoryRouter><Perfil /></MemoryRouter>);
+    expect(screen.getByRole('heading', { name: 'Seu perfil' })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '90' } });
+    fireEvent.change(screen.getByLabelText('Altura (cm)'), { target: { value: '175' } });
+    fireEvent.change(screen.getByLabelText('Idade (anos)'), { target: { value: '40' } });
+    fireEvent.click(screen.getByLabelText('Homem'));
+    fireEvent.change(screen.getByLabelText('Hora que levanta'), { target: { value: '06:30' } });
+    fireEvent.change(screen.getByLabelText('Hora que deita'), { target: { value: '23:30' } });
+    fireEvent.change(screen.getByLabelText('Café ou chá com cafeína'), { target: { value: 'diario' } });
+    fireEvent.change(screen.getByLabelText('Álcool'), { target: { value: 'nao' } });
+    fireEvent.click(screen.getByLabelText('Pressão'));
+    fireEvent.change(screen.getByLabelText('Fuma?'), { target: { value: 'nao' } });
+
+    // medidas ao vivo: IMC aparece com os números digitados (90 / 1,75² = 29,4)
+    await waitFor(() => expect(container.querySelector('[data-medida="imc"] .big')?.textContent).toContain('29.4'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar perfil' }));
+
+    await waitFor(async () => {
+      const p = await lerPerfil();
+      expect(p?.peso).toBe(90);
+      expect(p?.altura).toBe(175);
+      expect(p?.idade).toBe(40);
+      expect(p?.cafe).toBe('diario');
+      expect(p?.remedios).toEqual(['pressao']);
+    });
+  });
+
+  test('não salva sem peso, altura e idade', () => {
+    render(<MemoryRouter><Perfil /></MemoryRouter>);
+    expect(screen.getByRole('button', { name: 'Salvar perfil' })).toBeDisabled();
+  });
+});

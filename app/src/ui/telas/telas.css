@@ -1,0 +1,49 @@
+/* ---------- comum ---------- */
+.tela .medidas { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 560px) { .tela .medidas { grid-template-columns: 1fr 1fr; } }
+.tela .cards { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 720px) { .tela .cards { grid-template-columns: 1fr 1fr; } }
+.tela .grupo-h { display: flex; align-items: baseline; gap: 12px; }
+.tela .grupo-h .n { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+/* ---------- Perfil ---------- */
+.perfil form { display: grid; gap: 18px; }
+.perfil fieldset { border: 1px solid var(--line); border-radius: var(--raio); padding: 12px 14px 14px; margin: 0; display: grid; gap: 12px; background: var(--surface); }
+.perfil legend { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); padding: 0 4px; }
+
+/* ---------- Hoje ---------- */
+.hoje .eventos { display: flex; flex-wrap: wrap; gap: 8px; }
+.hoje .eventos .botao { flex: 1 1 100px; }
+.hoje .mini-form { display: grid; gap: 12px; }
+.hoje .parado { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+.hoje .parado .n { font-family: var(--mono); font-size: 40px; font-weight: 500; line-height: 1; }
+.hoje .parado .n small { display: block; font-size: 11px; color: var(--muted); letter-spacing: .05em; text-transform: uppercase; font-weight: 400; margin-top: 2px; }
+.hoje .parado.zona-pouco .n { color: var(--bad); }
+.hoje .parado.zona-atencao .n { color: var(--weak); }
+.hoje .parado.zona-meta .n { color: var(--ok); }
+.hoje .levantadas { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+/* ---------- Ações ---------- */
+.acoes .habitos { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 720px) { .acoes .habitos { grid-template-columns: 1fr 1fr; } }
+.hab { border: 1px dashed var(--line); border-radius: var(--raio); padding: 14px 16px; display: grid; gap: 6px; font-size: 13.5px; }
+.hab .t { font-weight: 600; font-size: 16px; }
+.hab b { font-family: var(--mono); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--weak); font-weight: 500; }
+.hab p { color: var(--muted); }
+
+/* ---------- Segunda / Exames ---------- */
+.segunda .leitura { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.segunda .leitura b { color: var(--fg); font-weight: 500; }
+
+/* ---------- Tendências ---------- */
+.tendencias .frases { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.tendencias .frases li { border: 1px solid var(--line); border-radius: var(--raio); background: var(--surface); padding: 12px 14px; display: grid; gap: 4px; }
+.tendencias .frases .n { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.tendencias .baseline { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+/* ---------- Ajustes ---------- */
+.ajustes textarea { font-family: var(--mono); font-size: 12px; min-height: 140px; }
+.ajustes .fronteira { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ajustes .fronteira li { border: 1px dashed var(--line); border-radius: var(--raio); padding: 12px 14px; display: grid; gap: 4px; }
+.ajustes .fronteira .t { font-weight: 600; }
+.ajustes .fronteira p { font-size: 13.5px; color: var(--muted); }
