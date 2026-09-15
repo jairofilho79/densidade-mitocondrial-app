@@ -196,6 +196,21 @@ describe('sonoFomeCafe — sono → fome', () => {
     );
   });
 
+  it('delta exatamente 0 diz "igual"', () => {
+    const dias = gerar('2026-08-01', [
+      { noite: 'N', fome: 6 }, { noite: 'N', fome: 6 }, { noite: 'C', fome: 6 }, { noite: 'N', fome: 6 },
+      { noite: 'C', fome: 6 }, { noite: 'N', fome: 6 }, { noite: 'C', fome: 6 }, { noite: 'N', fome: 6 },
+      { noite: 'N', fome: 6 },
+    ]);
+    const t = sonoFomeCafe(dias, perfil('nao'));
+    expect(t.pronta).toBe(true);
+    if (!t.pronta) return;
+    expect(t.baseline).toBe(6);
+    expect(frase(t, 'sono-fome')?.texto).toBe(
+      'Nos dias após dormir menos de 6 h, sua fome ficou igual ao seu normal (n = 3).',
+    );
+  });
+
   it('14 dias: delta +2,5 com n = 4', () => {
     const t = sonoFomeCafe(gerar('2026-08-01', QUATORZE), perfil('nao'));
     expect(t.pronta).toBe(true);
@@ -231,6 +246,26 @@ describe('sonoFomeCafe — sono → comer sem fome', () => {
   it('28 dias: 4 de 4 noites curtas vs 0 de 12 normais', () => {
     const t = sonoFomeCafe(gerar('2026-08-01', vinteOito('13:00')), perfil('nao'));
     expect(frase(t, 'sono-comer-sem-fome')?.texto).toBe('Comeu sem fome em 4 de 4 noites curtas vs 0 de 12 normais.');
+  });
+
+  it('omite o "vs" quando nenhuma noite normal tem o dado (emNormais vazio)', () => {
+    // Noites alternando C/N (índices ímpares curtas); comiSemFome só registrado no dia
+    // seguinte a cada noite curta (índices pares > 0) — nenhuma noite normal tem o dado.
+    const espec: EspecDia[] = [];
+    for (let i = 0; i <= 10; i++) {
+      const curta = i % 2 === 1;
+      const diaAposCurta = i > 0 && i % 2 === 0;
+      espec.push({ noite: curta ? 'C' : 'N', fome: 5, ...(diaAposCurta ? { comiSemFome: true } : {}) });
+    }
+    const t = sonoFomeCafe(gerar('2026-08-01', espec), perfil('nao'));
+    expect(t.pronta).toBe(true);
+    if (!t.pronta) return;
+    expect(frase(t, 'sono-comer-sem-fome')).toEqual({
+      tipo: 'sono-comer-sem-fome',
+      texto: 'Comeu sem fome em 5 de 5 noites curtas.',
+      n: 5,
+      nComparacao: 0,
+    });
   });
 });
 

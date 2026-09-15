@@ -104,6 +104,13 @@ function fraseSonoFome(curtas: Noite[], baseline: number): Frase {
     return { tipo: 'sono-fome', texto: `Ainda poucas noites curtas para comparar (n = ${fomes.length}).`, n: fomes.length };
   }
   const delta = r1((media(fomes) as number) - baseline);
+  if (delta === 0) {
+    return {
+      tipo: 'sono-fome',
+      texto: `Nos dias após dormir menos de ${SONO_CURTO_H} h, sua fome ficou igual ao seu normal (n = ${fomes.length}).`,
+      n: fomes.length,
+    };
+  }
   const direcao = delta >= 0 ? 'acima' : 'abaixo';
   return {
     tipo: 'sono-fome',
@@ -123,9 +130,14 @@ function fraseComerSemFome(curtas: Noite[], normais: Noite[]): Frase | undefined
   const emNormais = comiSemFomeSeguinte(normais);
   const simCurtas = emCurtas.filter(Boolean).length;
   const simNormais = emNormais.filter(Boolean).length;
+  // Sem noites normais com o dado, não há com o que comparar: omite o "vs".
+  const texto =
+    emNormais.length === 0
+      ? `Comeu sem fome em ${simCurtas} de ${emCurtas.length} noites curtas.`
+      : `Comeu sem fome em ${simCurtas} de ${emCurtas.length} noites curtas vs ${simNormais} de ${emNormais.length} normais.`;
   return {
     tipo: 'sono-comer-sem-fome',
-    texto: `Comeu sem fome em ${simCurtas} de ${emCurtas.length} noites curtas vs ${simNormais} de ${emNormais.length} normais.`,
+    texto,
     n: emCurtas.length,
     nComparacao: emNormais.length,
   };
