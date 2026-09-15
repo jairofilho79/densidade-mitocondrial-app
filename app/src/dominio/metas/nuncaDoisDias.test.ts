@@ -36,13 +36,18 @@ describe('nunca-dois-dias', () => {
     expect(m.posicao).toBe(0.25);
   });
 
-  it('meta: 0 ou 1 dia', () => {
+  it('meta: 0 dia — "em dia"', () => {
     const m0 = nuncaDoisDias.meta(ctxParado(0));
     expect(m0.zona).toBe('meta');
-    expect(m0.texto).toBe('0 dia(s) seguido(s) parado');
+    expect(m0.texto).toBe('em dia — moveu hoje');
     expect(m0.proximoPasso).toBe('contador zerado');
     expect(m0.posicao).toBe(0.45);
-    expect(nuncaDoisDias.meta(ctxParado(1)).zona).toBe('meta');
+  });
+
+  it('meta: 1 dia — "moveu ontem; hoje ainda não"', () => {
+    const m1 = nuncaDoisDias.meta(ctxParado(1));
+    expect(m1.zona).toBe('meta');
+    expect(m1.texto).toBe('moveu ontem; hoje ainda não');
   });
 
   it('demais não existe: nunca sai de meta por mover muito', () => {
