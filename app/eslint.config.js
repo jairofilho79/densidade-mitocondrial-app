@@ -10,6 +10,8 @@ const MSG_CAMADA =
   'src/dominio não pode importar de src/dados, src/ui ou src/app (regra de dependência da spec §2).';
 const MSG_PACOTE =
   'src/dominio é TypeScript puro: não importa react nem dexie (regra de dependência da spec §2).';
+const MSG_ALIAS_DOMINIO =
+  'dentro de src/dominio use imports relativos, não o alias @/dominio (regra de dependência da spec §2).';
 
 export default tseslint.config(
   { ignores: ['dist', 'dev-dist', 'coverage', 'node_modules'] },
@@ -60,6 +62,10 @@ export default tseslint.config(
             {
               group: ['react/*', 'react-dom/*', 'dexie/*', '@/dados', '@/dados/*', '@/ui', '@/ui/*', '@/app', '@/app/*'],
               message: MSG_CAMADA,
+            },
+            {
+              group: ['@/dominio', '@/dominio/*'],
+              message: MSG_ALIAS_DOMINIO,
             },
           ],
         },
