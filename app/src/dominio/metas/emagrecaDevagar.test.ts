@@ -57,6 +57,18 @@ describe('emagreca-devagar', () => {
     expect(m.posicao).toBeCloseTo(0.917, 2);
   });
 
+  it('atencao: limiar sem arredondar (dl 0,5 kg a 90 kg, 0,5 > 0,45)', () => {
+    const m = emagrecaDevagar.meta(ctxPeso(89.5, 90.0));
+    expect(m.valor).toBe(0.5);
+    expect(m.zona).toBe('atencao');
+  });
+
+  it('meta: logo abaixo do limiar sem arredondar (dl 0,4 kg a 90 kg)', () => {
+    const m = emagrecaDevagar.meta(ctxPeso(89.6, 90.0));
+    expect(m.valor).toBe(0.4);
+    expect(m.zona).toBe('meta');
+  });
+
   it('sem-dado: falta a semana anterior ou a atual', () => {
     const m = emagrecaDevagar.meta(ctxPeso(90, null));
     expect(m.zona).toBe('sem-dado');

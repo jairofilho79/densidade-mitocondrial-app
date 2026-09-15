@@ -10,16 +10,21 @@ export const emagrecaDevagar: AcaoMeta = {
     const w0 = ctx.derivados.pesoMedioSemanaAnterior;
     if (w === null || w0 === null) return semDado(['dia.peso'], 'precisa do peso em duas semanas seguidas');
 
-    const ideal = r1(0.005 * w); // 0,5 % por semana
-    const max = r1(0.01 * w); // 1 %
+    const idealBruto = 0.005 * w; // 0,5 % por semana — limiar real, sem arredondar
+    const maxBruto = 0.01 * w; // 1 % — limiar real, sem arredondar
+    const ideal = r1(idealBruto); // só para exibição (faixa, texto)
+    const max = r1(maxBruto); // só para exibição (faixa, texto)
     const dl = r1(w0 - w); // perda (positivo = emagreceu)
 
-    const zona: Zona = dl <= 0 ? 'pouco' : dl <= ideal ? 'meta' : dl <= max ? 'atencao' : 'demais';
+    // Zona decidida contra os limiares sem arredondar: r1 antes da comparação
+    // classificaria 0,5 kg como 'meta' a 90 kg (0,45 → 0,5), quando na
+    // verdade já passou do limiar de 0,5 %.
+    const zona: Zona = dl <= 0 ? 'pouco' : dl <= idealBruto ? 'meta' : dl <= maxBruto ? 'atencao' : 'demais';
     const delta = dl === 0 ? 'peso estável' : `${dl > 0 ? '−' : '+'}${Math.abs(dl)} kg`;
     const proximoPasso =
       dl <= 0
         ? 'peso estável: não é problema; se quer perder, o déficit moderado está nas Medidas'
-        : dl <= ideal
+        : dl <= idealBruto
           ? 'ritmo certo — panturrilha estável confirma que é gordura'
           : 'rápido demais: não cortar mais nada esta semana; manter proteína e força';
 
@@ -27,7 +32,7 @@ export const emagrecaDevagar: AcaoMeta = {
       zona,
       valor: dl,
       faixa: { pouco: 0, meta: ideal, demais: max },
-      posicao: dl <= 0 ? 0.15 : pos(dl, 0, max),
+      posicao: dl <= 0 ? 0.15 : pos(dl, 0, maxBruto),
       texto: `${delta} esta semana (meta até ${ideal} kg)`,
       proximoPasso,
     });
