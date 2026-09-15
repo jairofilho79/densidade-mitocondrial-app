@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { derivar, horaParaMin, horasEntre, media, mediana, minParaHora, pos, r1 } from './derivados';
+import { derivar, horaParaMin, horasEntre, media, mediana, minParaHora, pos, r1, somarDias } from './derivados';
 import type { Dia, EventoTreino, Perfil, Semana } from './tipos';
 
 const HOJE = '2026-09-14';
@@ -62,6 +62,14 @@ describe('utilitários de hora', () => {
     expect(horasEntre('06:30', '23:30')).toBe(17);
     expect(horasEntre('19:00', '09:00')).toBe(14);
     expect(horasEntre('12:00', '12:00')).toBe(0);
+  });
+});
+
+describe('somarDias', () => {
+  it('atravessa mês, ano e fevereiro bissexto', () => {
+    expect(somarDias('2026-03-01', -1)).toBe('2026-02-28');
+    expect(somarDias('2024-02-28', 1)).toBe('2024-02-29');
+    expect(somarDias('2026-12-31', 1)).toBe('2027-01-01');
   });
 });
 

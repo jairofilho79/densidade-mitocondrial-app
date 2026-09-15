@@ -75,12 +75,13 @@ export function pos(v: number, lo: number, hi: number): number {
   return Math.min(0.98, Math.max(0.02, p));
 }
 
-// ---------- helpers internos ----------
-
-function somarDias(data: DataISO, n: number): DataISO {
+/** "2026-09-14" + n dias → "YYYY-MM-DD" (atravessa mês/ano/fevereiro bissexto). */
+export function somarDias(data: DataISO, n: number): DataISO {
   const [ano, mes, dia] = data.split('-').map(Number);
   return new Date(Date.UTC(ano, mes - 1, dia + n)).toISOString().slice(0, 10);
 }
+
+// ---------- helpers internos ----------
 
 function positivo(n: number): boolean {
   return Number.isFinite(n) && n > 0;
