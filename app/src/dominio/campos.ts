@@ -106,6 +106,26 @@ export const CAMPOS: readonly Campo[] = [
   { id: 'exame.paDiastolica', nivel: 1, tipo: 'inteiro', rotulo: 'Pressão diastólica', unidade: 'mmHg', min: 30, max: 160, desbloqueia: [] },
 ];
 
+// Atribuição de dia-calendário (contratos §"Atribuição de dia (convenção)"): dia[D]
+// descreve o dia D, exceto fome/comiSemFome (dia D−1) e deitou/levantou (a noite
+// D−1→D). Os 12 campos abaixo são os únicos do check-in da manhã que seguem a
+// convenção normal de dia-calendário e, por serem perguntados sobre o dia anterior,
+// o check-in os grava em `dia[ontem]` — não em `dia[hoje]`, onde a tela roda.
+export const CAMPOS_SOBRE_ONTEM: readonly CampoId[] = [
+  'dia.ultimoCafe',
+  'dia.jantarFim',
+  'dia.passos',
+  'dia.moveu',
+  'dia.maiorBloco',
+  'dia.minPosJantar',
+  'dia.copos',
+  'dia.proteinaG',
+  'dia.fibraG',
+  'dia.refeicoesCozinhadas',
+  'dia.bebidaDoce',
+  'dia.alcoolDoses',
+];
+
 export function campo(id: CampoId): Campo {
   const c = CAMPOS.find((x) => x.id === id);
   if (!c) throw new Error(`Campo '${id}' não está no registro.`);

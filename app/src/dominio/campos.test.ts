@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CAMPOS, campo, camposDe, validar } from './campos';
+import { CAMPOS, CAMPOS_SOBRE_ONTEM, campo, camposDe, validar } from './campos';
 import type { CampoId } from './campos';
 import { catalogo } from './catalogo';
 import type { Dia, Exame, Mes, Perfil, Semana } from './tipos';
@@ -86,6 +86,35 @@ describe('CAMPOS', () => {
         expect(c.max, `${c.id}: escala precisa de max`).toBeDefined();
       }
     }
+  });
+});
+
+describe('CAMPOS_SOBRE_ONTEM', () => {
+  const ESPERADOS: CampoId[] = [
+    'dia.ultimoCafe',
+    'dia.jantarFim',
+    'dia.passos',
+    'dia.moveu',
+    'dia.maiorBloco',
+    'dia.minPosJantar',
+    'dia.copos',
+    'dia.proteinaG',
+    'dia.fibraG',
+    'dia.refeicoesCozinhadas',
+    'dia.bebidaDoce',
+    'dia.alcoolDoses',
+  ];
+
+  it('só contém ids "dia.*" presentes em CAMPOS', () => {
+    const idsDeCampos = new Set(CAMPOS.map((c) => c.id));
+    for (const id of CAMPOS_SOBRE_ONTEM) {
+      expect(id.startsWith('dia.'), id).toBe(true);
+      expect(idsDeCampos.has(id), id).toBe(true);
+    }
+  });
+
+  it('é exatamente a lista de 12 campos definida pelo controller', () => {
+    expect([...CAMPOS_SOBRE_ONTEM].sort()).toEqual([...ESPERADOS].sort());
   });
 });
 
