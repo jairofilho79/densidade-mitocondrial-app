@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import { hojeISO, mesISO, ontem, segundaDaSemana, semanaAnteriorISO, semanaISO, somarDias } from './datas';
 import { semanaISO as semanaISODominio } from '@/dominio/metas/_util';
