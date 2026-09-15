@@ -28,10 +28,11 @@ Depois de abrir a app pelo menos uma vez (o service worker faz o cache do essenc
 
 ## Deploy
 
-O `start_url`/`scope` do manifest (`vite.config.ts`) são `/`: a app precisa ser servida na **raiz do domínio**. Se o deploy for numa subpasta (ex.: GitHub Pages, `usuario.github.io/fornalha/`), é preciso:
+Publicado em GitHub Pages: **https://jairofilho79.github.io/densidade-mitocondrial-app/** — o job `pages` de `.github/workflows/ci.yml` roda a cada push em `main`, depois do CI passar.
 
-1. Definir `base: '/fornalha/'` (ou o caminho correspondente) em `vite.config.ts`.
-2. Ajustar `start_url` e `scope` do manifest do PWA para o mesmo caminho relativo.
+O caminho público vem de `VITE_BASE` (padrão `/`, raiz do domínio). O workflow define `VITE_BASE=/densidade-mitocondrial-app/`; `vite.config.ts` usa o mesmo valor em `base` e no `start_url`/`scope` do manifest. Para publicar noutra subpasta, basta mudar a variável. O HashRouter não depende do caminho.
+
+Os dados ficam no IndexedDB do navegador em que a app foi aberta — o Pages só serve arquivos estáticos. Use **Ajustes → exportar** para levar o histórico a outro aparelho.
 
 ## Dependências
 

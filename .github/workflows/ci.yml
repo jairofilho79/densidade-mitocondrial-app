@@ -27,3 +27,51 @@ jobs:
 
       - name: Instalar, lint, testar e buildar
         run: pnpm install --frozen-lockfile && pnpm lint && pnpm test && pnpm build
+
+  # Publica em GitHub Pages (https://jairofilho79.github.io/densidade-mitocondrial-app/)
+  # só depois do CI passar em main. O build refaz com VITE_BASE apontando
+  # para a subpasta do repo (assets, manifest e service worker dependem disso).
+  pages:
+    name: deploy GitHub Pages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
+
+      - name: Buildar para a subpasta do Pages
+        run: pnpm install --frozen-lockfile && pnpm build
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/dist
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

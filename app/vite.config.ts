@@ -10,7 +10,13 @@ import { VitePWA } from 'vite-plugin-pwa';
 // da transformação dos testes.
 const semVitest = process.env.VITEST === undefined;
 
+// Caminho público da app. `/` em dev e em deploy na raiz do domínio; o
+// workflow de GitHub Pages define VITE_BASE=/densidade-mitocondrial-app/.
+// O HashRouter não depende disso — só os assets, o manifest e o service worker.
+const base = process.env.VITE_BASE ?? '/';
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     ...(semVitest
@@ -24,7 +30,8 @@ export default defineConfig({
               description:
                 'Diário local de hábitos ligados à densidade mitocondrial. Não prescreve; mostra onde você está e o próximo passo.',
               lang: 'pt-BR',
-              start_url: '/',
+              start_url: base,
+              scope: base,
               display: 'standalone',
               background_color: '#F5F6F3',
               theme_color: '#F5F6F3',
