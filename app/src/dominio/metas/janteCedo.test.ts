@@ -40,6 +40,17 @@ describe('jante-cedo', () => {
     expect(m.proximoPasso).toBe('terminar o jantar 15 min mais cedo esta semana: até 22:45 (a meta é até 20:30)');
   });
 
+  it('demais: jantar depois do horário de deitar (22:30, deitar 22:00)', () => {
+    const m = janteCedo.meta(
+      ctxBase({ perfil: { ...perfilBase, deitar: '22:00' }, hoje: diaBase(HOJE, { jantarFim: '22:30' }) }),
+    );
+    expect(m.zona).toBe('demais');
+    expect(m.valor).toBe(-0.5);
+    expect(m.texto).toBe('depois do horário de deitar (0,5 h)');
+    expect(m.posicao).toBe(0.98);
+    expect(m.vals).toEqual({ deitar: '22:00', jantar_ideal: '19:00' });
+  });
+
   it('sem-dado', () => {
     const m = janteCedo.meta(ctxBase({ hoje: diaBase(HOJE) }));
     expect(m.zona).toBe('sem-dado');

@@ -28,10 +28,11 @@ describe('ultimo-cafe', () => {
     const m = ultimoCafe.meta(ctxBase({ hoje: diaBase(HOJE, { ultimoCafe: '16:00' }) }));
     expect(m.zona).toBe('atencao');
     expect(m.valor).toBe(7.5);
-    expect(m.texto).toBe('último café 7.5 h antes de deitar');
+    expect(m.texto).toBe('último café 7,5 h antes de deitar');
     expect(m.proximoPasso).toBe('último café 15 min mais cedo: até 15:45 (a meta é antes das 14:30)');
     expect(m.posicao).toBe(0.72);
     expect(m.deDia).toBeUndefined();
+    expect(m.vals).toEqual({ deitar: '23:30', corte_cafe: '14:30' });
   });
 
   it('perto da meta o passo encolhe para não passar dela: 14:36 → 14:30', () => {
@@ -55,6 +56,25 @@ describe('ultimo-cafe', () => {
     expect(m.proximoPasso).toBe('último café 15 min mais cedo: até 19:45 (a meta é antes das 14:30)');
   });
 
+  it('demais: café depois do horário de deitar (22:30, deitar 22:00)', () => {
+    const m = ultimoCafe.meta(
+      ctxBase({ perfil: { ...perfilBase, deitar: '22:00' }, hoje: diaBase(HOJE, { ultimoCafe: '22:30' }) }),
+    );
+    expect(m.zona).toBe('demais');
+    expect(m.valor).toBe(-0.5);
+    expect(m.texto).toBe('depois do horário de deitar (0,5 h)');
+    expect(m.posicao).toBe(0.98);
+    expect(m.proximoPasso).toBe('último café 15 min mais cedo: até 22:15 (a meta é antes das 13:00)');
+  });
+
+  it('meta: café às 14:00, deitar às 00:30 (10,5 h antes, atravessa a meia-noite)', () => {
+    const m = ultimoCafe.meta(
+      ctxBase({ perfil: { ...perfilBase, deitar: '00:30' }, hoje: diaBase(HOJE, { ultimoCafe: '14:00' }) }),
+    );
+    expect(m.zona).toBe('meta');
+    expect(m.valor).toBe(10.5);
+  });
+
   it('sem-dado: nenhum dia com ultimoCafe nos últimos 7 dias', () => {
     expect(ultimoCafe.meta(ctxBase({ hoje: diaBase(HOJE) })).zona).toBe('sem-dado');
     const antigo = ultimoCafe.meta(ctxBase({ dias: [diaBase('2026-09-01', { ultimoCafe: '20:00' })] }));
@@ -72,7 +92,7 @@ describe('ultimo-cafe', () => {
     );
     expect(m.zona).toBe('atencao');
     expect(m.valor).toBe(7.5);
-    expect(m.texto).toBe('nos dias em que tomar, antes das 14:30 — último: 7.5 h antes de deitar');
+    expect(m.texto).toBe('nos dias em que tomar, antes das 14:30 — último: 7,5 h antes de deitar');
     expect(m.deDia).toBe(ONTEM);
   });
 });
