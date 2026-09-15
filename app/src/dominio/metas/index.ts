@@ -63,10 +63,12 @@ export function metasAplicaveis(ctx: Contexto): AcaoComMeta[] {
     .map((acao) => ({ acao, meta: METAS[acao.id].meta(ctx) }));
 }
 
-/** As `n` ações em `pouco`/`atencao` mais perto da meta (maior `posicao` primeiro). */
+const ORDEM_ZONA: Record<'atencao' | 'pouco', number> = { atencao: 0, pouco: 1 };
+
+/** As `n` ações em `pouco`/`atencao`: `atencao` antes de `pouco` e, dentro da zona, na ordem do catálogo. */
 export function acoesEmFoco(ctx: Contexto, n = 3): AcaoComMeta[] {
   return metasAplicaveis(ctx)
-    .filter(({ meta }) => meta.zona === 'pouco' || meta.zona === 'atencao')
-    .sort((a, b) => (b.meta.posicao ?? -1) - (a.meta.posicao ?? -1))
+    .filter((x): x is AcaoComMeta & { meta: { zona: 'pouco' | 'atencao' } } => x.meta.zona === 'pouco' || x.meta.zona === 'atencao')
+    .sort((a, b) => ORDEM_ZONA[a.meta.zona] - ORDEM_ZONA[b.meta.zona])
     .slice(0, n);
 }

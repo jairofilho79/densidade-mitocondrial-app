@@ -49,32 +49,33 @@ describe('acoesEmFoco', () => {
     expect(acoesEmFoco(ctxBase())).toEqual([]);
   });
 
-  it('só pouco/atencao, mais perto da meta primeiro, no máximo n', () => {
+  it('atencao antes de pouco; dentro da zona, na ordem do catálogo (não por posicao)', () => {
     const ctx = ctxBase({
       hoje: diaBase(HOJE, { passos: 4000, fibraG: 20, proteinaG: 60, refeicoesCozinhadas: 2, minPosJantar: 0 }),
       semana: semanaBase({ sessoesTiros: 3 }),
       derivados: { diasParado: 0 },
     });
-    // posições: passos 0.375 (atencao) > fibra 0.1875 (atencao) > proteína 0.167 (pouco) > jantar 0.06 (pouco)
+    // zonas: seis-mil-passos atencao, fibra-no-prato atencao (nessa ordem no catálogo);
+    // ande-depois-do-jantar pouco, proteina-no-prato pouco (nessa ordem no catálogo).
     // fora: tres-tiros (meta), comida-de-verdade (meta), nunca-dois-dias (meta), o resto sem-dado
     const tres = acoesEmFoco(ctx);
-    expect(tres.map((x) => x.acao.id)).toEqual(['seis-mil-passos', 'fibra-no-prato', 'proteina-no-prato']);
+    expect(tres.map((x) => x.acao.id)).toEqual(['seis-mil-passos', 'fibra-no-prato', 'ande-depois-do-jantar']);
     for (const x of tres) expect(x.meta.proximoPasso.length).toBeGreaterThan(0);
 
     const quatro = acoesEmFoco(ctx, 4);
     expect(quatro.map((x) => x.acao.id)).toEqual([
       'seis-mil-passos',
       'fibra-no-prato',
-      'proteina-no-prato',
       'ande-depois-do-jantar',
+      'proteina-no-prato',
     ]);
   });
 
-  it('respeita aplica(): se-beber em atencao some com perfil "nao"', () => {
-    const base = { semana: semanaBase({ alcoolDoses: 3 }) };
-    expect(acoesEmFoco(ctxBase(base)).map((x) => x.acao.id)).toContain('se-beber');
+  it('respeita aplica(): ultimo-cafe em atencao some com perfil "nao"', () => {
+    const base = { hoje: diaBase(HOJE, { ultimoCafe: '16:00' }) }; // 7,5 h antes de deitar → atencao
+    expect(acoesEmFoco(ctxBase(base)).map((x) => x.acao.id)).toContain('ultimo-cafe');
     expect(
-      acoesEmFoco(ctxBase({ ...base, perfil: { ...perfilBase, alcool: 'nao' } })).map((x) => x.acao.id),
-    ).not.toContain('se-beber');
+      acoesEmFoco(ctxBase({ ...base, perfil: { ...perfilBase, cafe: 'nao' } })).map((x) => x.acao.id),
+    ).not.toContain('ultimo-cafe');
   });
 });
