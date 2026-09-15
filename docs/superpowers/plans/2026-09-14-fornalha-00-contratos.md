@@ -276,6 +276,7 @@ export interface Meta {
   precisaDe?: CampoId[];
   seguranca?: string;
   deDia?: DataISO;             // de que dia é o valor, quando não é hoje
+  vals?: Record<string, string | number>; // placeholders de faixa.pouco/ideal/demais/regra do catálogo (ver `interpolar`)
 }
 
 export interface AcaoMeta {
@@ -285,9 +286,42 @@ export interface AcaoMeta {
 }
 ```
 
-`src/dominio/metas/index.ts`: `export const METAS: Record<AcaoId, AcaoMeta>` e `export function metasAplicaveis(ctx: Contexto): Array<{ acao: AcaoCatalogo; meta: Meta }>` (só `aplica(perfil)`, na ordem do catálogo) e `export function acoesEmFoco(ctx: Contexto, n = 3)` (zona `pouco`/`atencao`, ordenado por `posicao` desc, isto é, mais perto da meta primeiro).
+Cada módulo de `meta()` preenche `vals` com os valores que preenchem os `{placeholders}` da(s) faixa(s) do catálogo daquela ação (extraídos de `faixa.pouco/ideal/demais/regra` em `catalogo/acoes.json`). Placeholders que dependem só do perfil/derivados (ex.: `fc85`, `corte_cafe`, `prot_min`) ficam em `vals` mesmo quando a meta é `sem-dado`; só os que dependem do dado ausente (ex.: `prox_passos`, `jejum_h`, `delta_peso`) ficam de fora.
+
+`src/dominio/metas/index.ts`: `export const METAS: Record<AcaoId, AcaoMeta>` e `export function metasAplicaveis(ctx: Contexto): Array<{ acao: AcaoCatalogo; meta: Meta }>` (só `aplica(perfil)`, na ordem do catálogo) e `export function acoesEmFoco(ctx: Contexto, n = 3)` (zona `pouco`/`atencao`; ordenado por zona — `atencao` antes de `pouco` — e, dentro da zona, pela ordem do catálogo; não depende de `posicao`).
+
+### Regra de precedência (contagens semanais)
+
+Contagens semanais derivadas de eventos/dias (sessões de treino, doces, doses de álcool) usam **janela móvel de 7 dias** (`contarSessoes7`/`somaUltimos7` em `_util.ts`), não "segunda-feira até hoje". A revisão de segunda (`ctx.semana`, tipo `Semana`) refere-se à **semana ISO anterior** (ver `semanaAnteriorISO` no plano 03) e só é usada por `medidas` (cintura) e por ações quando `semanaAtual(ctx)` existir, isto é, quando `ctx.semana.semana` for a semana ISO corrente (edição manual da semana em curso) — quando não, a ação cai para a janela móvel de 7 dias.
 
 Ações **sem módulo de meta** (só registro): `anote-o-sono`, `pergunte-a-fome`, `meca-a-cintura`, `panturrilha-preensao` — mesmo assim existem em `METAS` com `meta()` retornando `zona: 'sem-dado'` quando falta o campo e `zona: 'meta'` com texto "registrado" quando existe. O teste de contrato exige as 22 chaves.
+
+### `src/dominio/metas/_util.ts`
+
+Além dos helpers de data/janela (`dataISO`, `hojeISO`, `semanaISO`, `inicioSemana`, `semDado`, `ultimoDiaCom`, `diasUltimos`, `eventosUltimos`, `semanaAtual`, `deDiaSeNaoHoje`, `aplicarSeguranca`):
+
+```ts
+/** Número com vírgula decimal, sem zeros à direita desnecessários (`fmt(7.5)` → `"7,5"`, `fmt(2)` → `"2"`). */
+export function fmt(n: number, casas = 1): string;
+
+/** Substitui `{chave}` por `vals[chave]` (números via `fmt`); chaves ausentes ficam como estão. */
+export function interpolar(texto: string, vals: Record<string, string | number>): string;
+
+/**
+ * Horas de `hora` até `deitar`, com virada de meia-noite tratada: quando a diferença bruta
+ * passa de 12 h, o valor real é negativo — `hora` é depois de `deitar`.
+ */
+export function horasAntesDeDeitar(hora: Hora, deitar: Hora): number;
+
+/** Move `horaAtual` em direção a `horaAlvo` em no máximo 15 min (o menor entre 15 e o que falta). */
+export function passo15min(horaAtual: Hora, horaAlvo: Hora, direcao: 'antes' | 'depois'): { hora: Hora; minutos: number };
+
+/** Soma dos valores numéricos de `dia[campo]` (não-null/undefined) nos últimos 7 dias; `undefined` se nenhum dia tem o campo registrado. */
+export function somaUltimos7<K extends keyof Dia>(ctx: Contexto, campo: K): number | undefined;
+
+/** Sessões de `tipo` nos últimos 7 dias (janela móvel; substitui a antiga `contarSessoes` segunda→hoje). */
+export function contarSessoes7(ctx: Contexto, tipo: EventoTreino['tipo']): number;
+```
 
 ## `src/dominio/seguranca.ts`
 

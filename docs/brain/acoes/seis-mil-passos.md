@@ -22,10 +22,10 @@ Variáveis: passos
 | Zona | |
 |---|---|
 | **Pouco** | abaixo de 2 mil/dia — a faixa de dano |
-| **Ideal** | 5–7 mil/dia; se você está abaixo, a meta desta semana é {prox_passos} (seu baseline + 1 mil) |
+| **Ideal** | 5–7 mil/dia; se você está abaixo, a meta desta semana é {prox_passos} (seu baseline + 500 por semana) |
 | **Demais** | acima de 10 mil o benefício para de crescer (não faz mal) |
 
-*Regra de bolso:* O '+1 mil por semana' é regra de progressão, não evidência — a evidência é a meta final de 5–7 mil.
+*Regra de bolso:* O '+500 por semana' é regra de progressão, não evidência — a evidência é a meta final de 5–7 mil.
 
 ## O que afeta
 - **Input:** —

@@ -567,15 +567,17 @@ git -C .. commit -m "feat: hooks usePerfil, useDia e useContexto com useLiveQuer
 - Test: `app/src/ui/componentes/CartaoMedida.test.tsx`
 
 **Interfaces:**
-- Consumes: `Campo`, `CAMPOS`, `validar` (`@/dominio/campos`); `Zona`, `Meta` (`@/dominio/metas/tipos`); `AcaoCatalogo` (`@/dominio/catalogo/tipos`); `catalogo`, `acaoDoCatalogo` (`@/dominio/catalogo`); `MedidaResultado` (`@/dominio/medidas`); `chaveDe`, `listar`, `ROTULO_ZONA`, `formatarData` (`@/ui/formato`); `Link` (`react-router`).
+- Consumes: `Campo`, `CAMPOS`, `validar` (`@/dominio/campos`); `Zona`, `Meta`, `Faixa`, `interpolar` (`@/dominio/metas/tipos`, `@/dominio/metas/_util`); `AcaoCatalogo` (`@/dominio/catalogo/tipos`); `catalogo`, `acaoDoCatalogo` (`@/dominio/catalogo`); `MedidaResultado` (`@/dominio/medidas`); `chaveDe`, `listar`, `ROTULO_ZONA`, `formatarData` (`@/ui/formato`); `Link` (`react-router`).
 - Produces (props fixas do contrato):
   ```tsx
   <CampoRegistro campo={Campo} valor={unknown} onChange={(v: unknown) => void} />
-  <BarraZona zona={Zona} posicao={number | null} />
-  <ConviteRegistro campos={Campo[]} />
+  <BarraZona zona={Zona} posicao={number | null} faixa={Faixa | null} />
+  <ConviteRegistro campos={Campo[]} semanal?={boolean} />
   <CardAcao acao={AcaoCatalogo} meta={Meta} compacto?={boolean} />
   <CartaoMedida m={MedidaResultado} />
   ```
+
+  Fix wave (item 22): `BarraZona` ganha a prop `faixa` — não assume a meta em 0,5 do desenho, só o marcador em `posicao`; os três segmentos passam a mostrar os valores de `faixa.pouco/meta/demais` como rótulo. `CardAcao` renderiza `faixa.pouco/ideal/demais/regra` do catálogo (`acao.faixa`) passados por `interpolar(texto, meta.vals ?? {})`. `ConviteRegistro` ganha `semanal?: boolean`: quando os `campos` desbloqueiam só ações semanais (`troque-o-doce`, `se-beber`, `tres-tiros`, `levante-peso`, `some-150`), a frase diz "registre um treino ou a revisão de segunda" em vez de listar campos diários.
 
 Regras do `CampoRegistro`, por `campo.tipo`:
 
@@ -695,15 +697,22 @@ import { render, screen } from '@testing-library/react';
 import { BarraZona } from './BarraZona';
 
 describe('BarraZona', () => {
-  test('marcador "você" na posição', () => {
-    const { container } = render(<BarraZona zona="atencao" posicao={0.4} />);
+  test('marcador "você" só na posição — não assume meta em 0,5', () => {
+    const { container } = render(<BarraZona zona="atencao" posicao={0.4} faixa={{ pouco: 2000, meta: 5000, demais: 10000 }} />);
     expect(screen.getByRole('img', { name: 'Zona: perto' })).toBeInTheDocument();
     const voce = container.querySelector('.voce') as HTMLElement;
     expect(voce.style.left).toBe('40%');
   });
 
+  test('três segmentos rotulados pela faixa (pouco/meta/demais)', () => {
+    render(<BarraZona zona="atencao" posicao={0.4} faixa={{ pouco: 2000, meta: 5000, demais: 10000 }} />);
+    expect(screen.getByText('2000')).toBeInTheDocument();
+    expect(screen.getByText('5000')).toBeInTheDocument();
+    expect(screen.getByText('10000')).toBeInTheDocument();
+  });
+
   test('sem-dado: sem marcador e segmentos neutros', () => {
-    const { container } = render(<BarraZona zona="sem-dado" posicao={null} />);
+    const { container } = render(<BarraZona zona="sem-dado" posicao={null} faixa={null} />);
     expect(container.querySelector('.voce')).toBeNull();
     expect(container.querySelectorAll('i.nd')).toHaveLength(3);
   });
@@ -749,7 +758,15 @@ import { acaoDoCatalogo } from '@/dominio/catalogo';
 import type { Meta } from '@/dominio/metas/tipos';
 
 const acao = acaoDoCatalogo('seis-mil-passos');
-const meta: Meta = { zona: 'atencao', valor: 3500, faixa: { pouco: 2000, meta: 5000, demais: 10000 }, posicao: 0.4, texto: '3500 passos/dia', proximoPasso: 'meta desta semana: 4500 passos/dia (+1 mil)' };
+const meta: Meta = {
+  zona: 'atencao',
+  valor: 3500,
+  faixa: { pouco: 2000, meta: 5000, demais: 10000 },
+  posicao: 0.4,
+  texto: '3500 passos/dia',
+  proximoPasso: 'meta desta semana: 4500 passos/dia (+500)',
+  vals: { prox_passos: 4500 },
+};
 
 function renderizar(ui: ReactElement) {
   return render(<MemoryRouter>{ui}</MemoryRouter>);
@@ -765,6 +782,13 @@ describe('CardAcao', () => {
     expect(screen.getByText(meta.proximoPasso)).toBeInTheDocument();
     expect(screen.getByText(acao.descricao)).toBeInTheDocument();
     expect(screen.getByText(acao.evidencia.fontes)).toBeInTheDocument();
+  });
+
+  test('faixa.ideal interpolado com meta.vals aparece sem chaves abertas (fix wave, item 19+22)', () => {
+    renderizar(<CardAcao acao={acao} meta={meta} />);
+    // faixa.ideal do catálogo: "5–7 mil/dia; se você está abaixo, a meta desta semana é {prox_passos} (seu baseline + 500 por semana)"
+    expect(screen.getByText(/a meta desta semana é 4500/)).toBeInTheDocument();
+    expect(screen.queryByText(/\{prox_passos\}/)).toBeNull();
   });
 
   test('seguranca substitui o próximo passo', () => {
@@ -848,6 +872,7 @@ Esperado: 5 arquivos com `Failed to resolve import`.
 .barra i.p, .barra i.d { background: var(--bad-tint); }
 .barra i.i { background: var(--ok); opacity: .55; }
 .barra i.nd { background: var(--none-tint); }
+.barra i .rotulo { position: absolute; bottom: -16px; font: 9.5px var(--mono); color: var(--muted); }
 .barra .voce { position: absolute; top: -4px; width: 2px; height: 16px; background: var(--fg); border-radius: 1px; transform: translateX(-1px); }
 .barra .voce::after { content: "você"; position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font: 9.5px var(--mono); color: var(--muted); white-space: nowrap; }
 
@@ -866,6 +891,9 @@ Esperado: 5 arquivos com `Failed to resolve import`.
 .card.zona-sem-dado h3 { color: var(--muted); }
 .card-top { padding: 14px 16px 8px; display: grid; gap: 6px; }
 .card .faixa { padding: 8px 16px 12px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.card .faixa-catalogo { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 12px; color: var(--muted); }
+.card .faixa-catalogo b { text-transform: uppercase; font-family: var(--mono); font-size: 10px; margin-right: 4px; }
+.card .faixa-catalogo .regra { font-style: italic; }
 .card .voce-texto { font-size: 13.5px; }
 .card .voce-texto b { font-family: var(--mono); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
 .card .de-dia { color: var(--muted); font-size: 12px; }
@@ -1092,24 +1120,26 @@ export function CampoRegistro({ campo, valor, onChange }: CampoRegistroProps) {
 `app/src/ui/componentes/BarraZona.tsx`:
 
 ```tsx
-import type { Zona } from '@/dominio/metas/tipos';
+import type { Faixa, Zona } from '@/dominio/metas/tipos';
 import { ROTULO_ZONA } from '@/ui/formato';
 import './componentes.css';
 
 export interface BarraZonaProps {
   zona: Zona;
   posicao: number | null;
+  faixa: Faixa | null;
 }
 
-export function BarraZona({ zona, posicao }: BarraZonaProps) {
+/** Só desenha o marcador em `posicao` — nunca assume a meta no meio da barra (0,5). */
+export function BarraZona({ zona, posicao, faixa }: BarraZonaProps) {
   const semDado = zona === 'sem-dado';
   const mostraMarcador = posicao !== null && !semDado;
   const pct = mostraMarcador ? Math.round(Math.min(1, Math.max(0, posicao)) * 100) : 0;
   return (
     <div className={`barra zona-${zona}`} role="img" aria-label={`Zona: ${ROTULO_ZONA[zona]}`}>
-      <i className={semDado ? 'nd' : 'p'} />
-      <i className={semDado ? 'nd' : 'i'} />
-      <i className={semDado ? 'nd' : 'd'} />
+      <i className={semDado ? 'nd' : 'p'}>{faixa && <span className="rotulo">{faixa.pouco}</span>}</i>
+      <i className={semDado ? 'nd' : 'i'}>{faixa && <span className="rotulo">{faixa.meta}</span>}</i>
+      <i className={semDado ? 'nd' : 'd'}>{faixa && <span className="rotulo">{faixa.demais}</span>}</i>
       {mostraMarcador && <span className="voce" style={{ left: `${pct}%` }} />}
     </div>
   );
@@ -1127,11 +1157,14 @@ import './componentes.css';
 
 export interface ConviteRegistroProps {
   campos: Campo[];
+  /** true quando os campos só desbloqueiam ações semanais (tres-tiros, levante-peso, some-150, troque-o-doce, se-beber). */
+  semanal?: boolean;
 }
 
 /** "Registre X e Y e eu te digo onde você está em A e B." (ADR-002) */
-export function ConviteRegistro({ campos }: ConviteRegistroProps) {
+export function ConviteRegistro({ campos, semanal = false }: ConviteRegistroProps) {
   if (campos.length === 0) return null;
+  if (semanal) return <p className="convite">registre um treino ou a revisão de segunda.</p>;
   const rotulos = campos.map((c) => c.rotulo.toLowerCase());
   const ids: AcaoId[] = [];
   for (const c of campos) for (const id of c.desbloqueia) if (!ids.includes(id)) ids.push(id);
@@ -1151,6 +1184,7 @@ export function ConviteRegistro({ campos }: ConviteRegistroProps) {
 import { Link } from 'react-router';
 import type { AcaoCatalogo } from '@/dominio/catalogo/tipos';
 import type { Meta } from '@/dominio/metas/tipos';
+import { interpolar } from '@/dominio/metas/_util';
 import type { Campo } from '@/dominio/campos';
 import { CAMPOS } from '@/dominio/campos';
 import { BarraZona } from './BarraZona';
@@ -1171,6 +1205,7 @@ export function CardAcao({ acao, meta, compacto = false }: CardAcaoProps) {
     .map((id) => CAMPOS.find((c) => c.id === id))
     .filter((c): c is Campo => c !== undefined);
   const faltaPerfil = precisaDe.some((id) => id.startsWith('perfil.'));
+  const vals = meta.vals ?? {};
 
   return (
     <article className={`card zona-${meta.zona}${compacto ? ' compacto' : ''}`} data-acao={acao.id}>
@@ -1183,7 +1218,13 @@ export function CardAcao({ acao, meta, compacto = false }: CardAcaoProps) {
       </header>
 
       <div className="faixa">
-        <BarraZona zona={meta.zona} posicao={meta.posicao} />
+        <BarraZona zona={meta.zona} posicao={meta.posicao} faixa={meta.faixa} />
+        <ul className="faixa-catalogo">
+          <li><b>pouco</b> {interpolar(acao.faixa.pouco, vals)}</li>
+          <li><b>ideal</b> {interpolar(acao.faixa.ideal, vals)}</li>
+          <li><b>demais</b> {interpolar(acao.faixa.demais, vals)}</li>
+          {acao.faixa.regra && <li className="regra">{interpolar(acao.faixa.regra, vals)}</li>}
+        </ul>
         {semDado ? (
           <>
             <ConviteRegistro campos={camposFaltando} />
@@ -1706,7 +1747,7 @@ Comportamento:
 - **Quero registrar mais** expande `camposDe('dia', perfil, 2).filter(c => c.nivel === 2)` precedido por `<ConviteRegistro campos={nivel2} />`.
 - **Treinei / Comi / Levantei**: mini-forms inline. Depois de `registrarRefeicao`, recalcula `dia.proteinaG`/`dia.fibraG` como soma das refeições do dia (`refeicoesEntre(hoje, hoje)`) e grava com `salvarDia`. **Levantei** grava `levantadas + 1`.
 - **Dias parado**: `ctx.derivados.diasParado` com `METAS['nunca-dois-dias'].meta(ctx)` (`texto` + `proximoPasso`).
-- **Em foco**: `acoesEmFoco(ctx, 3)`; se vierem menos de 3, completa com ações `sem-dado` de `metasAplicaveis(ctx)` (excluindo medidas e hábitos), para que o convite apareça (spec §5.2).
+- **Em foco**: `acoesEmFoco(ctx, 3)`; se vierem menos de 3, completa com ações `sem-dado` de `metasAplicaveis(ctx)` (excluindo medidas e hábitos), para que o convite apareça (spec §5.2). A ordem vem inteira de `acoesEmFoco` (fix wave, item 7): zona `atencao` antes de `pouco` e, dentro da zona, a ordem do catálogo — a UI não reordena por `posicao` nem por nenhum outro critério próprio.
 
 - [ ] **Step 1: Teste (falha)**
 
@@ -2316,10 +2357,10 @@ git -C .. commit -m "feat: tela Ações agrupada por grupo, com medidas e hábit
 - Test: `app/src/ui/telas/Exames.test.tsx`
 
 **Interfaces:**
-- Consumes: `camposDe`, `Campo` (`@/dominio/campos`); `Semana`, `Mes`, `Exame`, `DataISO` (`@/dominio/tipos`); `lerSemana`, `salvarSemana`, `preencherSemana`, `lerMes`, `salvarMes`, `listarExames`, `salvarExame`, `ultimoExame` (repositórios em `@/dados/repositorios/semana`, `@/dados/repositorios/mes`, `@/dados/repositorios/exame`); `hojeISO`, `semanaISO`, `mesISO` (`@/dados/datas`); `useContexto`, `usePerfil`; `CampoRegistro`; `chaveDe`, `primeiraSegundaDoMes`, `diasEntre`, `formatarData`; `useLiveQuery` (`dexie-react-hooks`); `Link` (`react-router`).
+- Consumes: `camposDe`, `Campo` (`@/dominio/campos`); `Semana`, `Mes`, `Exame`, `DataISO` (`@/dominio/tipos`); `lerSemana`, `salvarSemana`, `preencherSemana`, `lerMes`, `salvarMes`, `listarExames`, `salvarExame`, `ultimoExame` (repositórios em `@/dados/repositorios/semana`, `@/dados/repositorios/mes`, `@/dados/repositorios/exame`); `hojeISO`, `semanaAnteriorISO`, `segundaDaSemana`, `somarDias`, `mesISO` (`@/dados/datas`); `useContexto`, `usePerfil`; `CampoRegistro`; `chaveDe`, `primeiraSegundaDoMes`, `diasEntre`, `formatarData`; `useLiveQuery` (`dexie-react-hooks`); `Link` (`react-router`).
 - Produces: `export function Segunda(): JSX.Element` (rota `/segunda`, heading "Segunda") e `export function Exames(): JSX.Element` (rota `/exames`, heading "Exames").
 
-Comportamento da Segunda: semana ISO atual. Se `lerSemana` não devolve nada, o form nasce com `preencherSemana(s)` (pré-preenchido dos eventos e dias); a pessoa confirma ou corrige e salva com `salvarSemana`. Mostra `derivados.pesoMedioSemana` (só leitura). Se hoje é a primeira segunda-feira do mês **ou** não há `mes` do mês corrente, acrescenta `camposDe('mes', perfil)` com botão próprio → `salvarMes`. Se `ultimoExame()` é undefined ou tem ≥ 84 dias, aviso com link para `/exames`.
+Comportamento da Segunda (fix wave, item 22): a revisão é da **semana anterior** — `sem = semanaAnteriorISO(hojeISO())`, rotulado "Semana passada (dd/mm–dd/mm)" usando `segundaDaSemana(sem)`/`somarDias(…, 6)`. Se `lerSemana` não devolve nada para essa chave, o form nasce com `preencherSemana(sem)` (pré-preenchido dos eventos e dias da semana anterior; `preencherSemana` em si não muda — continua só contando a chave que recebe). Mostra `derivados.pesoMedioSemana` rotulado "média desta semana" — esse derivado continua sendo a média móvel de hoje, não da revisão da semana anterior, e o rótulo deixa isso explícito para não confundir as duas semanas na mesma tela. Se hoje é a primeira segunda-feira do mês **ou** não há `mes` do mês corrente, acrescenta `camposDe('mes', perfil)` com botão próprio → `salvarMes`. Se `ultimoExame()` é undefined ou tem ≥ 84 dias, aviso com link para `/exames`.
 
 Truque com `useLiveQuery`: `undefined` significa "carregando" — para distinguir "carregou e não existe", a consulta devolve `null` nesse caso (`.then(x => x ?? null)`). Só assim a pré-carga não atropela um registro salvo que ainda estava chegando.
 
@@ -2337,7 +2378,7 @@ import { registrarTreino } from '@/dados/repositorios/eventos';
 import { lerSemana } from '@/dados/repositorios/semana';
 import { salvarExame } from '@/dados/repositorios/exame';
 import { apagarTudo } from '@/dados/exportImport';
-import { hojeISO, semanaISO, somarDias } from '@/dados/datas';
+import { hojeISO, semanaAnteriorISO, somarDias } from '@/dados/datas';
 import { PERFIL } from '@/test/fixtures';
 
 beforeEach(async () => {
@@ -2349,9 +2390,10 @@ function renderizar() {
 }
 
 describe('Segunda', () => {
-  test('pré-preenche sessões de tiros a partir dos eventos da semana', async () => {
+  test('pré-preenche sessões de tiros a partir dos eventos da semana passada (não da corrente)', async () => {
     await salvarPerfil(PERFIL);
-    await registrarTreino({ data: hojeISO(), hora: '07:00', tipo: 'tiros', minutos: 8, tiros: 3 });
+    // mesmo dia da semana, 7 dias atrás: garantidamente dentro de semanaAnteriorISO(hoje) (fix wave, item 22).
+    await registrarTreino({ data: somarDias(hojeISO(), -7), hora: '07:00', tipo: 'tiros', minutos: 8, tiros: 3 });
     const { container } = renderizar();
     await screen.findByRole('heading', { name: 'Segunda' });
     await waitFor(() => {
@@ -2361,7 +2403,7 @@ describe('Segunda', () => {
     });
   });
 
-  test('salvar grava a semana', async () => {
+  test('salvar grava a semana anterior (não a corrente)', async () => {
     await salvarPerfil(PERFIL);
     const { container } = renderizar();
     await screen.findByRole('heading', { name: 'Segunda' });
@@ -2372,7 +2414,7 @@ describe('Segunda', () => {
     });
     fireEvent.change(input, { target: { value: '100' } });
     fireEvent.click(screen.getByRole('button', { name: 'Salvar semana' }));
-    await waitFor(async () => expect((await lerSemana(semanaISO(hojeISO())))?.cintura).toBe(100));
+    await waitFor(async () => expect((await lerSemana(semanaAnteriorISO(hojeISO())))?.cintura).toBe(100));
   });
 
   test('sem exames, mostra o aviso com link para /exames', async () => {
@@ -2461,7 +2503,7 @@ import type { Semana, Mes } from '@/dominio/tipos';
 import { lerSemana, salvarSemana, preencherSemana } from '@/dados/repositorios/semana';
 import { lerMes, salvarMes } from '@/dados/repositorios/mes';
 import { ultimoExame } from '@/dados/repositorios/exame';
-import { hojeISO, semanaISO, mesISO } from '@/dados/datas';
+import { hojeISO, semanaAnteriorISO, segundaDaSemana, somarDias, mesISO } from '@/dados/datas';
 import { useContexto } from '@/ui/hooks/useContexto';
 import { CampoRegistro } from '@/ui/componentes/CampoRegistro';
 import { chaveDe, primeiraSegundaDoMes, diasEntre, formatarData } from '@/ui/formato';
@@ -2490,7 +2532,9 @@ function valoresDe(obj: object | null | undefined, campos: Campo[]): Valores {
 export function Segunda() {
   const { ctx, carregando } = useContexto();
   const hoje = hojeISO();
-  const sem = semanaISO(hoje);
+  const sem = semanaAnteriorISO(hoje); // a revisão é sempre da semana anterior (fix wave, item 22)
+  const inicioSem = segundaDaSemana(sem);
+  const fimSem = somarDias(inicioSem, 6);
   const mes = mesISO(hoje);
 
   // null = carregou e não existe; undefined = ainda carregando
@@ -2544,9 +2588,9 @@ export function Segunda() {
   return (
     <section className="tela segunda">
       <header>
-        <p className="eyebrow">revisão semanal · {sem}</p>
+        <p className="eyebrow">Semana passada ({formatarData(inicioSem)}–{formatarData(fimSem)})</p>
         <h1>Segunda</h1>
-        <p className="sub">Pré-preenchido com o que você registrou na semana. Confirme ou corrija.</p>
+        <p className="sub">Pré-preenchido com o que você registrou na semana passada. Confirme ou corrija.</p>
       </header>
 
       {lembrarExame && (
@@ -2566,7 +2610,8 @@ export function Segunda() {
           ))}
         </div>
         <p className="leitura">
-          peso médio da semana: <b>{pesoMedio === null ? '—' : `${pesoMedio} kg`}</b>
+          {/* derivados.pesoMedioSemana continua sendo a média desta semana (hoje), não da revisão — rótulo explícito para não confundir com a semana passada acima */}
+          média desta semana: <b>{pesoMedio === null ? '—' : `${pesoMedio} kg`}</b>
           {ctx.derivados.pesoMedioSemanaAnterior !== null && <> · semana anterior: <b>{ctx.derivados.pesoMedioSemanaAnterior} kg</b></>}
         </p>
         <div className="botoes">
@@ -2699,7 +2744,7 @@ pnpm vitest run src/ui/telas/Segunda.test.tsx src/ui/telas/Exames.test.tsx
 
 Esperado: `✓ Segunda.test.tsx (5 tests)`, `✓ Exames.test.tsx (1 test)`.
 
-Se "pré-preenche sessões de tiros" falhar com valor `''`: `preencherSemana` (plano 03) conta eventos da semana ISO — confira que a data do evento (`hojeISO()`) cai em `semanaISO(hojeISO())`; se o plano 03 devolver a chave com outro nome, o contrato é `sessoesTiros` e o erro está lá, não aqui.
+Se "pré-preenche sessões de tiros" falhar com valor `''`: `preencherSemana` (plano 03) conta eventos da semana que recebe — confira que a data do evento (`somarDias(hojeISO(), -7)`) cai em `semanaAnteriorISO(hojeISO())`, não em `semanaISO(hojeISO())` (a tela agora passa a semana anterior, fix wave item 22); se o plano 03 devolver a chave com outro nome, o contrato é `sessoesTiros` e o erro está lá, não aqui.
 
 - [ ] **Step 6: Commit**
 

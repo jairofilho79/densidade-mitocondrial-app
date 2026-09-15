@@ -408,9 +408,9 @@
      "passos"
     ],
     "pouco": "abaixo de 2 mil/dia — a faixa de dano",
-    "ideal": "5–7 mil/dia; se você está abaixo, a meta desta semana é {prox_passos} (seu baseline + 1 mil)",
+    "ideal": "5–7 mil/dia; se você está abaixo, a meta desta semana é {prox_passos} (seu baseline + 500 por semana)",
     "demais": "acima de 10 mil o benefício para de crescer (não faz mal)",
-    "regra": "O '+1 mil por semana' é regra de progressão, não evidência — a evidência é a meta final de 5–7 mil."
+    "regra": "O '+500 por semana' é regra de progressão, não evidência — a evidência é a meta final de 5–7 mil."
    },
    "afeta": {
     "input": "—",
