@@ -14,7 +14,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "sync-catalogo": "node scripts/sync-catalogo.mjs"
+    "sync-catalogo": "node scripts/sync-catalogo.mjs",
+    "icones": "node scripts/icones.mjs"
   },
   "dependencies": {
     "dexie": "^4.4.6",
