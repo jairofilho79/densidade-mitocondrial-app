@@ -81,6 +81,26 @@ describe('Hoje — check-in', () => {
     expect((await lerDia(hojeISO()))?.passos).toBeUndefined();
   });
 
+  // fix wave, item 4: cada campo do check-in mostra de que dia fala (ontem/hoje).
+  test('campos do check-in mostram sufixo "· ontem" ou "· hoje" (níveis 1 e 2)', async () => {
+    await salvarPerfil(PERFIL);
+    const { container } = renderizar();
+    await esperarCheckin();
+    expect(screen.getByText(/Cada campo diz de que dia fala\./)).toBeInTheDocument();
+    await waitFor(() => expect(container.querySelectorAll('[data-campo]').length).toBeGreaterThan(0));
+    // dia.passos é "sobre ontem"; dia.comoAcordei é "sobre hoje" (a resposta de hoje, sobre a noite passada).
+    const passos = container.querySelector('[data-campo="dia.passos"] .sufixo');
+    expect(passos).toHaveTextContent('· ontem');
+    const acordei = container.querySelector('[data-campo="dia.comoAcordei"] .sufixo');
+    expect(acordei).toHaveTextContent('· hoje');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quero registrar mais' }));
+    await waitFor(() => {
+      const copos = container.querySelector('[data-campo="dia.copos"] .sufixo');
+      expect(copos).toHaveTextContent('· ontem');
+    });
+  });
+
   test('Quero registrar mais abre o nível 2 com o convite', async () => {
     const perfil = await salvarPerfil(PERFIL);
     const { container } = renderizar();

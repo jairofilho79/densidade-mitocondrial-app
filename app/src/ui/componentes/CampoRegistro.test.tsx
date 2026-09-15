@@ -111,6 +111,17 @@ describe('CampoRegistro', () => {
     expect(screen.getByLabelText(/Copos de água/)).toHaveValue(7);
   });
 
+  test('sufixo aparece depois do rótulo quando informado (fix wave, item 4)', () => {
+    render(<CampoRegistro campo={copos} valor={undefined} onChange={() => {}} sufixo="· ontem" />);
+    const label = screen.getByText('Copos de água').closest('label');
+    expect(label?.querySelector('.sufixo')).toHaveTextContent('· ontem');
+  });
+
+  test('sem sufixo, não renderiza o span extra', () => {
+    const { container } = render(<CampoRegistro campo={copos} valor={undefined} onChange={() => {}} />);
+    expect(container.querySelector('.sufixo')).toBeNull();
+  });
+
   test('decimal: mais de um separador não é um número (fix round 1, minor 2)', () => {
     // Um <input type="number"> do jsdom (e dos navegadores) já sanitiza sozinho
     // "1,2,3" para "" antes do evento chegar ao React, então o bug do parseFloat

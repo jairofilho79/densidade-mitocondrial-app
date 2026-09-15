@@ -7,6 +7,8 @@ export interface CampoRegistroProps {
   campo: Campo;
   valor: unknown;
   onChange: (v: unknown) => void;
+  /** Diz de que dia o campo fala (ex.: "· ontem"), renderizado depois do rótulo. */
+  sufixo?: string;
 }
 
 function textoDe(valor: unknown): string {
@@ -31,7 +33,7 @@ export function numeroDe(t: string, tipo: Campo['tipo']): number | null {
   return Number.isNaN(n) ? null : n;
 }
 
-export function CampoRegistro({ campo, valor, onChange }: CampoRegistroProps) {
+export function CampoRegistro({ campo, valor, onChange, sufixo }: CampoRegistroProps) {
   const id = `campo-${campo.id.replace('.', '-')}`;
   const [erro, setErro] = useState<string | null>(null);
 
@@ -76,6 +78,7 @@ export function CampoRegistro({ campo, valor, onChange }: CampoRegistroProps) {
     <>
       {campo.rotulo}
       {campo.unidade && <span className="u"> {campo.unidade}</span>}
+      {sufixo && <span className="sufixo">{sufixo}</span>}
     </>
   );
 

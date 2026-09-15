@@ -1,6 +1,7 @@
 /* ---------- CampoRegistro ---------- */
 .campo .rotulo { display: block; }
 .campo .escolha .botao[aria-pressed="true"] { font-weight: 600; }
+.campo .sufixo { color: var(--muted); font-size: 11px; margin-left: 4px; }
 
 /* ---------- BarraZona ---------- */
 .barra { display: grid; grid-template-columns: 1fr 1fr 1fr; height: 8px; border-radius: 4px; position: relative; margin-block: 6px 22px; }

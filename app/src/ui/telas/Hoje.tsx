@@ -217,11 +217,17 @@ export function Hoje() {
       <section className="painel">
         <div className="ph">
           <h2>Check-in da manhã</h2>
-          <span className="sub">Sobre a noite passada e o dia de ontem. O que é de ontem fica no registro de ontem; o resto, no de hoje.</span>
+          <span className="sub">Cada campo diz de que dia fala.</span>
         </div>
         <div className="grid">
           {nivel1.map((c) => (
-            <CampoRegistro key={c.id} campo={c} valor={valorDe(c)} onChange={(v) => gravar(c, v)} />
+            <CampoRegistro
+              key={c.id}
+              campo={c}
+              valor={valorDe(c)}
+              onChange={(v) => gravar(c, v)}
+              sufixo={CAMPOS_SOBRE_ONTEM.includes(c.id) ? '· ontem' : '· hoje'}
+            />
           ))}
         </div>
         {mais ? (
@@ -229,7 +235,13 @@ export function Hoje() {
             <ConviteRegistro campos={nivel2} />
             <div className="grid">
               {nivel2.map((c) => (
-                <CampoRegistro key={c.id} campo={c} valor={valorDe(c)} onChange={(v) => gravar(c, v)} />
+                <CampoRegistro
+                  key={c.id}
+                  campo={c}
+                  valor={valorDe(c)}
+                  onChange={(v) => gravar(c, v)}
+                  sufixo={CAMPOS_SOBRE_ONTEM.includes(c.id) ? '· ontem' : '· hoje'}
+                />
               ))}
             </div>
           </>

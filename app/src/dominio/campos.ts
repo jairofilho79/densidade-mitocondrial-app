@@ -49,7 +49,7 @@ export const CAMPOS: readonly Campo[] = [
   },
   { id: 'dia.jantarFim', nivel: 1, tipo: 'hora', rotulo: 'Jantar de ontem terminou às', desbloqueia: ['jante-cedo', 'feche-a-cozinha'] },
   { id: 'dia.passos', nivel: 1, tipo: 'inteiro', rotulo: 'Passos de ontem', unidade: 'passos', min: 0, max: 100000, desbloqueia: ['seis-mil-passos'] },
-  { id: 'dia.moveu', nivel: 1, tipo: 'bool', rotulo: 'Me movi de propósito por 10 minutos ou mais?', ajuda: 'Só aparece se não houve treino registrado.', desbloqueia: ['nunca-dois-dias'] },
+  { id: 'dia.moveu', nivel: 1, tipo: 'bool', rotulo: 'Me movi de propósito por 10 minutos ou mais?', ajuda: 'Caminhada, bike, subir escada — vale tudo.', desbloqueia: ['nunca-dois-dias'] },
 
   // ---------- dia · nível 2 ("quero registrar mais") ----------
   { id: 'dia.primeiraRefeicao', nivel: 2, tipo: 'hora', rotulo: 'Primeira refeição às', desbloqueia: ['feche-a-cozinha'] },
@@ -58,8 +58,8 @@ export const CAMPOS: readonly Campo[] = [
   { id: 'dia.copos', nivel: 2, tipo: 'inteiro', rotulo: 'Copos de água, chá ou café', unidade: 'copos', ajuda: 'Copo de 250 mL.', min: 0, max: 40, desbloqueia: ['beba-pela-sede'] },
   { id: 'dia.proteinaG', nivel: 2, tipo: 'inteiro', rotulo: 'Proteína no dia', unidade: 'g', ajuda: 'Rótulo, app de dieta ou suplemento. Soma das refeições registradas, se houver.', min: 0, max: 500, desbloqueia: ['proteina-no-prato'] },
   { id: 'dia.fibraG', nivel: 2, tipo: 'inteiro', rotulo: 'Fibra no dia', unidade: 'g', ajuda: 'Rótulo ou app de dieta; psyllium conta.', min: 0, max: 200, desbloqueia: ['fibra-no-prato'] },
-  { id: 'dia.refeicoesCozinhadas', nivel: 2, tipo: 'inteiro', rotulo: 'Refeições feitas de ingredientes', unidade: 'de 3', min: 0, max: 3, desbloqueia: ['comida-de-verdade'] },
-  { id: 'dia.bebidaDoce', nivel: 2, tipo: 'inteiro', rotulo: 'Bebidas doces', unidade: 'por dia', ajuda: 'Refrigerante, suco, energético.', min: 0, max: 30, desbloqueia: ['troque-o-doce'] },
+  { id: 'dia.refeicoesCozinhadas', nivel: 2, tipo: 'inteiro', rotulo: 'Refeições feitas de ingredientes', ajuda: 'De 0 a 3 refeições.', min: 0, max: 3, desbloqueia: ['comida-de-verdade'] },
+  { id: 'dia.bebidaDoce', nivel: 2, tipo: 'inteiro', rotulo: 'Bebidas doces', ajuda: 'Refrigerante, suco, energético. Quantidade por dia.', min: 0, max: 30, desbloqueia: ['troque-o-doce'] },
   {
     id: 'dia.alcoolDoses',
     nivel: 2,
@@ -86,7 +86,7 @@ export const CAMPOS: readonly Campo[] = [
   { id: 'semana.minAtiv', nivel: 1, tipo: 'inteiro', rotulo: 'Minutos de atividade moderada na semana', unidade: 'min', ajuda: 'Sem contar os tiros.', min: 0, max: 3000, desbloqueia: ['some-150'] },
   { id: 'semana.maiorBlocoTipico', nivel: 2, tipo: 'inteiro', rotulo: 'Maior bloco sentado num dia típico', unidade: 'min', min: 0, max: 1440, desbloqueia: ['levante-a-cada-30'] },
   { id: 'semana.alcoolDoses', nivel: 2, tipo: 'inteiro', rotulo: 'Doses de álcool na semana', unidade: 'doses', min: 0, max: 100, condicao: bebeAlcool, desbloqueia: ['se-beber'] },
-  { id: 'semana.docesSemana', nivel: 2, tipo: 'inteiro', rotulo: 'Bebidas doces na semana', unidade: 'por semana', min: 0, max: 100, desbloqueia: ['troque-o-doce'] },
+  { id: 'semana.docesSemana', nivel: 2, tipo: 'inteiro', rotulo: 'Bebidas doces na semana', ajuda: 'Quantidade por semana.', min: 0, max: 100, desbloqueia: ['troque-o-doce'] },
 
   // ---------- mes (primeira segunda do mês) ----------
   { id: 'mes.panturrilha', nivel: 1, tipo: 'decimal', rotulo: 'Panturrilha', unidade: 'cm', ajuda: 'Ponto mais largo, sentado, perna a 90°.', min: 15, max: 80, desbloqueia: ['panturrilha-preensao'] },
