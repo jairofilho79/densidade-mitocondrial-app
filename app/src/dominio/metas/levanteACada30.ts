@@ -1,4 +1,4 @@
-import { aplicarSeguranca, deDiaSeNaoHoje, semDado, ultimoDiaCom } from './_util';
+import { aplicarSeguranca, deDiaSeNaoHoje, fmt, semDado, ultimoDiaCom } from './_util';
 import type { AcaoMeta, Zona } from './tipos';
 
 export const levanteACada30: AcaoMeta = {
@@ -11,8 +11,8 @@ export const levanteACada30: AcaoMeta = {
 
     const zona: Zona = b <= 30 ? 'meta' : b <= 60 ? 'atencao' : 'pouco';
     const levantadas = ctx.hoje?.levantadas;
-    const texto = `maior bloco: ${b} min` + (levantadas === undefined ? '' : ` · levantou ${levantadas}× hoje`);
-    const proximoPasso = b <= 30 ? 'manter' : `um alarme em ${Math.max(30, b - 30)} min esta semana; depois em 30`;
+    const texto = `maior bloco: ${fmt(b)} min` + (levantadas === undefined ? '' : ` · levantou ${fmt(levantadas)}× hoje`);
+    const proximoPasso = b <= 30 ? 'manter' : `um alarme em ${fmt(Math.max(30, b - 30))} min esta semana; depois em 30`;
 
     return aplicarSeguranca('levante-a-cada-30', ctx.perfil, {
       zona,

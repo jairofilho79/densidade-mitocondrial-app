@@ -1,4 +1,4 @@
-import { aplicarSeguranca, deDiaSeNaoHoje, semDado, ultimoDiaCom } from './_util';
+import { aplicarSeguranca, deDiaSeNaoHoje, fmt, semDado, ultimoDiaCom } from './_util';
 import type { AcaoMeta, Zona } from './tipos';
 
 export const comidaDeVerdade: AcaoMeta = {
@@ -16,7 +16,7 @@ export const comidaDeVerdade: AcaoMeta = {
       valor: n,
       faixa: { pouco: 0, meta: 2, demais: 3 },
       posicao: n >= 2 ? 0.55 : n === 1 ? 0.25 : 0.06,
-      texto: `${n} de 3 refeições de ingredientes`,
+      texto: `${fmt(n)} de 3 refeições de ingredientes`,
       proximoPasso: n >= 2 ? 'manter' : 'uma refeição a mais de ingredientes: a mais fácil é o café da manhã',
       ...deDiaSeNaoHoje(ctx, dia),
     });
