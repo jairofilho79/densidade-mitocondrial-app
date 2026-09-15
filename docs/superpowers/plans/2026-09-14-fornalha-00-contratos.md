@@ -146,10 +146,10 @@ export interface AcaoCatalogo {
   registro: [string, string, string];
   sinal: { output: string; prazo: string };
   seguranca?: string;
-  evidencia: { grau: string; fontes: string[] };
-  setas: string[];
+  evidencia: { grau: string; fontes: string };   // texto único separado por ";"
+  setas: Array<string | number>;
 }
-export interface MedidaCatalogo { id: string; titulo: string; como: string; para_que: string; muda: string; fontes: string[]; grau: string; }
+export interface MedidaCatalogo { id: string; titulo: string; como: string; para_que: string; muda: string; fontes: string; grau: string; }
 export interface Catalogo { variaveis: Record<string, unknown>; acoes: AcaoCatalogo[]; medidas: MedidaCatalogo[]; }
 ```
 

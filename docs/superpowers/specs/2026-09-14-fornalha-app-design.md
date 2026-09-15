@@ -167,7 +167,7 @@ As telas de registro são geradas deste registro. `desbloqueia` alimenta o convi
 
 1. **Perfil** — onboarding na primeira abertura; editável depois. Mostra as Medidas ao vivo (IMC, cintura/estatura, FC máx e faixas 60/70/85, gasto de repouso, meta de água) enquanto a pessoa digita.
 2. **Hoje** — tela inicial.
-   - **Check-in da manhã** (nível 1): deitei/levantei, como acordei, fome de ontem, comi sem fome?, último café de ontem (condicional), jantar de ontem terminou às, passos de ontem, moveu? (se sem evento). 6 a 8 toques. Botão "quero registrar mais" abre nível 2 com a frase do que desbloqueia.
+   - **Check-in da manhã** (nível 1): deitei/levantei, como acordei, fome de ontem, comi sem fome?, último café de ontem (condicional), jantar de ontem terminou às, passos de ontem, moveu? (se sem evento). 7 a 9 campos (café condicional ao perfil; `moveu` só sem evento). Botão "quero registrar mais" abre nível 2 com a frase do que desbloqueia.
    - **Eventos:** botões *Treinei*, *Comi*, *Levantei* (este incrementa uma contagem do dia usada por `levante-a-cada-30`).
    - **Dias sem movimento:** contador `diasParado` com a ação mínima que zera.
    - **Três ações em foco:** as 3 com zona `atencao`/`pouco` mais perto da meta (menor distância relativa), com próximo passo. Ações `sem-dado` aparecem em cinza com o convite.
@@ -234,7 +234,7 @@ Saída `{ pronta: true, frases: Frase[] }`, cada frase com `texto`, `n` e `tipo`
 - **sono → fome:** fome nos dias após sono < 6 h vs baseline. n < 3 → "ainda poucas noites curtas para comparar".
 - **sono → comer sem fome:** proporção de `comiSemFome` em noites curtas vs normais.
 - **café → sono:**
-  - `diario`: café após o corte pessoal (`deitar − 8 h`) vs antes → diferença de horas de sono.
+  - `diario`: café após o corte pessoal (`deitar − 9 h`) vs antes → diferença de horas de sono.
   - `as-vezes`: dias com café vs sem → diferença de horas de sono (ambos n mostrados).
   - `nao`: frase omitida; o card explica que a tendência é sono × fome.
 
