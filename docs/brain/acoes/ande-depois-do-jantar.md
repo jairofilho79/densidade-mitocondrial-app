@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: moderada
 setas: [5]
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Ande 10 minutos depois do jantar
 

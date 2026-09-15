@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: instrumento
 setas: ['instrumento']
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Anote a hora que deitou e levantou
 

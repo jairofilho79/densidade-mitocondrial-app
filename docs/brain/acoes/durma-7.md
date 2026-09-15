@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: forte
 setas: [6, 7, 'faixa-sono']
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Durma 7 horas
 

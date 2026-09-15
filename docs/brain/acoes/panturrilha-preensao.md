@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: instrumento (forte)
 setas: ['instrumento']
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Meça a panturrilha e a preensão uma vez por mês
 

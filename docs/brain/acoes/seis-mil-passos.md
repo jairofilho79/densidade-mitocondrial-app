@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: forte
 setas: ['faixa-passos']
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Chegue aos 6 mil passos
 

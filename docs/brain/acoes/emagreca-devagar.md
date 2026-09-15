@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: forte
 setas: ['dano-metab']
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Emagreça no máximo meio quilo por semana
 

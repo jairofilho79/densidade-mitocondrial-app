@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: forte (sono → fome); instrumento
 setas: [7]
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Antes de repetir, pergunte à fome
 

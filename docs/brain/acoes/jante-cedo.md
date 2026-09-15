@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: moderada
 setas: [10]
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Jante 3 horas antes de deitar
 

@@ -6,6 +6,7 @@ nivel: nucleo
 evidencia: forte
 setas: [13]
 fonte-unica: acoes.json
+vira-feature-em: v1
 ---
 # Comida de verdade em duas das três refeições
 
