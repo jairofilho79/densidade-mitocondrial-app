@@ -12,7 +12,7 @@ describe('CartaoMedida', () => {
   test('título do catálogo, valor, zona e faixas', () => {
     render(<CartaoMedida m={imc} />);
     expect(screen.getByText('IMC')).toBeInTheDocument();
-    expect(screen.getByText('29.4')).toBeInTheDocument();
+    expect(screen.getByText('29,4')).toBeInTheDocument();
     expect(screen.getByText('perto')).toBeInTheDocument();
     expect(screen.getByText('Categoria: sobrepeso.')).toBeInTheDocument();
     expect(screen.getAllByRole('listitem')).toHaveLength(3);

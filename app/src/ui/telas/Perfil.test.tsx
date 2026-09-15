@@ -26,7 +26,8 @@ describe('Perfil', () => {
     fireEvent.change(screen.getByLabelText('Fuma?'), { target: { value: 'nao' } });
 
     // medidas ao vivo: IMC aparece com os números digitados (90 / 1,75² = 29,4)
-    await waitFor(() => expect(container.querySelector('[data-medida="imc"] .big')?.textContent).toContain('29.4'));
+    // fix wave, item 10: CartaoMedida formata o valor com fmt (vírgula decimal).
+    await waitFor(() => expect(container.querySelector('[data-medida="imc"] .big')?.textContent).toContain('29,4'));
 
     fireEvent.click(screen.getByRole('button', { name: 'Salvar perfil' }));
 

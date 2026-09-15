@@ -1,5 +1,6 @@
 import type { MedidaResultado } from '@/dominio/medidas';
 import { catalogo } from '@/dominio/catalogo';
+import { fmt } from '@/dominio/metas/_util';
 import { ROTULO_ZONA } from '@/ui/formato';
 import './componentes.css';
 
@@ -17,7 +18,7 @@ export function CartaoMedida({ m }: CartaoMedidaProps) {
         {cat && <span className="ev">{cat.grau}</span>}
       </div>
       <div className="big">
-        {m.valor === null ? '—' : m.valor}
+        {m.valor === null ? '—' : fmt(m.valor)}
         {m.unidade && <small>{m.unidade}</small>}
       </div>
       <div className={`st ${m.zona}`}>{status}</div>
