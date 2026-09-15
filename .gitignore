@@ -36,3 +36,7 @@ ios/
 
 # Claude Code local
 .claude/settings.local.json
+
+# Worktrees locais
+.worktrees/
+.superpowers/
