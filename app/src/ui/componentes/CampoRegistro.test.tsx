@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { CampoRegistro } from './CampoRegistro';
+import { CampoRegistro, numeroDe } from './CampoRegistro';
 import type { Campo } from '@/dominio/campos';
 
 const copos: Campo = { id: 'dia.copos', nivel: 2, tipo: 'inteiro', rotulo: 'Copos de água', unidade: 'copos', min: 0, max: 30, desbloqueia: ['beba-pela-sede'] };
@@ -85,5 +85,40 @@ describe('CampoRegistro', () => {
     const el = container.querySelector('[data-campo="dia.copos"]');
     expect(el).not.toBeNull();
     expect(el).toHaveAttribute('data-tipo', 'inteiro');
+  });
+
+  test('inteiro-ou-nao: clicar "Não bebi" com valor numérico anterior limpa o texto do input (fix round 1)', () => {
+    const onChange = vi.fn();
+    render(<CampoRegistro campo={doses} valor={5} onChange={onChange} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Não bebi' }));
+    expect(onChange).toHaveBeenCalledWith(null);
+    expect(screen.getByLabelText(/Doses de álcool ontem/)).toHaveValue(null);
+  });
+
+  test('inteiro: rerender de valor numérico para undefined limpa o input (fix round 1)', () => {
+    const onChange = vi.fn();
+    const { rerender } = render(<CampoRegistro campo={copos} valor={5} onChange={onChange} />);
+    expect(screen.getByLabelText(/Copos de água/)).toHaveValue(5);
+    rerender(<CampoRegistro campo={copos} valor={undefined} onChange={onChange} />);
+    expect(screen.getByLabelText(/Copos de água/)).toHaveValue(null);
+  });
+
+  test('inteiro: rerender de undefined para um número mostra o valor novo (fix round 1)', () => {
+    const onChange = vi.fn();
+    const { rerender } = render(<CampoRegistro campo={copos} valor={undefined} onChange={onChange} />);
+    expect(screen.getByLabelText(/Copos de água/)).toHaveValue(null);
+    rerender(<CampoRegistro campo={copos} valor={7} onChange={onChange} />);
+    expect(screen.getByLabelText(/Copos de água/)).toHaveValue(7);
+  });
+
+  test('decimal: mais de um separador não é um número (fix round 1, minor 2)', () => {
+    // Um <input type="number"> do jsdom (e dos navegadores) já sanitiza sozinho
+    // "1,2,3" para "" antes do evento chegar ao React, então o bug do parseFloat
+    // truncando silenciosamente ("1,2,3" → 1.2) não é alcançável simulando o DOM —
+    // testa-se a função de parsing diretamente.
+    expect(numeroDe('1,2,3', 'decimal')).toBeNull();
+    expect(numeroDe('1.2.3', 'decimal')).toBeNull();
+    expect(numeroDe('1,2', 'decimal')).toBe(1.2);
+    expect(numeroDe('12', 'inteiro')).toBe(12);
   });
 });

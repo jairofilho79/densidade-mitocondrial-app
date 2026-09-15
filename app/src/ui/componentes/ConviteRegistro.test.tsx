@@ -19,4 +19,9 @@ describe('ConviteRegistro', () => {
     const { container } = render(<ConviteRegistro campos={[]} />);
     expect(container.innerHTML).toBe('');
   });
+
+  test('semanal renderiza a frase fixa mesmo sem campos resolvidos', () => {
+    render(<ConviteRegistro campos={[]} semanal />);
+    expect(screen.getByText('registre um treino ou a revisão de segunda.')).toBeInTheDocument();
+  });
 });

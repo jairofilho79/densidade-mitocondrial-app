@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { Campo } from '@/dominio/campos';
 import { validar } from '@/dominio/campos';
 import './componentes.css';
@@ -13,23 +13,43 @@ function textoDe(valor: unknown): string {
   return valor === undefined || valor === null ? '' : String(valor);
 }
 
+/** Aceita um único separador decimal (','  ou '.'); "1,2,3" ou "1.2.3" não é um número. */
+const NUMERO_INTEIRO_RE = /^-?\d+$/;
+const NUMERO_DECIMAL_RE = /^-?\d+([.,]\d+)?$/;
+
+/**
+ * Texto digitado → número, ou `null` se não for um número válido (exportada para
+ * teste direto: um `<input type="number">` sanitiza sozinho grande parte dos
+ * textos malformados antes de disparar o evento, então "1,2,3" nunca chega ao
+ * `onChange` do React — o parsing precisa ser testado à parte da simulação de DOM).
+ */
+export function numeroDe(t: string, tipo: Campo['tipo']): number | null {
+  const inteiro = tipo === 'inteiro' || tipo === 'inteiro-ou-nao';
+  const re = inteiro ? NUMERO_INTEIRO_RE : NUMERO_DECIMAL_RE;
+  if (!re.test(t.trim())) return null;
+  const n = inteiro ? parseInt(t, 10) : parseFloat(t.replace(',', '.'));
+  return Number.isNaN(n) ? null : n;
+}
+
 export function CampoRegistro({ campo, valor, onChange }: CampoRegistroProps) {
   const id = `campo-${campo.id.replace('.', '-')}`;
   const [erro, setErro] = useState<string | null>(null);
 
   // Texto local para inputs numéricos: um valor inválido fica visível (com a
-  // mensagem) sem ser gravado; quando a prop muda de fora, o texto acompanha.
+  // mensagem) sem ser gravado. Quando a prop muda de fora — inclusive para `null`
+  // ou `undefined`, ex.: "Não tomei"/"Não bebi" ou troca do registro em edição —
+  // o texto acompanha sempre (nunca fica um número obsoleto ao lado de um botão
+  // "não" marcado).
   const [texto, setTexto] = useState(textoDe(valor));
-  const [valorAnterior, setValorAnterior] = useState(valor);
-  if (valor !== valorAnterior) {
-    setValorAnterior(valor);
-    if (valor !== undefined && valor !== null) setTexto(String(valor));
-  }
+  useEffect(() => {
+    setTexto(textoDe(valor));
+  }, [valor]);
 
   /** Estados "não registrou" (undefined) e "não se aplica" (null) não passam por validar. */
   function emitir(v: unknown) {
     if (v === undefined || v === null) {
       setErro(null);
+      setTexto('');
       onChange(v);
       return;
     }
@@ -44,10 +64,8 @@ export function CampoRegistro({ campo, valor, onChange }: CampoRegistroProps) {
       emitir(undefined);
       return;
     }
-    const n = campo.tipo === 'inteiro' || campo.tipo === 'inteiro-ou-nao'
-      ? parseInt(t, 10)
-      : parseFloat(t.replace(',', '.'));
-    if (Number.isNaN(n)) {
+    const n = numeroDe(t, campo.tipo);
+    if (n === null) {
       setErro('Digite um número.');
       return;
     }
