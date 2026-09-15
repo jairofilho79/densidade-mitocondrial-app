@@ -19,14 +19,14 @@ describe('tres-tiros', () => {
     expect(m.seguranca).toBeUndefined();
   });
 
-  it('meta: 3 sessões nesta semana; a de sábado passado não conta', () => {
+  it('meta: 3 sessões nos últimos 7 dias; a de 8 dias atrás não conta (janela móvel)', () => {
     const m = tresTiros.meta(
       ctxBase({
         eventos: [
           eventoBase('2026-09-17', 'tiros'),
           eventoBase('2026-09-15', 'tiros'),
           eventoBase('2026-09-14', 'tiros'),
-          eventoBase('2026-09-12', 'tiros'),
+          eventoBase('2026-09-09', 'tiros'), // 8 dias atrás: fora da janela
         ],
       }),
     );

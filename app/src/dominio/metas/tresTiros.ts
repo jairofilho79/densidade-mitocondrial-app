@@ -1,5 +1,5 @@
 import { pos } from '../derivados';
-import { aplicarSeguranca, contarSessoes, semDado, semanaAtual } from './_util';
+import { aplicarSeguranca, contarSessoes7, fmt, semDado, semanaAtual } from './_util';
 import type { AcaoMeta, Zona } from './tipos';
 
 export const tresTiros: AcaoMeta = {
@@ -9,8 +9,10 @@ export const tresTiros: AcaoMeta = {
     const revisao = semanaAtual(ctx);
     const n =
       revisao?.sessoesTiros ??
-      (ctx.eventos.length > 0 ? contarSessoes(ctx.eventos, 'tiros', ctx) : undefined);
-    if (n === undefined) return semDado(['semana.sessoesTiros'], 'nenhum treino registrado');
+      (ctx.eventos.length > 0 ? contarSessoes7(ctx, 'tiros') : undefined);
+    const fc85 = ctx.derivados.fc85;
+    const vals = fc85 === null ? undefined : { fc85 };
+    if (n === undefined) return semDado(['semana.sessoesTiros'], 'nenhum treino registrado', vals);
 
     const zona: Zona = n < 2 ? 'pouco' : n <= 3 ? 'meta' : n <= 4 ? 'atencao' : 'demais';
     const proximoPasso =
@@ -25,8 +27,9 @@ export const tresTiros: AcaoMeta = {
       valor: n,
       faixa: { pouco: 2, meta: 3, demais: 5 },
       posicao: pos(n, 2, 3),
-      texto: `${n} ${n === 1 ? 'sessão' : 'sessões'}/sem`,
+      texto: `${fmt(n)} ${n === 1 ? 'sessão' : 'sessões'}/sem`,
       proximoPasso,
+      vals,
     });
   },
 };

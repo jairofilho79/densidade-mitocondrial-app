@@ -1,5 +1,5 @@
 import { pos } from '../derivados';
-import { aplicarSeguranca, contarSessoes, semDado, semanaAtual } from './_util';
+import { aplicarSeguranca, contarSessoes7, fmt, semDado, semanaAtual } from './_util';
 import type { AcaoMeta, Zona } from './tipos';
 
 export const levantePeso: AcaoMeta = {
@@ -9,7 +9,7 @@ export const levantePeso: AcaoMeta = {
     const revisao = semanaAtual(ctx);
     const n =
       revisao?.sessoesForca ??
-      (ctx.eventos.length > 0 ? contarSessoes(ctx.eventos, 'forca', ctx) : undefined);
+      (ctx.eventos.length > 0 ? contarSessoes7(ctx, 'forca') : undefined);
     if (n === undefined) return semDado(['semana.sessoesForca'], 'nenhum treino registrado');
 
     const zona: Zona = n < 1 ? 'pouco' : n < 2 ? 'atencao' : n <= 3 ? 'meta' : 'demais';
@@ -25,7 +25,7 @@ export const levantePeso: AcaoMeta = {
       valor: n,
       faixa: { pouco: 1, meta: 2, demais: 3 },
       posicao: pos(n, 2, 3),
-      texto: `${n} ${n === 1 ? 'sessão' : 'sessões'}/sem`,
+      texto: `${fmt(n)} ${n === 1 ? 'sessão' : 'sessões'}/sem`,
       proximoPasso,
     });
   },

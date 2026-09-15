@@ -36,11 +36,11 @@ describe('troque-o-doce', () => {
     expect(m.valor).toBe(0);
   });
 
-  it('demais: soma dos últimos 7 dias = 5 (dia antigo ignorado)', () => {
+  it('demais: soma dos últimos 7 dias = 5 (8 dias atrás ignorado, janela móvel)', () => {
     const m = troqueODoce.meta(
       ctxBase({
         hoje: diaBase(HOJE, { bebidaDoce: 3 }),
-        dias: [diaBase(ONTEM, { bebidaDoce: 2 }), diaBase('2026-09-01', { bebidaDoce: 10 })],
+        dias: [diaBase(ONTEM, { bebidaDoce: 2 }), diaBase('2026-09-09', { bebidaDoce: 10 })],
       }),
     );
     expect(m.zona).toBe('demais');

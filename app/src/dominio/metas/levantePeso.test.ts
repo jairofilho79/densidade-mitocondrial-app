@@ -27,10 +27,10 @@ describe('levante-peso', () => {
     expect(m.proximoPasso).toBe('uma sessão de 20 min em casa nesta semana: agachamento, flexão, remada');
   });
 
-  it('meta: 2 sessões nesta semana; a da semana passada não conta', () => {
+  it('meta: 2 sessões nos últimos 7 dias; a de 8 dias atrás não conta (janela móvel)', () => {
     const m = levantePeso.meta(
       ctxBase({
-        eventos: [eventoBase('2026-09-14', 'forca'), eventoBase('2026-09-16', 'forca'), eventoBase('2026-09-11', 'forca')],
+        eventos: [eventoBase('2026-09-14', 'forca'), eventoBase('2026-09-16', 'forca'), eventoBase('2026-09-09', 'forca')],
       }),
     );
     expect(m.zona).toBe('meta');
