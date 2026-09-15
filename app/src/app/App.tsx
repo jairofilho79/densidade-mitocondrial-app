@@ -22,7 +22,9 @@ function Guarda({ children }: { children: ReactNode }) {
   const { carregando, semPerfil } = useContexto();
   const { pathname } = useLocation();
   if (carregando) return <p className="carregando">Carregando…</p>;
-  if (semPerfil && pathname !== '/perfil') return <Navigate to="/perfil" replace />;
+  // /ajustes fica acessível sem perfil: é o único jeito de restaurar um backup
+  // exportado noutro aparelho (fix wave, item 2).
+  if (semPerfil && pathname !== '/perfil' && pathname !== '/ajustes') return <Navigate to="/perfil" replace />;
   return <>{children}</>;
 }
 

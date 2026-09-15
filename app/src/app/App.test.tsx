@@ -70,4 +70,13 @@ describe('App', () => {
 
     expect(await screen.findByRole('heading', { name: 'Hoje' })).toBeInTheDocument();
   });
+
+  // Item 2 (fix wave): /ajustes precisa ficar acessível sem perfil para restaurar
+  // um backup (exportado noutro aparelho) — a Guarda não pode devolver para /perfil.
+  test('sem perfil: /ajustes abre normalmente, sem redirect para /perfil', async () => {
+    window.location.hash = '#/ajustes';
+    render(<App />);
+    expect(await screen.findByRole('heading', { name: 'Ajustes' })).toBeInTheDocument();
+    expect(window.location.hash).toBe('#/ajustes');
+  });
 });

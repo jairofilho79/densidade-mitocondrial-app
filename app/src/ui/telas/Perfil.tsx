@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import type { Perfil as PerfilTipo, Sexo, Hora } from '@/dominio/tipos';
 import type { Contexto } from '@/dominio/metas/tipos';
 import { camposDe } from '@/dominio/campos';
@@ -127,6 +127,9 @@ export function Perfil() {
         <p className="eyebrow">uma vez · editável depois</p>
         <h1>Seu perfil</h1>
         <p className="sub">Só o que as fórmulas precisam. Fica neste aparelho; nada sai daqui.</p>
+        {!salvo && (
+          <p className="sub">Tenho um backup? <Link to="/ajustes">Importar</Link></p>
+        )}
       </header>
 
       <form onSubmit={salvar}>
