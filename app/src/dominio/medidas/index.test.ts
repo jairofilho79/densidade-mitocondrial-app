@@ -265,6 +265,13 @@ describe('agua (referência fixada em 8 copos / 2 L)', () => {
     expect(m.zona).toBe('atencao');
     expect(m.texto).toContain('Ontem: 5 copos.');
   });
+
+  it('sem copos hoje nem ontem, mas 3 dias atrás: rotula com a data, não "Ontem"', () => {
+    const m = medida('agua', { dias: [diaBase('2026-09-14', { copos: 5 })], derivados: ref });
+    expect(m.zona).toBe('atencao');
+    expect(m.texto).toContain('último registro (14/09): 5 copos.');
+    expect(m.texto).not.toContain('Ontem');
+  });
 });
 
 describe('peso (média 90 → meta até 0,5 kg/sem, 1 % = 0,9)', () => {

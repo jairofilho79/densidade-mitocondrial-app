@@ -1,6 +1,12 @@
-import { r1 } from '../derivados';
-import { fmt, ultimoDiaCom } from '../metas/_util';
+import { r1, somarDias } from '../derivados';
+import { fmt, hojeISO, ultimoDiaCom } from '../metas/_util';
 import type { Contexto, Zona } from '../metas/tipos';
+
+/** "2026-09-14" → "14/09" */
+function diaMes(data: string): string {
+  const [, mes, dia] = data.split('-');
+  return `${dia}/${mes}`;
+}
 
 export type MedidaId = 'imc' | 'whtr' | 'panturrilha' | 'preensao' | 'fc_repouso' | 'fc_max' | 'rmr' | 'agua' | 'peso';
 
@@ -115,8 +121,11 @@ function agua(ctx: Contexto): MedidaResultado {
   const { coposMeta, aguaMetaL } = ctx.derivados;
   const homem = ctx.perfil.sexo === 'H';
   const base = homem ? 2.0 : 1.6;
-  const n = ctx.hoje?.copos ?? ultimoDiaCom(ctx.dias, 'copos')?.copos;
-  const origem = ctx.hoje?.copos !== undefined ? 'Hoje' : 'Ontem';
+  const diaCopos = ctx.hoje?.copos !== undefined ? ctx.hoje : ultimoDiaCom(ctx.dias, 'copos');
+  const n = diaCopos?.copos;
+  const hoje = hojeISO(ctx);
+  const ontem = somarDias(hoje, -1);
+  const origem = diaCopos === undefined || diaCopos.data === hoje ? 'Hoje' : diaCopos.data === ontem ? 'Ontem' : `último registro (${diaMes(diaCopos.data)})`;
   const zona: Zona | 'neutra' = n === undefined ? 'neutra' : n < coposMeta * 0.6 ? 'pouco' : n < coposMeta ? 'atencao' : 'meta';
   const registro = n === undefined ? 'Hoje: — copos.' : `${origem}: ${fmt(n)} copos.`;
   const texto = `Base ${homem ? '2,0' : '1,6'} L de bebidas + ${fmt(Math.max(0, aguaMetaL - base))} L pelo treino de hoje. ${registro} Urina cor 1–3 confirma; café conta.`;
