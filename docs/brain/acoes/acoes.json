@@ -1,0 +1,1094 @@
+{
+ "variaveis": {
+  "peso": {
+   "escopo": "perfil",
+   "rotulo": "Peso (média da semana)",
+   "unidade": "kg",
+   "padrao": 90
+  },
+  "peso_anterior": {
+   "escopo": "perfil",
+   "rotulo": "Peso há 7 dias",
+   "unidade": "kg",
+   "padrao": 90.8
+  },
+  "altura": {
+   "escopo": "perfil",
+   "rotulo": "Altura",
+   "unidade": "cm",
+   "padrao": 175
+  },
+  "idade": {
+   "escopo": "perfil",
+   "rotulo": "Idade",
+   "unidade": "anos",
+   "padrao": 40
+  },
+  "sexo": {
+   "escopo": "perfil",
+   "rotulo": "Sexo (cortes de cintura, preensão, água)",
+   "unidade": "H/M",
+   "padrao": "H"
+  },
+  "levantar": {
+   "escopo": "perfil",
+   "rotulo": "Hora que levanta",
+   "unidade": "hh:mm",
+   "padrao": "06:30"
+  },
+  "deitar": {
+   "escopo": "perfil",
+   "rotulo": "Hora que deita",
+   "unidade": "hh:mm",
+   "padrao": "23:30"
+  },
+  "cintura": {
+   "escopo": "perfil",
+   "rotulo": "Cintura (no umbigo)",
+   "unidade": "cm",
+   "padrao": 100
+  },
+  "panturrilha": {
+   "escopo": "perfil",
+   "rotulo": "Panturrilha (ponto mais largo)",
+   "unidade": "cm",
+   "padrao": 38
+  },
+  "preensao": {
+   "escopo": "perfil",
+   "rotulo": "Força de preensão (se tiver dinamômetro)",
+   "unidade": "kg",
+   "padrao": ""
+  },
+  "fc_repouso": {
+   "escopo": "perfil",
+   "rotulo": "FC de repouso matinal (média de 7 dias)",
+   "unidade": "bpm",
+   "padrao": 72
+  },
+  "min_ativ": {
+   "escopo": "perfil",
+   "rotulo": "Minutos de atividade moderada por semana",
+   "unidade": "min",
+   "padrao": 60
+  },
+  "hiit": {
+   "escopo": "perfil",
+   "rotulo": "Sessões de tiros por semana",
+   "unidade": "x/sem",
+   "padrao": 3
+  },
+  "forca": {
+   "escopo": "perfil",
+   "rotulo": "Sessões de força por semana",
+   "unidade": "x/sem",
+   "padrao": 0
+  },
+  "alcool": {
+   "escopo": "perfil",
+   "rotulo": "Doses de álcool por semana",
+   "unidade": "doses",
+   "padrao": 0
+  },
+  "doces_semana": {
+   "escopo": "perfil",
+   "rotulo": "Bebidas doces por semana (refri, suco, energético)",
+   "unidade": "por sem",
+   "padrao": 3
+  },
+  "passos": {
+   "escopo": "dia",
+   "rotulo": "Passos",
+   "unidade": "passos",
+   "padrao": 3500
+  },
+  "maior_bloco": {
+   "escopo": "dia",
+   "rotulo": "Maior bloco sentado sem levantar",
+   "unidade": "min",
+   "padrao": 90
+  },
+  "dias_parado": {
+   "escopo": "dia",
+   "rotulo": "Dias seguidos sem nenhum movimento intencional",
+   "unidade": "dias",
+   "padrao": 0
+  },
+  "min_pos_jantar": {
+   "escopo": "dia",
+   "rotulo": "Minutos andando depois do jantar",
+   "unidade": "min",
+   "padrao": 0
+  },
+  "ultimo_cafe": {
+   "escopo": "dia",
+   "rotulo": "Hora do último café ou chá com cafeína (vazio = não tomo)",
+   "unidade": "hh:mm · opcional",
+   "padrao": ""
+  },
+  "jantar": {
+   "escopo": "dia",
+   "rotulo": "Hora que termina o jantar",
+   "unidade": "hh:mm",
+   "padrao": "18:00"
+  },
+  "primeira": {
+   "escopo": "dia",
+   "rotulo": "Hora da primeira refeição",
+   "unidade": "hh:mm",
+   "padrao": "12:00"
+  },
+  "proteina_g": {
+   "escopo": "dia",
+   "rotulo": "Proteína no dia (rótulos, app de dieta ou suplemento)",
+   "unidade": "g",
+   "padrao": 80
+  },
+  "fibra_g": {
+   "escopo": "dia",
+   "rotulo": "Fibra no dia (rótulos ou app de dieta)",
+   "unidade": "g",
+   "padrao": 12
+  },
+  "refeicoes_cozinhadas": {
+   "escopo": "dia",
+   "rotulo": "Refeições feitas de ingredientes (0–3)",
+   "unidade": "de 3",
+   "padrao": 2
+  },
+  "copos_agua": {
+   "escopo": "dia",
+   "rotulo": "Copos de água ou chá/café (250 mL)",
+   "unidade": "copos",
+   "padrao": 5
+  },
+  "min_treino_dia": {
+   "escopo": "dia",
+   "rotulo": "Minutos de treino nesse dia (para a água)",
+   "unidade": "min",
+   "padrao": 30
+  }
+ },
+ "acoes": [
+  {
+   "id": "tres-tiros",
+   "grupo": "Movimento",
+   "titulo": "Três tiros fortes, três vezes na semana",
+   "gatilho": "Depois do café da manhã, ou logo que chega em casa — o mesmo horário sempre, na bike.",
+   "acao_minima": "Um tiro de 20 segundos no máximo que você aguenta. Registre.",
+   "descricao": "Tiros curtos no esforço máximo são o único estímulo que faz o corpo *fabricar* mitocôndrias novas. O que pesa é o esforço, não o tempo total: nos estudos, 3 tiros de 20 segundos, três vezes por semana, aumentaram a enzima-chave das mitocôndrias em 48% e a sensibilidade à insulina em 53% em pessoas sedentárias. 'Carga moderada' não foi testada — o sinal vem de ir ao máximo.",
+   "faixa": {
+    "variaveis": [
+     "hiit"
+    ],
+    "pouco": "1 sessão por semana, ou tiros que não chegam ao máximo — estímulo insuficiente",
+    "ideal": "2–3 sessões por semana, 3–6 tiros de 20–30 s no máximo (FC acima de ~{fc85} bpm), 2–4 min de descanso leve entre eles",
+    "demais": "todo dia com carga crescente — sem evidência de ganho extra; sinais de excesso (RPE subindo, acordando pior)",
+    "regra": "Ponto de partida se o máximo ainda não dá (IMC alto, muito tempo parado): tiros a ~70% do esforço mantiveram o ganho enzimático nos estudos (Boyd 2013) — o fôlego cresce menos, a mitocôndria não. O descanso de 1 min 30 do seu protocolo é mais curto que o dos estudos (2–4 min). Protocolo fixo para comparar semanas."
+   },
+   "afeta": {
+    "input": "—",
+    "processo": "AMPK → PGC-1α (o gatilho da biogênese)",
+    "output": "mitocôndrias novas → sensibilidade à insulina ↑, VO₂ ↑"
+   },
+   "registro": [
+    "Fiz os tiros hoje? (sim/não)",
+    "Quantos tiros, RPE 0–10 da sessão",
+    "Em qual tiro travou, FC 1 min depois do último, calor, jejum/alimentado"
+   ],
+   "sinal": {
+    "output": "RPE caindo com o mesmo protocolo; teste de caminhada (Rockport) melhor; HOMA-IR no exame",
+    "prazo": "enzimas em 2 semanas; fôlego em 6–12; exame em 12"
+   },
+   "seguranca": "Dor no peito, tontura ou falta de ar desproporcional: parar e avaliar antes de continuar.",
+   "evidencia": {
+    "grau": "forte",
+    "fontes": "Gillen 2014/2016; MacInnis & Gibala 2017; Mølmen 2025"
+   },
+   "setas": [
+    1
+   ]
+  },
+  {
+   "id": "levante-peso",
+   "grupo": "Movimento",
+   "titulo": "Levante peso duas vezes na semana",
+   "gatilho": "Nos dias sem tiros. Pode ser em casa: agachamento, flexão, remada com mochila.",
+   "acao_minima": "Um exercício, 2 séries até ficar difícil. Registre.",
+   "descricao": "Força é o estímulo que o protocolo original não tinha. Ela constrói o músculo onde as mitocôndrias moram, baixa a HbA1c e sobe o gasto de repouso em ~96 kcal/dia — a única modalidade que faz isso de forma mensurável. Não briga com os tiros: os dois se somam.",
+   "faixa": {
+    "variaveis": [
+     "forca"
+    ],
+    "pouco": "menos de 1 sessão por semana",
+    "ideal": "2–3 sessões por semana, 3 séries de 8–10 repetições até ficar difícil, grandes grupos (pernas, costas, peito)",
+    "demais": "mesmo grupo muscular em dias seguidos, sem 48 h de descanso",
+    "regra": "Banho gelado logo depois reduz o ganho de músculo — se fizer frio, faça em outro horário."
+   },
+   "afeta": {
+    "input": "proteína (precisa dela para construir)",
+    "processo": "mTOR → síntese proteica",
+    "output": "mais músculo → HbA1c ↓, metabolismo basal ↑, massa magra preservada em dieta"
+   },
+   "registro": [
+    "Fiz força hoje? (sim/não)",
+    "Quais grupos, RPE",
+    "Repetições até falhar num exercício fixo (o seu '1RM de bolso')"
+   ],
+   "sinal": {
+    "output": "repetições até falhar subindo; força de preensão; panturrilha; HbA1c",
+    "prazo": "força em 4–8 semanas; músculo em 8–12; exame em 12"
+   },
+   "evidencia": {
+    "grau": "forte",
+    "fontes": "Schumann 2022; meta-análises de HbA1c; Wycherley (RMR)"
+   },
+   "setas": [
+    2
+   ]
+  },
+  {
+   "id": "some-150",
+   "grupo": "Movimento",
+   "titulo": "Some 150 minutos na semana",
+   "gatilho": "A caminhada com vídeo, o trajeto a pé, a subida de escada — tudo conta. Some no fim do dia.",
+   "acao_minima": "10 minutos andando em ritmo de conversa. Registre.",
+   "descricao": "Movimento moderado regular baixa a frequência cardíaca de repouso e a cintura — mesmo sem o peso mudar. A caminhada leve *não* é o estímulo que cria mitocôndrias (isso é dos tiros), mas é o volume que sustenta tudo. Seu protocolo atual (15–30 min × 4) dá 60–120 min: está abaixo da faixa.",
+   "faixa": {
+    "variaveis": [
+     "min_ativ",
+     "hiit"
+    ],
+    "pouco": "menos de 150 min/semana de moderado (ou 75 de vigoroso)",
+    "ideal": "150–300 min/semana moderado; cada sessão de tiros conta em dobro",
+    "demais": "acima de 600 min/semana o retorno para",
+    "regra": "Ritmo de conversa: consegue falar, não consegue cantar (≈ {fc60}–{fc70} bpm para você, se quiser o número). Não precisa ser de uma vez — 10 minutos valem."
+   },
+   "afeta": {
+    "input": "—",
+    "processo": "gasto, capilares, coração",
+    "output": "FC de repouso ↓, cintura ↓ (visceral cai 6% mesmo sem perder peso)"
+   },
+   "registro": [
+    "Andei hoje? (sim/não)",
+    "Minutos",
+    "Minutos + conseguia conversar? + FC média"
+   ],
+   "sinal": {
+    "output": "FC de repouso matinal (média de 7 dias) caindo; cintura",
+    "prazo": "FC em 4–8 semanas; cintura em 4–12"
+   },
+   "evidencia": {
+    "grau": "forte",
+    "fontes": "OMS 2020; Lee 2022; Verheggen 2016; Reimers 2018"
+   },
+   "setas": [
+    3
+   ]
+  },
+  {
+   "id": "levante-a-cada-30",
+   "grupo": "Movimento",
+   "titulo": "Levante a cada 30 minutos",
+   "gatilho": "Fim de um bloco de foco, uma reunião, um commit. Levante, ande até a cozinha, volte.",
+   "acao_minima": "Ficar de pé e dar 20 passos. Registre uma vez por dia quantas vezes levantou.",
+   "descricao": "Para quem programa, é o input mais relevante do dia — e custa zero. Interromper o sentar com 2–5 minutos de movimento leve baixa a glicose e a insulina depois das refeições de forma grande e imediata. Age direto na insulina, sem esperar mitocôndria nenhuma: é o efeito que aparece primeiro.",
+   "faixa": {
+    "variaveis": [
+     "maior_bloco"
+    ],
+    "pouco": "blocos de mais de 60–90 min sem levantar",
+    "ideal": "levantar a cada 20–30 min, 2–5 min de movimento leve",
+    "demais": "não há 'demais' — mas mesa em pé sem andar conta pouco",
+    "regra": "O que importa é o *maior bloco* sentado do dia, não o total."
+   },
+   "afeta": {
+    "input": "—",
+    "processo": "GLUT4 pós-refeição (glicose e insulina depois de comer ↓)",
+    "output": "resistência à insulina ↓ — direto"
+   },
+   "registro": [
+    "Quantas vezes levantei hoje (faixa: poucas / várias / muitas)",
+    "Maior bloco sentado sem pausa",
+    "Passos por dia"
+   ],
+   "sinal": {
+    "output": "sono e energia à tarde (percepção); glicemia/HOMA-IR no exame",
+    "prazo": "efeito agudo no mesmo dia; exame em 12 semanas"
+   },
+   "evidencia": {
+    "grau": "forte",
+    "fontes": "Loh 2020 (SMD −0,55)"
+   },
+   "setas": [
+    4
+   ]
+  },
+  {
+   "id": "ande-depois-do-jantar",
+   "grupo": "Movimento",
+   "titulo": "Ande 10 minutos depois do jantar",
+   "gatilho": "Terminou de comer → calçado → 10 minutos pela rua ou pela casa. Pode ser o seu vídeo de caminhada.",
+   "acao_minima": "5 minutos de pé andando, ainda na sala. Registre.",
+   "descricao": "Caminhar logo depois de comer corta o pico de glicose da refeição, e o efeito é maior no jantar, quando o corpo tolera pior o açúcar. É o cruzamento alimentação × movimento mais barato que existe — e pode *ser* a sua caminhada leve do dia.",
+   "faixa": {
+    "variaveis": [],
+    "pouco": "sentar direto depois de comer, ou andar só 1 h depois",
+    "ideal": "10–30 min de caminhada leve, começando até 30 min depois do jantar",
+    "demais": "não há — só não exagere na intensidade com o estômago cheio",
+    "regra": "Jantar > almoço > café da manhã em efeito."
+   },
+   "afeta": {
+    "input": "a refeição que acabou de entrar",
+    "processo": "GLUT4 pós-refeição",
+    "output": "pico glicêmico ↓ → resistência à insulina ↓"
+   },
+   "registro": [
+    "Andei depois de comer? (sim/não)",
+    "Depois de qual refeição, quantos minutos",
+    "+ o que comeu (para o app cruzar)"
+   ],
+   "sinal": {
+    "output": "sonolência pós-jantar (percepção); glicemia",
+    "prazo": "agudo; exame em 12 semanas"
+   },
+   "evidencia": {
+    "grau": "moderada",
+    "fontes": "Reynolds 2016; Engeroff 2023; Buffey 2022"
+   },
+   "setas": [
+    5
+   ]
+  },
+  {
+   "id": "nunca-dois-dias",
+   "grupo": "Movimento",
+   "titulo": "Nunca dois dias seguidos parado",
+   "gatilho": "Perdeu o treino de hoje? Amanhã tem que ter *alguma coisa* — 10 minutos de caminhada bastam.",
+   "acao_minima": "Uma caminhada de 10 minutos, ou 3 lances de escada. Conta.",
+   "descricao": "O dano mais bem medido não é comer errado: é parar. As enzimas das mitocôndrias caem com meia-vida de 12 dias quando o estímulo some; duas semanas com poucos passos derrubam a sensibilidade à insulina em 17% — e em quem já tem resistência, ela não volta sozinha. Não é sobre o treino perfeito. É sobre não deixar o sinal sumir.",
+   "faixa": {
+    "variaveis": [],
+    "pouco": "3 ou mais dias seguidos sem nenhum movimento além do básico",
+    "ideal": "nunca dois dias seguidos sem pelo menos 10 minutos de movimento intencional",
+    "demais": "não há",
+    "regra": "Viagem, gripe, semana ruim: o app não julga — mostra o custo acumulando e a menor ação que zera o contador."
+   },
+   "afeta": {
+    "input": "—",
+    "processo": "ausência de sinal (desuso) — que não passa por estresse oxidativo",
+    "output": "densidade mitocondrial ↓ e resistência à insulina ↑ evitadas"
+   },
+   "registro": [
+    "Dias seguidos sem movimento (o app conta sozinho a partir dos outros registros)",
+    "—",
+    "—"
+   ],
+   "sinal": {
+    "output": "o contador de dias parados; RPE e FC de repouso não pioram",
+    "prazo": "48 h já muda transcritos; 4 dias, −18% de citrato sintase em repouso total"
+   },
+   "evidencia": {
+    "grau": "forte",
+    "fontes": "Coyle 1984; Houmard 1992; Krogh-Madsen 2010; McGlory 2018; Bajpeyi 2009"
+   },
+   "setas": [
+    "dano-desuso"
+   ]
+  },
+  {
+   "id": "seis-mil-passos",
+   "grupo": "Movimento",
+   "titulo": "Chegue aos 6 mil passos",
+   "gatilho": "Olhe o contador às 18h. Se estiver longe, a caminhada pós-jantar fecha a conta.",
+   "acao_minima": "Mais 500 passos que ontem.",
+   "descricao": "Passos são o registro mais barato do dia inteiro. O risco metabólico tem uma inflexão em 5–7 mil passos por dia; abaixo de 2 mil por duas semanas é a dose que os estudos usam para *provocar* resistência à insulina. Acima de 10 mil, o retorno achata. O alvo é pessoal: parte de onde você está.",
+   "faixa": {
+    "variaveis": [
+     "passos"
+    ],
+    "pouco": "abaixo de 2 mil/dia — a faixa de dano",
+    "ideal": "5–7 mil/dia; se você está abaixo, a meta desta semana é {prox_passos} (seu baseline + 1 mil)",
+    "demais": "acima de 10 mil o benefício para de crescer (não faz mal)",
+    "regra": "O '+1 mil por semana' é regra de progressão, não evidência — a evidência é a meta final de 5–7 mil."
+   },
+   "afeta": {
+    "input": "—",
+    "processo": "volume de movimento; quebra do sentar",
+    "output": "resistência à insulina ↓, FC de repouso ↓"
+   },
+   "registro": [
+    "Passos do dia (do celular/relógio)",
+    "—",
+    "—"
+   ],
+   "sinal": {
+    "output": "média semanal de passos subindo; FC de repouso",
+    "prazo": "4–8 semanas"
+   },
+   "evidencia": {
+    "grau": "forte",
+    "fontes": "Ding 2025; Paluch 2022; Krogh-Madsen 2010"
+   },
+   "setas": [
+    "faixa-passos"
+   ]
+  },
+  {
+   "id": "durma-7",
+   "grupo": "Sono e ritmo",
+   "titulo": "Durma 7 horas",
+   "gatilho": "A hora de levantar é fixa (trabalho). Então a hora de deitar é a variável: levantar − 7 h 30.",
+   "acao_minima": "Hoje, deitar 15 minutos antes do que ontem.",
+   "descricao": "Uma semana dormindo 5 horas derruba a sensibilidade à insulina em 10–20%. Sono curto também aumenta a fome no dia seguinte — e, se você está em dieta, faz o corpo perder mais músculo e menos gordura. É o input que acerta os três alvos de uma vez. 7–8 horas é a faixa de menor risco.",
+   "faixa": {
+    "variaveis": [
+     "levantar",
+     "deitar"
+    ],
+    "pouco": "menos de 6 h na cama de forma habitual",
+    "ideal": "7–8 h de sono; para levantar às {levantar}, deitar por volta das {deitar_ideal}",
+    "demais": "mais de 9 h habitual aparece nas coortes como risco, mas a causalidade é incerta (fronteira)",
+    "regra": "Conte 15–20 min para pegar no sono. 'Recuperar no fim de semana' não restaura a sensibilidade à insulina."
+   },
+   "afeta": {
+    "input": "cafeína e álcool tarde, jantar perto de dormir (os três atrapalham)",
+    "processo": "reparo, cortisol, grelina",
+    "output": "resistência à insulina, fome, e — em dieta — massa magra"
+   },
+   "registro": [
+    "Hora de deitar + hora de levantar (o app calcula duração e variação)",
+    "+ despertares + 'como acordei' 1–5",
+    "+ relógio (só tendência)"
+   ],
+   "sinal": {
+    "output": "'como acordei'; fome do dia seguinte; 'comi sem fome'",
+    "prazo": "dia seguinte; padrão em 2 semanas"
+   },
+   "evidencia": {
+    "grau": "forte",
+    "fontes": "Buxton 2010; Sondrup 2022; Nedeltcheva 2010; Shan 2015"
+   },
+   "setas": [
+    6,
+    7,
+    "faixa-sono"
+   ]
+  },
+  {
+   "id": "ultimo-cafe",
+   "grupo": "Sono e ritmo",
+   "titulo": "Último café 9 horas antes de deitar",
+   "gatilho": "Quando pensar em fazer café depois do almoço, olhe o relógio contra a hora de deitar.",
+   "acao_minima": "Hoje, o café da tarde vira descafeinado ou chá sem cafeína.",
+   "descricao": "Cafeína seis horas antes de deitar tira mais de uma hora de sono — e a pessoa não percebe, porque pega no sono mesmo assim. O corte para uma xícara (~100 mg) é cerca de 9 horas antes. De manhã, até ~300 mg, o café hidrata como água: o problema é *quando*, não quanto.",
+   "faixa": {
+    "variaveis": [
+     "deitar",
+     "ultimo_cafe"
+    ],
+    "pouco": "sem cafeína — já está na meta; a ação não se aplica",
+    "ideal": "último café até {corte_cafe} (9 h antes de deitar às {deitar}); até ~300 mg/dia",
+    "demais": "café depois de {corte_cafe}, ou mais de 400 mg/dia — sono pior sem você notar",
+    "regra": "Um expresso ≈ 60–80 mg; coado 200 mL ≈ 90–120 mg; energético ≈ 80 mg por lata."
+   },
+   "afeta": {
+    "input": "cafeína",
+    "processo": "latência e profundidade do sono",
+    "output": "sono → insulina, fome, humor"
+   },
+   "registro": [
+    "Hora do último café",
+    "+ quantas xícaras",
+    "+ tipo (expresso, coado, energético)"
+   ],
+   "sinal": {
+    "output": "'como acordei' nos dias com café cedo vs tarde",
+    "prazo": "dia seguinte; padrão em 1–2 semanas"
+   },
+   "evidencia": {
+    "grau": "forte",
+    "fontes": "Drake 2013; Gardiner 2023 (meta-análise); Killer 2014 (hidratação)"
+   },
+   "setas": [
+    8,
+    "faixa-cafe"
+   ]
+  },
+  {
+   "id": "jante-cedo",
+   "grupo": "Sono e ritmo",
+   "titulo": "Jante 3 horas antes de deitar",
+   "gatilho": "Defina o horário do jantar pela hora de deitar, não pela fome.",
+   "acao_minima": "Hoje, terminar o jantar 30 minutos mais cedo que ontem.",
+   "descricao": "A mesma refeição uma hora antes de deitar sobe a glicose 8% a mais do que quatro horas antes — e deixa a fome maior de manhã. Seu jantar às 18h é uma vantagem, mas não por ser 18h: é por estar longe da hora de dormir. Se a hora de deitar mudar, o jantar acompanha.",
+   "faixa": {
+    "variaveis": [
+     "deitar",
+     "jantar"
+    ],
+    "pouco": "não há 'pouco' — jantar cedo demais só encurta a janela de comer",
+    "ideal": "terminar o jantar até {jantar_ideal} (3 h antes de deitar às {deitar})",
+    "demais": "jantar a menos de 1 h de deitar",
+    "regra": "Vale para a refeição principal; um lanche leve mais tarde pesa menos."
+   },
+   "afeta": {
+    "input": "a refeição",
+    "processo": "ritmo circadiano, tolerância à glicose à noite",
+    "output": "glicose ↑ à noite, fome de manhã"
+   },
+   "registro": [
+    "Hora que terminou o jantar",
+    "+ o que comeu",
+    "—"
+   ],
+   "sinal": {
+    "output": "fome ao acordar; 'como acordei'",
+    "prazo": "dia seguinte; padrão em 2 semanas"
+   },
+   "evidencia": {
+    "grau": "moderada",
+    "fontes": "Garaulet 2022; Gu 2020"
+   },
+   "setas": [
+    10
+   ]
+  },
+  {
+   "id": "anote-o-sono",
+   "grupo": "Sono e ritmo",
+   "titulo": "Anote a hora que deitou e levantou",
+   "gatilho": "Ao pegar o celular de manhã: dois toques.",
+   "acao_minima": "Só a hora de levantar. O app pergunta a de deitar depois.",
+   "descricao": "Dois campos dão três informações: quanto dormiu, se o horário é regular, e quanto varia no fim de semana. É o registro mais barato e mais informativo do app inteiro — e o que permite cruzar sono com fome, com o treino e com o café.",
+   "faixa": {
+    "variaveis": [],
+    "pouco": "—",
+    "ideal": "registrar todo dia; a regularidade (±30 min) o app calcula e mostra, sem afirmar efeito (fronteira)",
+    "demais": "—",
+    "regra": "É um hábito de medição, não de comportamento — mas é o que faz os outros funcionarem."
+   },
+   "afeta": {
+    "input": "—",
+    "processo": "—",
+    "output": "todos os cruzamentos com sono"
+   },
+   "registro": [
+    "Deitar + levantar",
+    "+ despertares + 'como acordei'",
+    "+ relógio"
+   ],
+   "sinal": {
+    "output": "o próprio gráfico",
+    "prazo": "1 semana"
+   },
+   "evidencia": {
+    "grau": "instrumento",
+    "fontes": "escalas SQS; Windred 2024 (regularidade, fronteira)"
+   },
+   "setas": [
+    "instrumento"
+   ]
+  },
+  {
+   "id": "proteina-no-prato",
+   "grupo": "Alimentação",
+   "titulo": "Proteína em todo prato",
+   "gatilho": "Ao montar o prato, a proteína entra primeiro. Depois o resto.",
+   "acao_minima": "Um ovo, uma lata de atum, um copo de iogurte — o que estiver à mão. Registre.",
+   "descricao": "Proteína é o input mais importante que faltava no protocolo. Ela constrói o músculo onde as mitocôndrias moram, e é o que impede o jejum e a dieta de comerem músculo em vez de gordura. Em dieta, proteína alta poupa cerca de 142 kcal/dia de gasto de repouso. Carne e ovos valem por isso — não por CoQ10 ou ferro.",
+   "faixa": {
+    "variaveis": [
+     "peso",
+     "proteina_g"
+    ],
+    "pouco": "menos de {prot_pouco} g/dia (0,8 g/kg) — especialmente combinado com jejum e treino",
+    "ideal": "{prot_min}–{prot_max} g/dia (1,2–1,6 g/kg para {peso} kg) ; dividir em 3 refeições ajuda a lembrar, mas o total é o que importa",
+    "demais": "acima de {prot_max2} g/dia (2,2 g/kg) não há benefício extra",
+    "regra": "Em gramas, pelo rótulo ou app de dieta — suplemento (whey, etc.) entra na conta. Sem pesar: uma palma de carne, peixe ou frango ≈ 25–30 g; 1 ovo ≈ 6 g; 100 g de feijão cozido ≈ 5 g (não verificado)."
+   },
+   "afeta": {
+    "input": "proteína",
+    "processo": "mTOR → síntese proteica; saciedade",
+    "output": "massa magra preservada, metabolismo basal, HbA1c (com força)"
+   },
+   "registro": [
+    "Teve proteína em cada refeição? (sim/não)",
+    "Gramas no dia (rótulo, app, suplemento)",
+    "Gramas por refeição"
+   ],
+   "sinal": {
+    "output": "panturrilha e preensão não caem em dieta; saciedade",
+    "prazo": "8–12 semanas"
+   },
+   "evidencia": {
+    "grau": "forte",
+    "fontes": "Morton 2018; Wycherley (24 RCTs); Weinheimer 2010; Longland 2016"
+   },
+   "setas": [
+    "faixa-proteina"
+   ]
+  },
+  {
+   "id": "fibra-no-prato",
+   "grupo": "Alimentação",
+   "titulo": "Uma planta em todo prato",
+   "gatilho": "Junto com a proteína: uma verdura, uma fruta, um grão integral ou uma leguminosa.",
+   "acao_minima": "Uma fruta inteira, ou uma concha de feijão. Registre.",
+   "descricao": "25–29 g de fibra por dia reduz a incidência de diabetes e mortalidade, e carboidrato integral no lugar do refinado achata os picos de glicose — a flutuação glicêmica é o que mais correlaciona com estresse oxidativo. Fruta inteira e suco não são a mesma coisa: a fibra fica na fruta.",
+   "faixa": {
+    "variaveis": [
+     "fibra_g"
+    ],
+    "pouco": "menos de 15 g/dia — o padrão de quem come refinado",
+    "ideal": "25–29 g/dia ≈ 5–6 porções: ~3 de vegetais + 2 de fruta inteira + 1 de leguminosa/grão integral",
+    "demais": "acima de 40 g sem ganho extra; subir rápido dá desconforto",
+    "regra": "Em gramas, pelo rótulo ou app de dieta — suplemento de fibra (psyllium etc.) entra na conta. Sem pesar: uma concha de feijão ≈ 7 g; uma maçã ≈ 4 g; 1 pão integral ≈ 2 g; aveia 40 g ≈ 4 g."
+   },
+   "afeta": {
+    "input": "fibra, carboidrato integral",
+    "processo": "pico de glicose ↓, saciedade",
+    "output": "resistência à insulina ↓, cintura"
+   },
+   "registro": [
+    "Teve planta em cada refeição? (sim/não)",
+    "Gramas de fibra no dia (rótulo, app, suplemento)",
+    "Gramas por refeição"
+   ],
+   "sinal": {
+    "output": "saciedade; glicemia no exame",
+    "prazo": "12 semanas"
+   },
+   "evidencia": {
+    "grau": "forte",
+    "fontes": "Reynolds 2019 (Lancet); Monnier 2006"
+   },
+   "setas": [
+    "faixa-fibra"
+   ]
+  },
+  {
+   "id": "feche-a-cozinha",
+   "grupo": "Alimentação",
+   "titulo": "Feche a cozinha por 14 horas",
+   "gatilho": "Terminou o jantar → 'a cozinha fechou'. Só água, café e chá sem açúcar até a primeira refeição.",
+   "acao_minima": "Não comer depois do jantar. Registre a hora que fechou.",
+   "descricao": "Jejum de 14–16 horas reais produz efeitos modestos e mensuráveis em 8–12 semanas: peso, cintura, HOMA-IR. A 'limpeza celular' (autofagia) que se fala é promessa de roedor — o que está medido em humanos é a glicose mais baixa no dia. Seu jantar às 18h com almoço ao meio-dia dá **18 horas**, não 16 — vale decidir se é isso que você quer.",
+   "faixa": {
+    "variaveis": [
+     "jantar",
+     "primeira"
+    ],
+    "pouco": "menos de 12 h — sem sinal",
+    "ideal": "14–16 h reais; com jantar terminando às {jantar} e primeira refeição às {primeira}, o seu jejum é de {jejum_h} h",
+    "demais": "24 h ou mais repetido, ou jejum sem bater a proteína do dia — perde músculo",
+    "regra": "Refrigerante zero: registre *qual adoçante* (fronteira). Café e chá sem açúcar hidratam e não quebram o jejum energético."
+   },
+   "afeta": {
+    "input": "a regra de tempo",
+    "processo": "insulina basal ↓",
+    "output": "peso, cintura, HOMA-IR modestos"
+   },
+   "registro": [
+    "Fechei a cozinha? (sim/não)",
+    "Hora que fechou + hora que abriu",
+    "+ o que bebeu na janela"
+   ],
+   "sinal": {
+    "output": "cintura; HOMA-IR",
+    "prazo": "8–12 semanas"
+   },
+   "evidencia": {
+    "grau": "moderada",
+    "fontes": "Jamshed 2019; meta-análises de TRE; TREAT (Lowe 2020) para a face ruim"
+   },
+   "setas": [
+    11
+   ]
+  },
+  {
+   "id": "troque-o-doce",
+   "grupo": "Alimentação",
+   "titulo": "Troque o líquido doce por água",
+   "gatilho": "Antes de pegar refrigerante ou suco: um copo de água primeiro. Se ainda quiser, tudo bem — registre.",
+   "acao_minima": "Uma troca por dia.",
+   "descricao": "Açúcar líquido — refrigerante, suco (mesmo natural), energético — vai direto para gordura visceral e resistência à insulina, sem saciar. É o input ruim mais bem documentado e o mais fácil de tirar. Suco não é fruta: a fibra ficou no liquidificador.",
+   "faixa": {
+    "variaveis": [],
+    "pouco": "zero — o ideal aqui é pouco",
+    "ideal": "ocasional (menos de 1 por semana)",
+    "demais": "diário — dose-resposta com diabetes independente do peso",
+    "regra": "Refrigerante zero não tem açúcar, mas o adoçante é fronteira (registre qual)."
+   },
+   "afeta": {
+    "input": "frutose líquida",
+    "processo": "picos de glicose, gordura visceral",
+    "output": "resistência à insulina ↑, cintura"
+   },
+   "registro": [
+    "Bebi algo doce hoje? (sim/não)",
+    "Qual, quantos",
+    "—"
+   ],
+   "sinal": {
+    "output": "cintura; triglicerídeos",
+    "prazo": "4–12 semanas"
+   },
+   "evidencia": {
+    "grau": "forte",
+    "fontes": "Stanhope 2009; Imamura 2015"
+   },
+   "setas": [
+    12
+   ]
+  },
+  {
+   "id": "comida-de-verdade",
+   "grupo": "Alimentação",
+   "titulo": "Comida de verdade em duas das três refeições",
+   "gatilho": "Ao decidir o que comer: 'isso foi cozinhado ou foi aberto?'",
+   "acao_minima": "Uma refeição do dia feita de ingredientes. Registre.",
+   "descricao": "Ultraprocessado faz a pessoa comer ~500 kcal a mais por dia sem perceber, e a associação com diabetes é forte. Mas 'evitar' é registro negativo, que vira culpa. O app inverte: você registra o que comeu, ele classifica com incerteza (até especialistas discordam), e mostra a proporção da semana.",
+   "faixa": {
+    "variaveis": [],
+    "pouco": "maioria das refeições de pacote",
+    "ideal": "2 de 3 refeições feitas de ingredientes (regra de bolso, não evidência de número)",
+    "demais": "não há",
+    "regra": "Gordura trans no rótulo: zero, sem faixa. Excesso calórico piora insulina e ROS, mas *não* danifica a mitocôndria — o dano é outro."
+   },
+   "afeta": {
+    "input": "ultraprocessado, excesso calórico",
+    "processo": "+500 kcal/dia, picos de glicose, ROS",
+    "output": "resistência à insulina ↑, cintura, peso"
+   },
+   "registro": [
+    "Quantas refeições 'cozinhadas' hoje (0–3)",
+    "O que comeu (o app classifica NOVA com incerteza)",
+    "—"
+   ],
+   "sinal": {
+    "output": "cintura, peso (média semanal)",
+    "prazo": "4–12 semanas"
+   },
+   "evidencia": {
+    "grau": "forte",
+    "fontes": "Hall 2019; Lane 2024"
+   },
+   "setas": [
+    13
+   ]
+  },
+  {
+   "id": "beba-pela-sede",
+   "grupo": "Alimentação",
+   "titulo": "Beba pela sede, olhe a urina",
+   "gatilho": "Garrafa na mesa. Ao levantar a cada 30 min, um gole. De manhã, olhe a cor.",
+   "acao_minima": "Um copo ao acordar.",
+   "descricao": "Água não fabrica mitocôndria — mas deixa o treino e o jejum renderem. 1–2% de desidratação já piora humor, concentração e dor de cabeça; café até ~300 mg conta como líquido (não desidrata). Do outro lado, beber muito além da sede em exercício longo causa hiponatremia. O guia é a sede e a cor da urina, não uma meta de litros.",
+   "faixa": {
+    "variaveis": [],
+    "pouco": "urina escura (5–8 na escala de 8 tons) na maioria dos dias; 3–4 idas ao banheiro",
+    "ideal": "urina clara a amarelo-claro (1–3); sede atendida; sua referência hoje: ~{copos_meta} copos de 250 mL ({agua_meta} L), café incluído, com {min_treino_dia} min de treino",
+    "demais": "mais de 1 L por hora além da sede em exercício longo",
+    "regra": "Peso antes/depois do treino: cada 1 kg a menos ≈ 1 L de suor não reposto."
+   },
+   "afeta": {
+    "input": "água, café, chá",
+    "processo": "volume plasmático (treino), adesão ao jejum",
+    "output": "rendimento no treino, humor, dor de cabeça"
+   },
+   "registro": [
+    "Cor da urina da manhã (4 tons)",
+    "+ 'bebi pouco / normal / muito'",
+    "+ kg antes e depois do treino"
+   ],
+   "sinal": {
+    "output": "dor de cabeça e brain fog (percepção)",
+    "prazo": "mesmo dia"
+   },
+   "evidencia": {
+    "grau": "forte (treino, café); contestada (crônico)",
+    "fontes": "Sawka 2015; Armstrong 2012; Killer 2014; consenso EAH 2015"
+   },
+   "setas": [
+    "faixa-cafe",
+    "aviso-sede"
+   ]
+  },
+  {
+   "id": "se-beber",
+   "grupo": "Alimentação",
+   "titulo": "Se beber, pouco e cedo",
+   "gatilho": "Antes da primeira dose, veja a hora contra a hora de deitar.",
+   "acao_minima": "Uma dose a menos que o planejado, ou uma hora mais cedo.",
+   "descricao": "Álcool à noite adianta o sono e fragmenta a segunda metade — 'ajuda a dormir' é meia verdade. Bebedeira corta a síntese de músculo em 24–37% depois do treino. Zero é o mínimo de risco; até 7 doses por semana é quase neutro nos grandes estudos, e acima disso a curva desce. Você já está em zero; para outros usuários, a faixa existe.",
+   "faixa": {
+    "variaveis": [
+     "alcool",
+     "sexo"
+    ],
+    "pouco": "zero — o mínimo de risco",
+    "ideal": "até 7 doses/semana ({alcool_g} g de álcool), nunca perto de deitar",
+    "demais": "mais de 7/semana, ou 4+ numa noite, ou nas horas antes de dormir",
+    "regra": "Uma dose ≈ 14 g: lata de cerveja 350 mL, taça de vinho 150 mL, dose de destilado 45 mL."
+   },
+   "afeta": {
+    "input": "álcool",
+    "processo": "sono fragmentado, REM ↓; síntese proteica ↓",
+    "output": "sono → insulina, fome; massa magra"
+   },
+   "registro": [
+    "Bebi hoje? (sim/não)",
+    "Doses + hora",
+    "—"
+   ],
+   "sinal": {
+    "output": "'como acordei'; FC noturna (relógio)",
+    "prazo": "mesma noite"
+   },
+   "evidencia": {
+    "grau": "forte (sono); contestada (curva em J)",
+    "fontes": "Wood 2018; GBD 2018; Parr 2014"
+   },
+   "setas": [
+    9,
+    "faixa-alcool"
+   ]
+  },
+  {
+   "id": "pergunte-a-fome",
+   "grupo": "Alimentação",
+   "titulo": "Antes de repetir, pergunte à fome",
+   "gatilho": "Mão indo para a segunda porção, ou para o armário fora de hora: 'fome de estômago ou fome de cabeça?'",
+   "acao_minima": "Responder a pergunta. Comer ou não, registrar.",
+   "descricao": "Fome emocional não se combate com força de vontade — se entende com dados. O gatilho mais bem documentado de fome por comida calórica é a noite mal dormida. O app cruza sua resposta com o sono da véspera, o café, o álcool e o jantar tardio — e mostra o padrão, sem julgar. A 'dopamina do treino' que resolveria isso não se sustentou nos estudos.",
+   "faixa": {
+    "variaveis": [],
+    "pouco": "—",
+    "ideal": "responder sempre que a pergunta aparecer; escala de fome 1–10 antes de comer",
+    "demais": "—",
+    "regra": "A frase exata ('fome de estômago ou de cabeça?') é design, não evidência — testar na PoC (Q19)."
+   },
+   "afeta": {
+    "input": "o que entra fora de hora",
+    "processo": "grelina/sono",
+    "output": "o laço sono → fome → prato"
+   },
+   "registro": [
+    "Fome 1–10 antes de comer",
+    "+ 'de estômago / de cabeça'",
+    "+ o que comeu"
+   ],
+   "sinal": {
+    "output": "'comi sem fome' caindo nas semanas com sono melhor",
+    "prazo": "padrão em 2 semanas"
+   },
+   "evidencia": {
+    "grau": "forte (sono → fome); instrumento",
+    "fontes": "Greer 2013; Spiegel 2004; Flint 2000 (VAS)"
+   },
+   "setas": [
+    7
+   ]
+  },
+  {
+   "id": "emagreca-devagar",
+   "grupo": "Corpo e medida",
+   "titulo": "Emagreça no máximo meio quilo por semana",
+   "gatilho": "Ao ver a balança: olhe a média da semana, não o dia. Se caiu mais de 0,5–1% do peso, freie.",
+   "acao_minima": "Não cortar mais nada esta semana. Manter proteína e força.",
+   "descricao": "Emagrecer é consequência — mas a velocidade é um input. Déficit moderado (15–25%) perde ~0,5 kg por semana com adaptação pequena (50–120 kcal/dia). Déficit severo derruba o T3 em 3–5 dias e faz o músculo cair mais rápido que a gordura: a balança desce, o metabolismo basal desce junto. O que protege: proteína, força e sono.",
+   "faixa": {
+    "variaveis": [
+     "peso"
+    ],
+    "pouco": "peso estável — não é problema; a adaptação some em 1–2 anos",
+    "ideal": "até {perda_ideal} kg/semana (0,5% de {peso} kg), com proteína e força — esta semana: {delta_peso}",
+    "demais": "mais de {perda_max} kg/semana (1%) sustentado — músculo indo junto",
+    "regra": "A balança engana nas primeiras semanas (água do glicogênio). Peso = média de 7 dias; cintura e panturrilha contam a história certa."
+   },
+   "afeta": {
+    "input": "tamanho do déficit",
+    "processo": "termogênese adaptativa; perda de massa magra",
+    "output": "metabolismo basal, massa magra"
+   },
+   "registro": [
+    "Peso (o app faz a média semanal)",
+    "+ 'comi bem menos que o normal?'",
+    "+ calorias (quem conta)"
+   ],
+   "sinal": {
+    "output": "panturrilha e preensão estáveis enquanto a cintura cai",
+    "prazo": "4–12 semanas"
+   },
+   "evidencia": {
+    "grau": "forte",
+    "fontes": "CALERIE; Nunes 2022; Weinheimer 2010; Deller 2026; Loucks 2003"
+   },
+   "setas": [
+    "dano-metab"
+   ]
+  },
+  {
+   "id": "meca-a-cintura",
+   "grupo": "Corpo e medida",
+   "titulo": "Fita na cintura toda segunda",
+   "gatilho": "Segunda de manhã, antes do café, na altura do umbigo, sem apertar.",
+   "acao_minima": "Uma medida. Anote.",
+   "descricao": "A cintura mede o que a balança esconde: gordura visceral cai 6% com exercício mesmo sem o peso mudar. Cintura dividida pela altura abaixo de 0,5 é a melhor triagem barata de risco metabólico — melhor que IMC. É o output de faixa B que mais responde ao Núcleo.",
+   "faixa": {
+    "variaveis": [
+     "altura",
+     "cintura",
+     "sexo"
+    ],
+    "pouco": "—",
+    "ideal": "cintura abaixo de {cintura_ideal} cm (metade da sua altura de {altura} cm); corte brasileiro de risco: {corte_cintura} cm; hoje: {cintura} cm",
+    "demais": "—",
+    "regra": "Contra o seu próprio baseline: a direção importa mais que o número. Mesmo dia, mesma hora, mesma fita."
+   },
+   "afeta": {
+    "input": "—",
+    "processo": "—",
+    "output": "resistência à insulina (proxy), emagrecimento"
+   },
+   "registro": [
+    "Cintura em cm",
+    "—",
+    "—"
+   ],
+   "sinal": {
+    "output": "a própria cintura",
+    "prazo": "4–12 semanas"
+   },
+   "evidencia": {
+    "grau": "instrumento (forte)",
+    "fontes": "Browning 2010; Verheggen 2016; Barbosa 2006"
+   },
+   "setas": [
+    "instrumento"
+   ]
+  },
+  {
+   "id": "panturrilha-preensao",
+   "grupo": "Corpo e medida",
+   "titulo": "Meça a panturrilha e a preensão uma vez por mês",
+   "gatilho": "Primeira segunda do mês, junto com a cintura.",
+   "acao_minima": "Só a panturrilha, com a fita.",
+   "descricao": "Massa magra é o alvo do dano que ninguém mede em casa — e dá para medir: a circunferência da panturrilha acompanha a massa magra com correlação de 0,85, e a força de preensão diz se ela funciona. Sem dinamômetro, repetições até falhar num exercício fixo servem. É como você sabe se os 5 kg que saíram eram gordura ou músculo.",
+   "faixa": {
+    "variaveis": [
+     "sexo"
+    ],
+    "pouco": "panturrilha abaixo de {pant_corte} cm (baixa) / {pant_grave} cm (grave); preensão abaixo de {preensao_corte} kg",
+    "ideal": "estável ou subindo enquanto a cintura cai",
+    "demais": "—",
+    "regra": "Bioimpedância de balança: só tendência, nunca o número."
+   },
+   "afeta": {
+    "input": "—",
+    "processo": "—",
+    "output": "massa magra, metabolismo basal"
+   },
+   "registro": [
+    "Panturrilha em cm",
+    "+ repetições até falhar (flexão ou agachamento)",
+    "+ dinamômetro"
+   ],
+   "sinal": {
+    "output": "os próprios",
+    "prazo": "8–12 semanas"
+   },
+   "evidencia": {
+    "grau": "instrumento (forte)",
+    "fontes": "NHANES (panturrilha); EWGSOP2 (preensão)"
+   },
+   "setas": [
+    "instrumento"
+   ]
+  }
+ ],
+ "medidas": [
+  {
+   "id": "imc",
+   "titulo": "IMC",
+   "como": "peso ÷ altura²",
+   "para_que": "Não mede gordura, mas calibra o resto: o ponto de partida dos tiros, os cortes da panturrilha e a base da proteína. Cintura/estatura é melhor triagem de risco (AUC 0,70 vs 0,67).",
+   "muda": "semanas a meses",
+   "fontes": "OMS; Browning 2010",
+   "grau": "instrumento"
+  },
+  {
+   "id": "whtr",
+   "titulo": "Cintura ÷ estatura",
+   "como": "fita no umbigo, segunda de manhã, sem apertar",
+   "para_que": "A melhor triagem barata de risco metabólico. Abaixo de 0,5 para todos; corte brasileiro de risco 88 cm (H) / 84 cm (M).",
+   "muda": "4–12 semanas",
+   "fontes": "Browning 2010; Barbosa 2006",
+   "grau": "forte"
+  },
+  {
+   "id": "panturrilha",
+   "titulo": "Panturrilha",
+   "como": "fita no ponto mais largo, sentado, perna a 90°",
+   "para_que": "Acompanha a massa magra com r ≈ 0,85. Se a cintura cai e a panturrilha não, você está perdendo gordura e guardando músculo.",
+   "muda": "8–12 semanas",
+   "fontes": "NHANES (Gonzalez 2021); EWGSOP2",
+   "grau": "forte"
+  },
+  {
+   "id": "preensao",
+   "titulo": "Força de preensão",
+   "como": "dinamômetro de mão (barato); sem ele, repetições até falhar num exercício fixo",
+   "para_que": "Indicador de *função* muscular — cai 2–5× mais rápido que a massa e prediz desfechos melhor que ela.",
+   "muda": "4–8 semanas",
+   "fontes": "EWGSOP2; Mitchell 2012",
+   "grau": "forte"
+  },
+  {
+   "id": "fc_repouso",
+   "titulo": "FC de repouso",
+   "como": "ao acordar, antes de levantar; dedo no pulso 30 s × 2, ou relógio (vale)",
+   "para_que": "Cai com treino regular; sobe com excesso, infecção, álcool e sono ruim. Só a média de 7 dias importa.",
+   "muda": "4–8 semanas",
+   "fontes": "Reimers 2018; Plews 2014; O'Grady 2024",
+   "grau": "forte"
+  },
+  {
+   "id": "fc_max",
+   "titulo": "FC máxima e zonas",
+   "como": "estimada pela idade (Tanaka: 208 − 0,7 × idade), erro de ±10 bpm",
+   "para_que": "Dá o número por trás de 'ritmo de conversa' e 'esforço máximo'. O teste de fala continua sendo o guia; os números são apoio.",
+   "muda": "—",
+   "fontes": "Tanaka 2001 — fórmula padrão, não verificada nesta rodada; Boyd 2013 (70%)",
+   "grau": "convenção"
+  },
+  {
+   "id": "rmr",
+   "titulo": "Gasto de repouso e déficit",
+   "como": "Mifflin-St Jeor (±10%) × fator de atividade",
+   "para_que": "Dimensiona o déficit moderado (15–25%) — o que perde ~0,5 kg/semana sem derrubar o metabolismo. É estimativa: o que confirma é a balança (média semanal) e a panturrilha.",
+   "muda": "—",
+   "fontes": "Mifflin 1990; CALERIE; Nunes 2022",
+   "grau": "instrumento"
+  },
+  {
+   "id": "agua",
+   "titulo": "Meta de água",
+   "como": "copos de 250 mL; café e chá contam; cor da urina confirma",
+   "para_que": "Referência EFSA: 2,5 L (H) / 2,0 L (M) de água total, ~80% de bebidas; cada 30 min de treino ≈ +0,3–0,5 L (1 kg de suor = 1 L). A sede e a urina clara mandam mais que o número.",
+   "muda": "mesmo dia",
+   "fontes": "EFSA 2010; Sawka 2015; Killer 2014",
+   "grau": "referência (AI, não RCT)"
+  },
+  {
+   "id": "peso",
+   "titulo": "Peso e velocidade",
+   "como": "média de 7 dias, mesma hora",
+   "para_que": "O dia engana (água do glicogênio). A velocidade é o que importa: até 0,5% do peso por semana com proteína e força.",
+   "muda": "semana a semana",
+   "fontes": "Kreitzman 1992; CALERIE",
+   "grau": "forte"
+  }
+ ]
+}

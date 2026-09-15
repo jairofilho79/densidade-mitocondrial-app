@@ -1,0 +1,38 @@
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Node / Vite / PWA
+node_modules/
+dist/
+dev-dist/
+.vite/
+coverage/
+*.tsbuildinfo
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Ambiente e segredos
+.env
+.env.*
+!.env.example
+
+# Editores
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Obsidian (estado local do vault, não o conteúdo)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+.trash/
+
+# Capacitor (v2)
+android/
+ios/
+
+# Claude Code local
+.claude/settings.local.json
