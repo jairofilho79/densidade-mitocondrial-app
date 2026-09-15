@@ -17,11 +17,30 @@ describe('durma-7', () => {
     const m = durma7.meta(ctxSono('01:00', '06:30', 5.2));
     expect(m.zona).toBe('pouco');
     expect(m.valor).toBe(5.2);
-    expect(m.texto).toBe('5.2 h de sono (5.5 h na cama)');
+    expect(m.texto).toBe('5,2 h de sono (5,5 h na cama)');
     expect(m.proximoPasso).toBe('deitar 15 min antes por uma semana, até chegar às 23:00');
     expect(m.faixa).toEqual({ pouco: 6, meta: 7, demais: 8.5 });
     expect(m.posicao).toBeCloseTo(0.05, 3);
     expect(m.deDia).toBeUndefined();
+    expect(m.vals).toEqual({ levantar: '06:30', deitar_ideal: '23:00' });
+  });
+
+  it('limite exato 6,0 h: ainda atencao (não pouco)', () => {
+    const m = durma7.meta(ctxSono('00:30', '06:30', 6.0));
+    expect(m.zona).toBe('atencao');
+  });
+
+  it('limite exato 7,0 h: já meta (não atencao)', () => {
+    const m = durma7.meta(ctxSono('23:00', '06:30', 7.0));
+    expect(m.zona).toBe('meta');
+    expect(m.proximoPasso).toBe('manter o horário; anotar a variação');
+    expect(m.texto).not.toContain('fronteira');
+  });
+
+  it('limite exato 8,5 h: meta, sem o texto de fronteira (só "mais de")', () => {
+    const m = durma7.meta(ctxSono('22:00', '06:30', 8.5));
+    expect(m.zona).toBe('meta');
+    expect(m.texto).not.toContain('fronteira');
   });
 
   it('atencao: 6,7 h', () => {
@@ -38,10 +57,11 @@ describe('durma-7', () => {
     expect(m.posicao).toBeCloseTo(0.675, 3);
   });
 
-  it('demais não existe: 9,2 h vira atencao', () => {
+  it('demais não existe: 9,2 h continua meta, com texto de fronteira', () => {
     const m = durma7.meta(ctxSono('21:00', '06:30', 9.2));
-    expect(m.zona).toBe('atencao');
-    expect(m.proximoPasso).toBe('mais de 8,5 h: manter o horário e anotar como acordou');
+    expect(m.zona).toBe('meta');
+    expect(m.proximoPasso).toBe('manter');
+    expect(m.texto).toBe('9,2 h de sono (9,5 h na cama) — mais de 8,5 h: sem sinal claro de custo (fronteira)');
   });
 
   it('sem-dado: nenhum dia com deitou e levantou', () => {
