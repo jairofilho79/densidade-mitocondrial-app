@@ -33,6 +33,7 @@ export interface Meta {
   precisaDe?: CampoId[];
   seguranca?: string;
   deDia?: DataISO;             // de que dia é o valor, quando não é hoje
+  vals?: Record<string, string | number>; // placeholders de faixa.pouco/ideal/demais/regra do catálogo
 }
 
 export interface AcaoMeta {

@@ -1,8 +1,8 @@
 import type { CampoId } from '../campos';
 import type { AcaoId } from '../catalogo/tipos';
-import { somarDias } from '../derivados';
+import { horaParaMin, horasEntre, minParaHora, somarDias } from '../derivados';
 import { avisoSeguranca } from '../seguranca';
-import type { DataISO, Dia, EventoTreino, Perfil, Semana, SemanaISO } from '../tipos';
+import type { DataISO, Dia, EventoTreino, Hora, Perfil, Semana, SemanaISO } from '../tipos';
 import type { Contexto, Meta } from './tipos';
 
 const DIA_MS = 86_400_000;
@@ -42,7 +42,11 @@ export function inicioSemana(data: DataISO): DataISO {
   return somarDias(data, 1 - diaSemana);
 }
 
-export function semDado(precisaDe: CampoId[], texto = 'ainda sem registro'): Meta {
+export function semDado(
+  precisaDe: CampoId[],
+  texto = 'ainda sem registro',
+  vals?: Record<string, string | number>,
+): Meta {
   return {
     zona: 'sem-dado',
     valor: null,
@@ -51,7 +55,24 @@ export function semDado(precisaDe: CampoId[], texto = 'ainda sem registro'): Met
     texto,
     proximoPasso: 'registre para ver onde você está',
     precisaDe,
+    vals,
   };
+}
+
+/** Número com vírgula decimal, sem zeros à direita desnecessários (`fmt(7.5)` → `"7,5"`, `fmt(2)` → `"2"`). */
+export function fmt(n: number, casas = 1): string {
+  let s = n.toFixed(casas);
+  if (s.includes('.')) s = s.replace(/0+$/, '').replace(/\.$/, '');
+  return s.replace('.', ',');
+}
+
+/** Substitui `{chave}` por `vals[chave]` (números via `fmt`); chaves ausentes ficam como estão. */
+export function interpolar(texto: string, vals: Record<string, string | number>): string {
+  return texto.replace(/\{([a-z_0-9]+)\}/g, (m, chave: string) => {
+    if (!(chave in vals)) return m;
+    const v = vals[chave];
+    return typeof v === 'number' ? fmt(v) : v;
+  });
 }
 
 /** Dia mais recente em que `dias[i][campo] !== undefined` (`null` conta como registrado). */
@@ -72,11 +93,19 @@ export function eventosUltimos(ctx: Contexto, n: number): EventoTreino[] {
   return ctx.eventos.filter((e) => e.data >= limite && e.data <= hoje);
 }
 
-/** Sessões de `tipo` na semana ISO corrente (segunda-feira até hoje). */
-export function contarSessoes(eventos: EventoTreino[], tipo: EventoTreino['tipo'], ctx: Contexto): number {
-  const hoje = hojeISO(ctx);
-  const segunda = inicioSemana(hoje);
-  return eventos.filter((e) => e.tipo === tipo && e.data >= segunda && e.data <= hoje).length;
+/** Sessões de `tipo` nos últimos 7 dias (janela móvel; ver regra de precedência no contrato). */
+export function contarSessoes7(ctx: Contexto, tipo: EventoTreino['tipo']): number {
+  return eventosUltimos(ctx, 7).filter((e) => e.tipo === tipo).length;
+}
+
+/** Soma de `dia[campo]` (números; `null` conta como 0) nos últimos 7 dias; `undefined` se nenhum dia registrou o campo. */
+export function somaUltimos7<K extends keyof Dia>(ctx: Contexto, campo: K): number | undefined {
+  const registrados = diasUltimos(ctx, 7).filter((d) => d[campo] !== undefined);
+  if (registrados.length === 0) return undefined;
+  return registrados.reduce((soma, d) => {
+    const v = d[campo];
+    return soma + (typeof v === 'number' ? v : 0);
+  }, 0);
 }
 
 /** `ctx.semana` quando ela é a revisão da semana ISO de hoje; senão `undefined`. */
@@ -93,4 +122,24 @@ export function deDiaSeNaoHoje(ctx: Contexto, dia: Dia): { deDia?: DataISO } {
 export function aplicarSeguranca(id: AcaoId, perfil: Perfil, meta: Meta): Meta {
   const aviso = avisoSeguranca(id, perfil);
   return aviso === undefined ? meta : { ...meta, seguranca: aviso };
+}
+
+/**
+ * Horas de `hora` até `deitar`, com virada de meia-noite tratada: quando `horasEntre` passa de 12 h
+ * (o café/jantar ficaria "quase um dia inteiro antes" de deitar), a diferença real é negativa —
+ * `hora` é depois de `deitar`.
+ */
+export function horasAntesDeDeitar(hora: Hora, deitar: Hora): number {
+  const dh = horasEntre(hora, deitar);
+  return dh > 12 ? dh - 24 : dh;
+}
+
+/** Move `horaAtual` em direção a `horaAlvo` em no máximo 15 min (o menor entre 15 e o que falta). */
+export function passo15min(horaAtual: Hora, horaAlvo: Hora, direcao: 'antes' | 'depois'): { hora: Hora; minutos: number } {
+  const atualMin = horaParaMin(horaAtual);
+  const alvoMin = horaParaMin(horaAlvo);
+  const restam = direcao === 'antes' ? ((atualMin - alvoMin) % 1440 + 1440) % 1440 : ((alvoMin - atualMin) % 1440 + 1440) % 1440;
+  const minutos = Math.min(15, restam);
+  const hora = minParaHora(direcao === 'antes' ? atualMin - minutos : atualMin + minutos);
+  return { hora, minutos };
 }

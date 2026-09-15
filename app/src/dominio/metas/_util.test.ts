@@ -1,15 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import {
   aplicarSeguranca,
-  contarSessoes,
+  contarSessoes7,
   dataISO,
   diasUltimos,
   eventosUltimos,
+  fmt,
+  horasAntesDeDeitar,
   hojeISO,
   inicioSemana,
+  interpolar,
+  passo15min,
   semDado,
   semanaAtual,
   semanaISO,
+  somaUltimos7,
   ultimoDiaCom,
   deDiaSeNaoHoje,
 } from './_util';
@@ -95,19 +100,33 @@ describe('janelas', () => {
     expect(eventosUltimos(ctx, 7).length).toBe(2);
   });
 
-  it('contarSessoes conta só a semana ISO corrente (segunda 14 a hoje 17)', () => {
+  it('contarSessoes7 conta os últimos 7 dias (janela móvel), não segunda→hoje', () => {
     const ctx = ctxBase({
       eventos: [
         eventoBase('2026-09-17', 'tiros'),
         eventoBase('2026-09-15', 'tiros'),
         eventoBase('2026-09-14', 'forca'),
-        eventoBase('2026-09-13', 'tiros'), // domingo da semana passada
+        eventoBase('2026-09-11', 'tiros'), // dentro dos 7 dias móveis (limite 11/09), fora da semana ISO
+        eventoBase('2026-09-09', 'tiros'), // 8 dias atrás: exclui
         eventoBase('2026-09-18', 'tiros'), // amanhã (não deveria existir, mas não conta)
       ],
     });
-    expect(contarSessoes(ctx.eventos, 'tiros', ctx)).toBe(2);
-    expect(contarSessoes(ctx.eventos, 'forca', ctx)).toBe(1);
-    expect(contarSessoes(ctx.eventos, 'moderado', ctx)).toBe(0);
+    expect(contarSessoes7(ctx, 'tiros')).toBe(3);
+    expect(contarSessoes7(ctx, 'forca')).toBe(1);
+    expect(contarSessoes7(ctx, 'moderado')).toBe(0);
+  });
+
+  it('somaUltimos7 soma o campo nos últimos 7 dias; null conta como 0; undefined se ninguém registrou', () => {
+    const ctx = ctxBase({
+      hoje: diaBase(HOJE, { alcoolDoses: 4 }),
+      dias: [
+        diaBase('2026-09-16', { alcoolDoses: null }),
+        diaBase('2026-09-11', { alcoolDoses: 5 }), // dentro dos 7 dias (limite 11/09)
+        diaBase('2026-09-01', { alcoolDoses: 20 }), // fora da janela
+      ],
+    });
+    expect(somaUltimos7(ctx, 'alcoolDoses')).toBe(9);
+    expect(somaUltimos7(ctxBase(), 'alcoolDoses')).toBeUndefined();
   });
 
   it('semanaAtual só devolve a revisão da semana ISO de hoje', () => {
@@ -136,6 +155,41 @@ describe('aplicarSeguranca', () => {
     expect(m.seguranca).toContain('converse com quem te acompanha');
     expect(m.proximoPasso).toBe('manter');
     expect(m.zona).toBe('meta');
+  });
+});
+
+describe('fmt', () => {
+  it('vírgula decimal, sem zeros à direita desnecessários', () => {
+    expect(fmt(7.5)).toBe('7,5');
+    expect(fmt(2)).toBe('2');
+    expect(fmt(0.45, 2)).toBe('0,45');
+    expect(fmt(0)).toBe('0');
+    expect(fmt(-0.5)).toBe('-0,5');
+  });
+});
+
+describe('interpolar', () => {
+  it('substitui {chave} por vals[chave]; números via fmt; chaves ausentes ficam como estão', () => {
+    expect(interpolar('até {corte} ({n} vezes)', { corte: '14:30', n: 2.5 })).toBe('até 14:30 (2,5 vezes)');
+    expect(interpolar('falta {x}', {})).toBe('falta {x}');
+  });
+});
+
+describe('horasAntesDeDeitar', () => {
+  it('trata a virada de meia-noite', () => {
+    expect(horasAntesDeDeitar('14:00', '23:00')).toBe(9);
+    expect(horasAntesDeDeitar('22:30', '22:00')).toBe(-0.5);
+    expect(horasAntesDeDeitar('14:00', '00:30')).toBeCloseTo(10.5, 5);
+    expect(horasAntesDeDeitar('23:30', '01:00')).toBeCloseTo(1.5, 5);
+  });
+});
+
+describe('passo15min', () => {
+  it('move no máximo 15 min em direção ao alvo, na direção pedida', () => {
+    expect(passo15min('16:00', '14:30', 'antes')).toEqual({ hora: '15:45', minutos: 15 });
+    expect(passo15min('14:36', '14:30', 'antes')).toEqual({ hora: '14:30', minutos: 6 });
+    expect(passo15min('20:00', '20:30', 'depois')).toEqual({ hora: '20:15', minutos: 15 });
+    expect(passo15min('20:20', '20:30', 'depois')).toEqual({ hora: '20:30', minutos: 10 });
   });
 });
 
