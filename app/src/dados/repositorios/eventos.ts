@@ -18,7 +18,7 @@ function uuidV4ViaGetRandomValues(): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
-/** ids UUID v4; usa `crypto.randomUUID` quando existe, com fallback via `getRandomValues` (Safari/WebKit mais antigos). */
+/** Contrato: ids UUID v4 com fallback sem `crypto.randomUUID` (via `getRandomValues`, Safari/WebKit mais antigos). */
 function novoId(): string {
   return crypto.randomUUID?.() ?? uuidV4ViaGetRandomValues();
 }

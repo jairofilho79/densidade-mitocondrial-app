@@ -30,6 +30,7 @@ Não prescreve (ADR-001). Não compara com tabelas quando o dado é do próprio 
 - Ordem dos nutrientes (fibra → proteína → carboidrato) como ação (Q26): só depois de verificar. Na v1 é um campo opcional no evento refeição (`comecouPelaFibra`) para já haver dado.
 - "Tiros até travar" como afirmação (Q24): na v1 é só registro pessoal, sem interpretação.
 - Notificações locais, Health Connect, Capacitor (v2).
+- Modo em memória sem IndexedDB.
 
 ## 2. Estrutura do projeto
 
@@ -252,7 +253,7 @@ Sem teste estatístico. Sempre mostra n. Comparação é sempre com a própria p
 
 - Campo fora de faixa (`min`/`max` do registro): a tela avisa e não grava; o domínio nunca recebe valor inválido.
 - Perfil incompleto: as metas que dependem do campo faltante retornam `sem-dado` com `precisaDe: ['perfil.altura']`; a tela Hoje leva ao Perfil.
-- IndexedDB indisponível (modo privado): mensagem única na abertura, app continua em memória na sessão, export ainda funciona.
+- IndexedDB indisponível (modo privado, bloqueio): mensagem única na abertura explicando que este navegador não permite guardar dados e sugerindo abrir fora do modo privado; a v1 não tem modo em memória (fora do escopo, ver §1).
 - Import inválido: mostra o motivo (versão, JSON malformado, tabela desconhecida) e não altera nada.
 - Catálogo fora de sync com o brain: o teste de hash falha no CI; nunca em runtime.
 
