@@ -115,19 +115,22 @@ function maisRecente(nova: Linha, atual: Linha | undefined): boolean {
   return a > b;
 }
 
+/** Lê as 7 tabelas dentro de uma transação de leitura: snapshot consistente mesmo se algo grava no meio tempo. */
 export async function exportar(): Promise<Exportacao> {
-  const [perfil, dia, eventoTreino, eventoRefeicao, semana, mes, exame] = await Promise.all([
-    lerPerfil(),
-    db.dia.toArray(),
-    db.eventoTreino.toArray(),
-    db.eventoRefeicao.toArray(),
-    db.semana.toArray(),
-    db.mes.toArray(),
-    db.exame.toArray(),
-  ]);
-  const exportacao: Exportacao = { versao: 1, exportadoEm: new Date().toISOString(), dia, eventoTreino, eventoRefeicao, semana, mes, exame };
-  if (perfil) exportacao.perfil = perfil;
-  return exportacao;
+  return db.transaction('r', db.tables, async () => {
+    const [perfil, dia, eventoTreino, eventoRefeicao, semana, mes, exame] = await Promise.all([
+      lerPerfil(),
+      db.dia.toArray(),
+      db.eventoTreino.toArray(),
+      db.eventoRefeicao.toArray(),
+      db.semana.toArray(),
+      db.mes.toArray(),
+      db.exame.toArray(),
+    ]);
+    const exportacao: Exportacao = { versao: 1, exportadoEm: new Date().toISOString(), dia, eventoTreino, eventoRefeicao, semana, mes, exame };
+    if (perfil) exportacao.perfil = perfil;
+    return exportacao;
+  });
 }
 
 /**

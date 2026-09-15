@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/dados/db';
 import { limparBanco, PERFIL_TESTE } from '@/dados/testes/banco';
 import { lerPerfil, salvarPerfil } from '@/dados/repositorios/perfil';
@@ -49,6 +49,18 @@ describe('exportar', () => {
     const e = await exportar();
     expect(e.perfil).toBeUndefined();
     expect(e.dia).toEqual([]);
+  });
+
+  it('lê as 7 tabelas dentro de uma única transação de leitura (snapshot consistente)', async () => {
+    await popular();
+    const spy = vi.spyOn(db, 'transaction');
+    await exportar();
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy.mock.calls[0][0]).toBe('r');
+    expect((spy.mock.calls[0][1] as { name: string }[]).map((t) => t.name).sort()).toEqual(
+      db.tables.map((t) => t.name).sort(),
+    );
+    spy.mockRestore();
   });
 });
 
