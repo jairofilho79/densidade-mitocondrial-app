@@ -4,7 +4,7 @@ import type { Perfil as PerfilTipo, Sexo, Hora } from '@/dominio/tipos';
 import type { Contexto } from '@/dominio/metas/tipos';
 import { camposDe } from '@/dominio/campos';
 import { derivar } from '@/dominio/derivados';
-import { medidas } from '@/dominio/medidas';
+import { medidas, type MedidaResultado } from '@/dominio/medidas';
 import { salvarPerfil } from '@/dados/repositorios/perfil';
 import { hojeISO } from '@/dados/datas';
 import { usePerfil } from '@/ui/hooks/usePerfil';
@@ -105,7 +105,10 @@ export function Perfil() {
         derivados: derivar(perfilTmp, [], [], undefined, hoje), agora: new Date(),
       }
     : null;
-  const medidasAoVivo = ctx ? medidas(ctx) : [];
+  // Só as medidas que dependem exclusivamente do perfil (as demais precisam de
+  // dados de dia/semana/mês que este formulário não tem).
+  const MEDIDAS_DO_PERFIL: ReadonlyArray<MedidaResultado['id']> = ['imc', 'fc_max', 'rmr', 'agua'];
+  const medidasAoVivo = ctx ? medidas(ctx).filter((m) => MEDIDAS_DO_PERFIL.includes(m.id)) : [];
   const examesOpcoes = camposDe('exame', perfilTmp).map((c) => ({ id: chaveDe(c), rotulo: c.rotulo }));
 
   function campo<K extends keyof Form>(k: K, v: Form[K]) {
@@ -149,7 +152,8 @@ export function Perfil() {
               <input id="p-idade" type="number" inputMode="numeric" min="10" max="120" value={form.idade} onChange={(e) => campo('idade', e.target.value)} />
             </div>
           </div>
-          <div className="opcoes" role="radiogroup" aria-label="Sexo (só para as fórmulas)">
+          <span className="rotulo" id="sexo-rotulo">Sexo</span>
+          <div className="opcoes" role="radiogroup" aria-labelledby="sexo-rotulo">
             <label><input type="radio" name="sexo" checked={form.sexo === 'H'} onChange={() => campo('sexo', 'H')} />Homem</label>
             <label><input type="radio" name="sexo" checked={form.sexo === 'M'} onChange={() => campo('sexo', 'M')} />Mulher</label>
           </div>
@@ -234,6 +238,7 @@ export function Perfil() {
         <div className="botoes">
           <button type="submit" className="botao primario" disabled={!parcial || salvando}>Salvar perfil</button>
         </div>
+        {!parcial && <p className="sub">Preencha peso, altura e idade para salvar.</p>}
       </form>
 
       <section className="secao">

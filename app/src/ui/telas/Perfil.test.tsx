@@ -45,4 +45,33 @@ describe('Perfil', () => {
     render(<MemoryRouter><Perfil /></MemoryRouter>);
     expect(screen.getByRole('button', { name: 'Salvar perfil' })).toBeDisabled();
   });
+
+  // fix wave, item 12: rótulo visível do grupo de sexo, dica só enquanto o botão
+  // está desabilitado, e Medidas ao vivo restritas às que dependem só do perfil.
+  test('grupo de sexo tem rótulo visível "Sexo"', () => {
+    render(<MemoryRouter><Perfil /></MemoryRouter>);
+    const grupo = screen.getByRole('radiogroup', { name: 'Sexo' });
+    expect(grupo).toHaveAttribute('aria-labelledby', 'sexo-rotulo');
+    expect(document.getElementById('sexo-rotulo')).toHaveTextContent('Sexo');
+  });
+
+  test('dica "Preencha peso, altura e idade para salvar" some quando o botão habilita', () => {
+    render(<MemoryRouter><Perfil /></MemoryRouter>);
+    expect(screen.getByText('Preencha peso, altura e idade para salvar.')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '90' } });
+    fireEvent.change(screen.getByLabelText('Altura (cm)'), { target: { value: '175' } });
+    fireEvent.change(screen.getByLabelText('Idade (anos)'), { target: { value: '40' } });
+    expect(screen.getByRole('button', { name: 'Salvar perfil' })).toBeEnabled();
+    expect(screen.queryByText('Preencha peso, altura e idade para salvar.')).toBeNull();
+  });
+
+  test('Medidas ao vivo mostra só imc, fc_max, rmr e agua', async () => {
+    const { container } = render(<MemoryRouter><Perfil /></MemoryRouter>);
+    fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '90' } });
+    fireEvent.change(screen.getByLabelText('Altura (cm)'), { target: { value: '175' } });
+    fireEvent.change(screen.getByLabelText('Idade (anos)'), { target: { value: '40' } });
+    await waitFor(() => expect(container.querySelectorAll('.medidas [data-medida]')).toHaveLength(4));
+    const ids = Array.from(container.querySelectorAll('.medidas [data-medida]')).map((el) => el.getAttribute('data-medida'));
+    expect(ids.sort()).toEqual(['agua', 'fc_max', 'imc', 'rmr']);
+  });
 });
