@@ -105,7 +105,7 @@ describe('panturrilha (H: corte 34 / grave 32)', () => {
     expect(m.texto).toBe('Corte: 34 cm (baixa) / 32 cm (grave). Meta: estável ou subindo enquanto a cintura cai.');
     expect(m.zonas).toEqual([
       { tom: 'bad', rotulo: '< 32 grave' },
-      { tom: 'weak', rotulo: '32–33.9 baixa' },
+      { tom: 'weak', rotulo: '32–33,9 baixa' },
       { tom: 'ok', rotulo: '≥ 34' },
     ]);
   });
@@ -167,7 +167,7 @@ describe('fc_repouso', () => {
     );
     expect(medida('fc_repouso', { derivados: { fcRepousoMedia7d: 58 } }).zona).toBe('meta');
     expect(m.zonas).toEqual([
-      { tom: 'ok', rotulo: '< 75 (treinado: < 60)' },
+      { tom: 'ok', rotulo: '≤ 75 (treinado: < 60)' },
       { tom: 'weak', rotulo: '75–85' },
       { tom: 'bad', rotulo: '> 85 ou subindo' },
     ]);
@@ -215,7 +215,7 @@ describe('rmr', () => {
     expect(m.unidade).toBe('kcal/dia');
     expect(m.zona).toBe('neutra');
     expect(m.texto).toBe(
-      'Com seu nível de atividade (fator 1.4): gasto total ≈ 2519 kcal/dia. Déficit moderado = 378–630 kcal/dia → ~0,5 kg/semana, adaptação de 50–120 kcal/dia. Abaixo de 1260 kcal/dia é severo.',
+      'Com seu nível de atividade (fator 1,4): gasto total ≈ 2519 kcal/dia. Déficit moderado = 378–630 kcal/dia → ~0,5 kg/semana, adaptação de 50–120 kcal/dia. Abaixo de 1260 kcal/dia é severo.',
     );
     expect(m.zonas).toEqual([
       { tom: 'ok', rotulo: 'déficit 15–25%' },
@@ -257,7 +257,13 @@ describe('agua (referência fixada em 8 copos / 2 L)', () => {
 
   it('mulher: base 1,6 L; treino de hoje soma na referência', () => {
     const m = medida('agua', { perfil: { ...perfilBase, sexo: 'M' }, derivados: { coposMeta: 8, aguaMetaL: 2 } });
-    expect(m.texto).toContain('Base 1,6 L de bebidas + 0.4 L pelo treino de hoje.');
+    expect(m.texto).toContain('Base 1,6 L de bebidas + 0,4 L pelo treino de hoje.');
+  });
+
+  it('sem copos hoje, mas ontem registrado: usa o valor de ontem e rotula "Ontem"', () => {
+    const m = medida('agua', { dias: [diaBase('2026-09-16', { copos: 5 })], derivados: ref });
+    expect(m.zona).toBe('atencao');
+    expect(m.texto).toContain('Ontem: 5 copos.');
   });
 });
 
@@ -267,7 +273,7 @@ describe('peso (média 90 → meta até 0,5 kg/sem, 1 % = 0,9)', () => {
     expect(m.valor).toBe(90);
     expect(m.unidade).toBe('kg');
     expect(m.zona).toBe('meta');
-    expect(m.texto).toBe('Esta semana: −0.4 kg. Meta de velocidade: até 0.5 kg/semana (0,5%); acima de 0.9 é rápido demais.');
+    expect(m.texto).toBe('Esta semana: −0,4 kg. Meta de velocidade: até 0,45 kg/semana (0,5%); acima de 0,9 é rápido demais.');
     expect(m.zonas).toEqual([
       { tom: 'ok', rotulo: 'até 0,5%/sem' },
       { tom: 'weak', rotulo: '0,5–1%/sem' },
@@ -283,7 +289,7 @@ describe('peso (média 90 → meta até 0,5 kg/sem, 1 % = 0,9)', () => {
     expect(estavel.texto).toContain('Esta semana: peso estável.');
     const ganhou = medida('peso', { derivados: { pesoMedioSemana: 90, pesoMedioSemanaAnterior: 89.5 } });
     expect(ganhou.zona).toBe('neutra');
-    expect(ganhou.texto).toContain('Esta semana: +0.5 kg.');
+    expect(ganhou.texto).toContain('Esta semana: +0,5 kg.');
   });
 
   it('neutra sem semana anterior', () => {

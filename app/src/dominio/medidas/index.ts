@@ -1,4 +1,5 @@
 import { r1 } from '../derivados';
+import { fmt, ultimoDiaCom } from '../metas/_util';
 import type { Contexto, Zona } from '../metas/tipos';
 
 export type MedidaId = 'imc' | 'whtr' | 'panturrilha' | 'preensao' | 'fc_repouso' | 'fc_max' | 'rmr' | 'agua' | 'peso';
@@ -43,27 +44,27 @@ function whtr(ctx: Contexto): MedidaResultado {
   const zona: Zona = r < 0.5 ? 'meta' : c < corte ? 'atencao' : 'pouco';
   const metaCm = Math.round(h / 2);
   const texto =
-    `Meta: abaixo de ${metaCm} cm (0,5 × ${h}). Hoje ${c} cm` +
-    (c >= corte ? ` — acima do corte de risco (${corte} cm)` : '') +
-    `. Faltam ${Math.max(0, c - metaCm)} cm.`;
+    `Meta: abaixo de ${fmt(metaCm)} cm (0,5 × ${fmt(h)}). Hoje ${fmt(c)} cm` +
+    (c >= corte ? ` — acima do corte de risco (${fmt(corte)} cm)` : '') +
+    `. Faltam ${fmt(Math.max(0, c - metaCm))} cm.`;
   return { id: 'whtr', valor: r, unidade: '', zona, texto, zonas };
 }
 
 function panturrilha(ctx: Contexto): MedidaResultado {
   const { pantCorte, pantGrave } = ctx.derivados;
-  const zonas = [z('bad', `< ${pantGrave} grave`), z('weak', `${pantGrave}–${r1(pantCorte - 0.1)} baixa`), z('ok', `≥ ${pantCorte}`)];
+  const zonas = [z('bad', `< ${fmt(pantGrave)} grave`), z('weak', `${fmt(pantGrave)}–${fmt(r1(pantCorte - 0.1))} baixa`), z('ok', `≥ ${fmt(pantCorte)}`)];
   const p = ctx.mes?.panturrilha;
   if (p === undefined) {
     return { id: 'panturrilha', valor: null, unidade: 'cm', zona: 'sem-dado', texto: 'meça a panturrilha na primeira segunda do mês', zonas };
   }
   const zona: Zona = p >= pantCorte ? 'meta' : p >= pantGrave ? 'atencao' : 'pouco';
-  const texto = `Corte: ${pantCorte} cm (baixa) / ${pantGrave} cm (grave). Meta: estável ou subindo enquanto a cintura cai.`;
+  const texto = `Corte: ${fmt(pantCorte)} cm (baixa) / ${fmt(pantGrave)} cm (grave). Meta: estável ou subindo enquanto a cintura cai.`;
   return { id: 'panturrilha', valor: p, unidade: 'cm', zona, texto, zonas };
 }
 
 function preensao(ctx: Contexto): MedidaResultado {
   const corte = ctx.derivados.preensaoCorte;
-  const zonas = [z('bad', `< ${corte} kg`), z('ok', `≥ ${corte} kg`)];
+  const zonas = [z('bad', `< ${fmt(corte)} kg`), z('ok', `≥ ${fmt(corte)} kg`)];
   const p = ctx.mes?.preensao;
   if (p === undefined) {
     return {
@@ -76,11 +77,11 @@ function preensao(ctx: Contexto): MedidaResultado {
     };
   }
   const zona: Zona = p >= corte ? 'meta' : 'pouco';
-  return { id: 'preensao', valor: p, unidade: 'kg', zona, texto: `Corte: ${corte} kg. Meta: subir com o treino de força em 4–8 semanas.`, zonas };
+  return { id: 'preensao', valor: p, unidade: 'kg', zona, texto: `Corte: ${fmt(corte)} kg. Meta: subir com o treino de força em 4–8 semanas.`, zonas };
 }
 
 function fcRepouso(ctx: Contexto): MedidaResultado {
-  const zonas = [z('ok', '< 75 (treinado: < 60)'), z('weak', '75–85'), z('bad', '> 85 ou subindo')];
+  const zonas = [z('ok', '≤ 75 (treinado: < 60)'), z('weak', '75–85'), z('bad', '> 85 ou subindo')];
   const f = ctx.derivados.fcRepousoMedia7d;
   if (f === null) return { id: 'fc_repouso', valor: null, unidade: 'bpm', zona: 'sem-dado', texto: 'registre a FC ao acordar por 7 dias', zonas };
   const zona: Zona = f <= 75 ? 'meta' : f <= 85 ? 'atencao' : 'pouco';
@@ -95,7 +96,7 @@ function fcMax(ctx: Contexto): MedidaResultado {
   if (v === null || fc60 === null || fc70 === null || fc85 === null) {
     return { id: 'fc_max', valor: null, unidade: 'bpm', zona: 'sem-dado', texto: 'preencha a idade no perfil', zonas };
   }
-  const texto = `Ritmo de conversa ≈ ${fc60}–${fc70} bpm (60–70%). Tiros no máximo: acima de ~${fc85} (85%). Recuperação: cair pelo menos 12 bpm no 1º minuto após o último tiro.`;
+  const texto = `Ritmo de conversa ≈ ${fmt(fc60)}–${fmt(fc70)} bpm (60–70%). Tiros no máximo: acima de ~${fmt(fc85)} (85%). Recuperação: cair pelo menos 12 bpm no 1º minuto após o último tiro.`;
   return { id: 'fc_max', valor: v, unidade: 'bpm', zona: 'neutra', texto, zonas };
 }
 
@@ -105,7 +106,7 @@ function rmr(ctx: Contexto): MedidaResultado {
   if (v === null || pal === null || tdee === null || defLo === null || defHi === null) {
     return { id: 'rmr', valor: null, unidade: 'kcal/dia', zona: 'sem-dado', texto: 'preencha peso, altura e idade no perfil', zonas };
   }
-  const texto = `Com seu nível de atividade (fator ${pal}): gasto total ≈ ${tdee} kcal/dia. Déficit moderado = ${defLo}–${defHi} kcal/dia → ~0,5 kg/semana, adaptação de 50–120 kcal/dia. Abaixo de ${Math.round(tdee * 0.5)} kcal/dia é severo.`;
+  const texto = `Com seu nível de atividade (fator ${fmt(pal)}): gasto total ≈ ${fmt(tdee)} kcal/dia. Déficit moderado = ${fmt(defLo)}–${fmt(defHi)} kcal/dia → ~0,5 kg/semana, adaptação de 50–120 kcal/dia. Abaixo de ${fmt(Math.round(tdee * 0.5))} kcal/dia é severo.`;
   return { id: 'rmr', valor: v, unidade: 'kcal/dia', zona: 'neutra', texto, zonas };
 }
 
@@ -114,10 +115,12 @@ function agua(ctx: Contexto): MedidaResultado {
   const { coposMeta, aguaMetaL } = ctx.derivados;
   const homem = ctx.perfil.sexo === 'H';
   const base = homem ? 2.0 : 1.6;
-  const n = ctx.hoje?.copos;
+  const n = ctx.hoje?.copos ?? ultimoDiaCom(ctx.dias, 'copos')?.copos;
+  const origem = ctx.hoje?.copos !== undefined ? 'Hoje' : 'Ontem';
   const zona: Zona | 'neutra' = n === undefined ? 'neutra' : n < coposMeta * 0.6 ? 'pouco' : n < coposMeta ? 'atencao' : 'meta';
-  const texto = `Base ${homem ? '2,0' : '1,6'} L de bebidas + ${r1(Math.max(0, aguaMetaL - base))} L pelo treino de hoje. Hoje: ${n === undefined ? '—' : n} copos. Urina cor 1–3 confirma; café conta.`;
-  return { id: 'agua', valor: coposMeta, unidade: `copos (${aguaMetaL} L)`, zona, texto, zonas };
+  const registro = n === undefined ? 'Hoje: — copos.' : `${origem}: ${fmt(n)} copos.`;
+  const texto = `Base ${homem ? '2,0' : '1,6'} L de bebidas + ${fmt(Math.max(0, aguaMetaL - base))} L pelo treino de hoje. ${registro} Urina cor 1–3 confirma; café conta.`;
+  return { id: 'agua', valor: coposMeta, unidade: `copos (${fmt(aguaMetaL)} L)`, zona, texto, zonas };
 }
 
 function peso(ctx: Contexto): MedidaResultado {
@@ -135,8 +138,8 @@ function peso(ctx: Contexto): MedidaResultado {
   const maxBruto = 0.01 * w;
   const dl = r1(w0 - w); // perda (positivo = emagreceu); só para exibição/comparação com o rótulo
   const zona: Zona | 'neutra' = dl <= 0 ? 'neutra' : dl <= idealBruto ? 'meta' : dl <= maxBruto ? 'atencao' : 'pouco';
-  const delta = dl === 0 ? 'peso estável' : `${dl > 0 ? '−' : '+'}${Math.abs(dl)} kg`;
-  const texto = `Esta semana: ${delta}. Meta de velocidade: até ${r1(idealBruto)} kg/semana (0,5%); acima de ${r1(maxBruto)} é rápido demais.`;
+  const delta = dl === 0 ? 'peso estável' : `${dl > 0 ? '−' : '+'}${fmt(Math.abs(dl))} kg`;
+  const texto = `Esta semana: ${delta}. Meta de velocidade: até ${fmt(idealBruto, 2)} kg/semana (0,5%); acima de ${fmt(maxBruto, 2)} é rápido demais.`;
   return { id: 'peso', valor: w, unidade: 'kg', zona, texto, zonas };
 }
 
