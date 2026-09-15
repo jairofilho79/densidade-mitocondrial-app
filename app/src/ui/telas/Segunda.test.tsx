@@ -6,6 +6,7 @@ import { salvarPerfil } from '@/dados/repositorios/perfil';
 import { registrarTreino } from '@/dados/repositorios/eventos';
 import { lerSemana } from '@/dados/repositorios/semana';
 import { salvarExame } from '@/dados/repositorios/exame';
+import { salvarDia } from '@/dados/repositorios/dia';
 import { apagarTudo } from '@/dados/exportImport';
 import { hojeISO, semanaAnteriorISO, somarDias } from '@/dados/datas';
 import { PERFIL } from '@/test/fixtures';
@@ -66,5 +67,24 @@ describe('Segunda', () => {
     const { container } = renderizar();
     await screen.findByRole('heading', { name: 'Segunda' });
     await waitFor(() => expect(container.querySelector('[data-campo="mes.panturrilha"]')).not.toBeNull());
+  });
+
+  // fix wave, item 3: rótulo do painel, aviso sem exame e cabeçalho do mês por extenso.
+  test('rótulo "Semana passada", aviso sem exame e "Medidas do mês" com o mês por extenso', async () => {
+    await salvarPerfil(PERFIL);
+    renderizar();
+    await screen.findByRole('heading', { name: 'Segunda' });
+    expect(screen.getByText('Semana passada')).toBeInTheDocument();
+    expect(screen.getByText(/Você ainda não registrou exames — vale registrar \(e repetir a cada 12 semanas\)/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText(/Medidas do mês ·/).textContent).toMatch(/Medidas do mês · \p{L}+ de \d{4}/u));
+  });
+
+  test('médias de peso aparecem formatadas com vírgula decimal', async () => {
+    await salvarPerfil(PERFIL);
+    await salvarDia(hojeISO(), { peso: 90 });
+    await salvarDia(somarDias(hojeISO(), -1), { peso: 89 });
+    renderizar();
+    await screen.findByRole('heading', { name: 'Segunda' });
+    expect(await screen.findByText(/89,5 kg/)).toBeInTheDocument();
   });
 });

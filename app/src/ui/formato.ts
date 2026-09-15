@@ -45,3 +45,10 @@ export function formatarData(d: DataISO): string {
   const [a, m, dia] = d.split('-');
   return `${dia}/${m}/${a}`;
 }
+
+/** "2026-09" → "setembro de 2026" (mês por extenso, pt-BR). */
+export function formatarMes(m: string): string {
+  const [ano, mes] = m.split('-').map(Number);
+  const d = new Date(Date.UTC(ano, mes - 1, 1));
+  return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+}

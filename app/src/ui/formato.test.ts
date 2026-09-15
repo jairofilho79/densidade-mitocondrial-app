@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { chaveDe, listar, ROTULO_ZONA, horaAgora, primeiraSegundaDoMes, diasEntre, formatarData } from './formato';
+import { chaveDe, listar, ROTULO_ZONA, horaAgora, primeiraSegundaDoMes, diasEntre, formatarData, formatarMes } from './formato';
 import type { Campo } from '@/dominio/campos';
 
 const campoPassos: Campo = { id: 'dia.passos', nivel: 1, tipo: 'inteiro', rotulo: 'Passos', desbloqueia: ['seis-mil-passos'] };
@@ -35,5 +35,11 @@ describe('formato', () => {
   test('diasEntre e formatarData', () => {
     expect(diasEntre('2026-06-22', '2026-09-14')).toBe(84);
     expect(formatarData('2026-09-14')).toBe('14/09/2026');
+  });
+
+  test('formatarMes escreve o mês por extenso (fix wave, item 3)', () => {
+    expect(formatarMes('2026-09')).toBe('setembro de 2026');
+    expect(formatarMes('2026-01')).toBe('janeiro de 2026');
+    expect(formatarMes('2026-12')).toBe('dezembro de 2026');
   });
 });

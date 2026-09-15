@@ -10,7 +10,8 @@ import { ultimoExame } from '@/dados/repositorios/exame';
 import { hojeISO, semanaAnteriorISO, segundaDaSemana, somarDias, mesISO } from '@/dados/datas';
 import { useContexto } from '@/ui/hooks/useContexto';
 import { CampoRegistro } from '@/ui/componentes/CampoRegistro';
-import { chaveDe, primeiraSegundaDoMes, diasEntre, formatarData } from '@/ui/formato';
+import { chaveDe, primeiraSegundaDoMes, diasEntre, formatarData, formatarMes } from '@/ui/formato';
+import { fmt } from '@/dominio/metas/_util';
 import './telas.css';
 
 type Valores = Record<string, unknown>;
@@ -100,14 +101,14 @@ export function Segunda() {
       {lembrarExame && (
         <p className="aviso">
           {ultimo === null
-            ? 'Você ainda não registrou exames. '
-            : `Seu último exame foi em ${formatarData(ultimo.data)}, há ${diasEntre(ultimo.data, hoje)} dias. `}
-          A cada 12 semanas vale repetir: <Link to="/exames">registrar exames</Link>.
+            ? 'Você ainda não registrou exames — vale registrar (e repetir a cada 12 semanas). '
+            : <>Seu último exame foi em {formatarData(ultimo.data)}, há {diasEntre(ultimo.data, hoje)} dias. A cada 12 semanas vale repetir: </>}
+          <Link to="/exames">registrar exames</Link>.
         </p>
       )}
 
       <form className="painel" onSubmit={salvarS}>
-        <div className="ph"><span className="k">Esta semana</span></div>
+        <div className="ph"><span className="k">Semana passada</span></div>
         <div className="grid">
           {camposSemana.map((c) => (
             <CampoRegistro key={c.id} campo={c} valor={form[chaveDe(c)]} onChange={(v) => setForm({ ...form, [chaveDe(c)]: v })} />
@@ -115,8 +116,8 @@ export function Segunda() {
         </div>
         <p className="leitura">
           {/* derivados.pesoMedioSemana continua sendo a média desta semana (hoje), não da revisão — rótulo explícito para não confundir com a semana passada acima */}
-          média desta semana: <b>{pesoMedio === null ? '—' : `${pesoMedio} kg`}</b>
-          {ctx.derivados.pesoMedioSemanaAnterior !== null && <> · semana anterior: <b>{ctx.derivados.pesoMedioSemanaAnterior} kg</b></>}
+          média desta semana: <b>{pesoMedio === null ? '—' : `${fmt(pesoMedio)} kg`}</b>
+          {ctx.derivados.pesoMedioSemanaAnterior !== null && <> · semana anterior: <b>{fmt(ctx.derivados.pesoMedioSemanaAnterior)} kg</b></>}
         </p>
         <div className="botoes">
           <button type="submit" className="botao primario">Salvar semana</button>
@@ -125,7 +126,7 @@ export function Segunda() {
 
       {mostrarMes && (
         <form className="painel" onSubmit={salvarM}>
-          <div className="ph"><span className="k">Primeira segunda do mês · {mes}</span><span className="sub">Panturrilha com a fita; preensão se tiver dinamômetro, senão repetições até falhar.</span></div>
+          <div className="ph"><span className="k">Medidas do mês · {formatarMes(mes)}</span><span className="sub">Panturrilha com a fita; preensão se tiver dinamômetro, senão repetições até falhar.</span></div>
           <div className="grid">
             {camposMes.map((c) => (
               <CampoRegistro key={c.id} campo={c} valor={formMes[chaveDe(c)]} onChange={(v) => setFormMes({ ...formMes, [chaveDe(c)]: v })} />
