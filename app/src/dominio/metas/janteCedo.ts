@@ -13,7 +13,7 @@ export const janteCedo: AcaoMeta = {
     const jantar = dia?.jantarFim;
     if (dia === undefined || jantar === undefined) return semDado(['dia.jantarFim'], undefined, vals);
 
-    const dh = horasAntesDeDeitar(jantar, ctx.perfil.deitar);
+    const dh = horasAntesDeDeitar(jantar, ctx.perfil.deitar, ctx.perfil.levantar);
     const zona: Zona = dh < 0 ? 'demais' : dh >= 3 ? 'meta' : dh >= 1 ? 'atencao' : 'demais';
 
     let proximoPasso: string;

@@ -49,6 +49,12 @@ describe('ultimo-cafe', () => {
     expect(m.posicao).toBe(0.5);
   });
 
+  it('meta: café bem cedo (07:00) não usa mais o corte fixo de 12 h — 16,5 h antes de deitar', () => {
+    const m = ultimoCafe.meta(ctxBase({ hoje: diaBase(HOJE, { ultimoCafe: '07:00' }) }));
+    expect(m.zona).toBe('meta');
+    expect(m.valor).toBe(16.5);
+  });
+
   it('demais: café às 20:00 (3,5 h antes)', () => {
     const m = ultimoCafe.meta(ctxBase({ hoje: diaBase(HOJE, { ultimoCafe: '20:00' }) }));
     expect(m.zona).toBe('demais');

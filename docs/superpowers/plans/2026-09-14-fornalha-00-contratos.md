@@ -308,10 +308,11 @@ export function fmt(n: number, casas = 1): string;
 export function interpolar(texto: string, vals: Record<string, string | number>): string;
 
 /**
- * Horas de `hora` até `deitar`, com virada de meia-noite tratada: quando a diferença bruta
- * passa de 12 h, o valor real é negativo — `hora` é depois de `deitar`.
+ * Horas de `hora` até `deitar`, com virada de meia-noite tratada pela janela de sono, não por um
+ * corte fixo de 12 h: se `hora` cai dentro de `[deitar, levantar)`, o valor é negativo — `hora` é
+ * depois de `deitar`; senão é a diferença normal até `deitar`.
  */
-export function horasAntesDeDeitar(hora: Hora, deitar: Hora): number;
+export function horasAntesDeDeitar(hora: Hora, deitar: Hora, levantar: Hora): number;
 
 /** Move `horaAtual` em direção a `horaAlvo` em no máximo 15 min (o menor entre 15 e o que falta). */
 export function passo15min(horaAtual: Hora, horaAlvo: Hora, direcao: 'antes' | 'depois'): { hora: Hora; minutos: number };

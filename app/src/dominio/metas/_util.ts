@@ -125,13 +125,14 @@ export function aplicarSeguranca(id: AcaoId, perfil: Perfil, meta: Meta): Meta {
 }
 
 /**
- * Horas de `hora` até `deitar`, com virada de meia-noite tratada: quando `horasEntre` passa de 12 h
- * (o café/jantar ficaria "quase um dia inteiro antes" de deitar), a diferença real é negativa —
- * `hora` é depois de `deitar`.
+ * Horas de `hora` até `deitar`, com virada de meia-noite tratada pela janela de sono, não por um
+ * corte fixo de 12 h (um café às 7h com deitar às 23h30 está 16,5 h antes, não "depois"):
+ * se `hora` cai dentro de `[deitar, levantar)` — a pessoa já devia estar dormindo — o valor é
+ * negativo (depois de deitar); senão é `horasEntre(hora, deitar)` normal.
  */
-export function horasAntesDeDeitar(hora: Hora, deitar: Hora): number {
-  const dh = horasEntre(hora, deitar);
-  return dh > 12 ? dh - 24 : dh;
+export function horasAntesDeDeitar(hora: Hora, deitar: Hora, levantar: Hora): number {
+  const dentroDoSono = horasEntre(deitar, hora) < horasEntre(deitar, levantar);
+  return dentroDoSono ? -horasEntre(deitar, hora) : horasEntre(hora, deitar);
 }
 
 /** Move `horaAtual` em direção a `horaAlvo` em no máximo 15 min (o menor entre 15 e o que falta). */

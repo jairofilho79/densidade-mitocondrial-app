@@ -176,11 +176,22 @@ describe('interpolar', () => {
 });
 
 describe('horasAntesDeDeitar', () => {
-  it('trata a virada de meia-noite', () => {
-    expect(horasAntesDeDeitar('14:00', '23:00')).toBe(9);
-    expect(horasAntesDeDeitar('22:30', '22:00')).toBe(-0.5);
-    expect(horasAntesDeDeitar('14:00', '00:30')).toBeCloseTo(10.5, 5);
-    expect(horasAntesDeDeitar('23:30', '01:00')).toBeCloseTo(1.5, 5);
+  it('trata a virada de meia-noite pela janela de sono (levantar 06:30)', () => {
+    expect(horasAntesDeDeitar('14:00', '23:00', '06:30')).toBe(9);
+    expect(horasAntesDeDeitar('22:30', '22:00', '06:30')).toBe(-0.5);
+    expect(horasAntesDeDeitar('14:00', '00:30', '06:30')).toBeCloseTo(10.5, 5);
+    expect(horasAntesDeDeitar('23:30', '01:00', '06:30')).toBeCloseTo(1.5, 5);
+  });
+
+  it('não usa mais um corte fixo de 12 h: café bem cedo continua "antes de deitar", não "depois"', () => {
+    expect(horasAntesDeDeitar('07:00', '23:30', '06:30')).toBe(16.5);
+    expect(horasAntesDeDeitar('08:00', '22:00', '06:30')).toBe(14);
+    expect(horasAntesDeDeitar('11:30', '23:30', '06:30')).toBe(12);
+  });
+
+  it('só é negativo dentro da janela de sono [deitar, levantar)', () => {
+    expect(horasAntesDeDeitar('05:00', '23:00', '06:30')).toBe(-6); // dentro do sono
+    expect(horasAntesDeDeitar('06:30', '23:00', '06:30')).toBe(16.5); // exatamente em levantar: fora
   });
 });
 

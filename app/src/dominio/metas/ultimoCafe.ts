@@ -34,7 +34,7 @@ export const ultimoCafe: AcaoMeta = {
     }
 
     const { dia, hora } = comCafe[0]; // o mais recente
-    const dh = horasAntesDeDeitar(hora, ctx.perfil.deitar);
+    const dh = horasAntesDeDeitar(hora, ctx.perfil.deitar, ctx.perfil.levantar);
     const zona: Zona = dh < 0 ? 'demais' : dh >= 9 ? 'meta' : dh >= 6 ? 'atencao' : 'demais';
 
     let proximoPasso: string;
