@@ -54,7 +54,7 @@ export function CardAcao({ acao, meta, compacto = false }: CardAcaoProps) {
         </ul>
         {semDado ? (
           <>
-            <ConviteRegistro campos={camposFaltando} semanal={semanal} />
+            <ConviteRegistro campos={camposFaltando} semanal={semanal} titulos={[acao.titulo]} />
             {faltaPerfil && (
               <p className="perfil-falta">
                 <Link to="/perfil">Complete o perfil</Link> para esta ação ter meta.

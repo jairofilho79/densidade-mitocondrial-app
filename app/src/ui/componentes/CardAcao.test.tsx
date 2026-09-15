@@ -61,14 +61,16 @@ describe('CardAcao', () => {
     expect(screen.queryByText(/prox_passos/)).toBeNull();
   });
 
-  test('sem-dado com campo semanal: o convite pede treino ou a revisão de segunda', () => {
+  // fix wave, item 5: o convite semanal cita "Treinei" e os títulos das ações que o campo desbloqueia.
+  test('sem-dado com campo semanal: o convite pede treino ou a revisão de segunda, citando os títulos desbloqueados', () => {
     renderizar(
       <CardAcao
         acao={acao}
         meta={{ zona: 'sem-dado', valor: null, faixa: null, posicao: null, texto: '', proximoPasso: '', precisaDe: ['semana.sessoesTiros'] }}
       />,
     );
-    expect(screen.getByText('registre um treino ou a revisão de segunda.')).toBeInTheDocument();
+    expect(screen.getByText(/^Registre um treino \(botão Treinei\) ou a revisão de segunda e eu te digo onde você está em/)).toBeInTheDocument();
+    expect(screen.getByText(/Três tiros/)).toBeInTheDocument();
   });
 
   test('deDia aparece quando o valor não é de hoje', () => {
