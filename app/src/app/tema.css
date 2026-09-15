@@ -82,7 +82,7 @@ a { color: var(--accent); }
 
 .nav {
   position: fixed; inset-inline: 0; bottom: 0; z-index: 10;
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
   background: var(--surface); border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -90,9 +90,11 @@ a { color: var(--accent); }
   display: grid; place-items: center; gap: 2px;
   padding: 10px 4px; text-decoration: none; color: var(--muted);
   font-family: var(--mono); font-size: 11px; letter-spacing: .04em; text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 .nav a.ativo { color: var(--accent); box-shadow: inset 0 3px 0 var(--accent); }
 .nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+@media (max-width: 360px) { .nav a { font-size: 10px; } }
 
 /* ---------- painéis e cartões genéricos ---------- */
 .painel { border: 1px solid var(--line); border-radius: var(--raio); background: var(--surface); padding: 16px; display: grid; gap: 14px; }
