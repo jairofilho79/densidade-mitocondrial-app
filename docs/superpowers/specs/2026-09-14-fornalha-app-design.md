@@ -168,14 +168,14 @@ As telas de registro são geradas deste registro. `desbloqueia` alimenta o convi
 
 1. **Perfil** — onboarding na primeira abertura; editável depois. Mostra as Medidas ao vivo (IMC, cintura/estatura, FC máx e faixas 60/70/85, gasto de repouso, meta de água) enquanto a pessoa digita.
 2. **Hoje** — tela inicial.
-   - **Check-in da manhã** (nível 1): deitei/levantei, como acordei, fome de ontem, comi sem fome?, último café de ontem (condicional), jantar de ontem terminou às, passos de ontem, moveu? (se sem evento). 7 a 9 campos (café condicional ao perfil; `moveu` só sem evento). Botão "quero registrar mais" abre nível 2 com a frase do que desbloqueia.
+   - **Check-in da manhã** (nível 1): deitei/levantei, como acordei, fome de ontem, comi sem fome?, último café de ontem (condicional), jantar de ontem terminou às, passos de ontem, moveu? (se sem evento). 7 a 9 campos (café condicional ao perfil; `moveu` só sem evento). Botão "quero registrar mais" abre nível 2 com a frase do que desbloqueia. Os campos "de ontem" do check-in gravam em `dia[ontem]` (lista `CAMPOS_SOBRE_ONTEM` nos contratos); os rótulos mostram um sufixo "· ontem"/"· hoje" dizendo de que dia cada campo fala.
    - **Eventos:** botões *Treinei*, *Comi*, *Levantei* (este incrementa uma contagem do dia usada por `levante-a-cada-30`).
    - **Dias sem movimento:** contador `diasParado` com a ação mínima que zera.
    - **Três ações em foco:** as 3 com zona `atencao`/`pouco` mais perto da meta (menor distância relativa), com próximo passo. Ações `sem-dado` aparecem em cinza com o convite.
 3. **Ações** — catálogo completo agrupado (Movimento, Sono e ritmo, Alimentação, Corpo e medida). Cada card: título, gatilho, ação mínima, barra de zona, meta pessoal, próximo passo, "afeta", evidência com fontes. `meca-a-cintura` e `panturrilha-preensao` aparecem como Medidas, não como cards. `ultimo-cafe` e `se-beber` somem com perfil `nao`.
 4. **Segunda** — revisão semanal, pré-preenchida. Primeira segunda do mês acrescenta panturrilha/preensão. A cada 12 semanas desde o último exame, lembra exames (link para a tela de exames).
 5. **Tendências** — só sono × fome × café. Antes de estar pronta: "faltam N check-ins" e o que vai dizer.
-6. **Ajustes** — exportar/importar JSON, apagar tudo (com confirmação), Fronteira (curiosidades do brain marcadas `fronteira`), sobre/evidência.
+6. **Ajustes** — exportar/importar JSON, apagar tudo (com confirmação), Fronteira (curiosidades do brain marcadas `fronteira`), sobre/evidência. Acessível sem perfil (restaurar backup): é a única rota, além de Perfil, que a Guarda libera antes de haver um perfil salvo.
 
 Sem push. Sem gamificação além do contador de dias parado.
 
@@ -256,6 +256,7 @@ Sem teste estatístico. Sempre mostra n. Comparação é sempre com a própria p
 - IndexedDB indisponível (modo privado, bloqueio): mensagem única na abertura explicando que este navegador não permite guardar dados e sugerindo abrir fora do modo privado; a v1 não tem modo em memória (fora do escopo, ver §1).
 - Import inválido: mostra o motivo (versão, JSON malformado, tabela desconhecida) e não altera nada.
 - Catálogo fora de sync com o brain: o teste de hash falha no CI; nunca em runtime.
+- Erro inesperado ao ler os dados (qualquer exceção não tratada na árvore de componentes): um `ErrorBoundary` único envolvendo o roteador captura e mostra uma mensagem única — "Algo deu errado ao ler os dados neste navegador. Recarregue a página; se persistir, exporte seus dados em Ajustes." — com um botão Recarregar (mesmo padrão de mensagem única do item acima, para o IndexedDB indisponível).
 
 ## 10. Testes
 
