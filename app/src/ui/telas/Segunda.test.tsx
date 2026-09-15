@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { Segunda } from './Segunda';
+import { renderComContexto } from '@/test/render';
 import { salvarPerfil } from '@/dados/repositorios/perfil';
 import { registrarTreino } from '@/dados/repositorios/eventos';
 import { lerSemana } from '@/dados/repositorios/semana';
@@ -16,7 +16,7 @@ beforeEach(async () => {
 });
 
 function renderizar() {
-  return render(<MemoryRouter><Segunda /></MemoryRouter>);
+  return renderComContexto(<Segunda />);
 }
 
 describe('Segunda', () => {

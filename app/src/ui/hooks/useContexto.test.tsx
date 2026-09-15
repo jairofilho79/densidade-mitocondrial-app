@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { useContexto } from './useContexto';
+import { ContextoProvider, useContexto } from './useContexto';
 import { usePerfil } from './usePerfil';
 import { useDia } from './useDia';
 import * as contexto from '@/dados/contexto';
@@ -21,7 +21,7 @@ afterEach(() => {
 
 describe('useContexto', () => {
   test('sem perfil → semPerfil; ao salvar perfil, entrega o contexto', async () => {
-    const { result } = renderHook(() => useContexto());
+    const { result } = renderHook(() => useContexto(), { wrapper: ContextoProvider });
     expect(result.current.carregando).toBe(true);
 
     await waitFor(() => expect(result.current.semPerfil).toBe(true));
@@ -36,7 +36,7 @@ describe('useContexto', () => {
 
   test('recalcula quando o dia muda', async () => {
     await salvarPerfil(PERFIL);
-    const { result } = renderHook(() => useContexto());
+    const { result } = renderHook(() => useContexto(), { wrapper: ContextoProvider });
     await waitFor(() => expect(result.current.ctx).toBeDefined());
 
     await salvarDia(hojeISO(), { passos: 4321 });
@@ -47,7 +47,7 @@ describe('useContexto', () => {
   test('atualiza hoje quando a aba volta a ficar visível num dia diferente', async () => {
     await salvarPerfil(PERFIL);
     const espiao = vi.spyOn(contexto, 'montarContexto');
-    renderHook(() => useContexto());
+    renderHook(() => useContexto(), { wrapper: ContextoProvider });
     await waitFor(() => expect(espiao).toHaveBeenCalledWith(hojeISO()));
 
     const amanha = somarDias(hojeISO(), 1);

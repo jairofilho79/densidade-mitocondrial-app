@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { screen, waitFor } from '@testing-library/react';
 import { Acoes } from './Acoes';
+import { renderComContexto } from '@/test/render';
 import { salvarPerfil } from '@/dados/repositorios/perfil';
 import { apagarTudo } from '@/dados/exportImport';
 import { PERFIL, PERFIL_SEM_CAFE } from '@/test/fixtures';
@@ -11,7 +11,7 @@ beforeEach(async () => {
 });
 
 function renderizar() {
-  return render(<MemoryRouter><Acoes /></MemoryRouter>);
+  return renderComContexto(<Acoes />);
 }
 
 describe('Ações', () => {

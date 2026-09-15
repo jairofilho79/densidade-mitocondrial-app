@@ -8,6 +8,7 @@ import { medidas, type MedidaResultado } from '@/dominio/medidas';
 import { salvarPerfil } from '@/dados/repositorios/perfil';
 import { hojeISO } from '@/dados/datas';
 import { usePerfil } from '@/ui/hooks/usePerfil';
+import { useContexto } from '@/ui/hooks/useContexto';
 import { CartaoMedida } from '@/ui/componentes/CartaoMedida';
 import { chaveDe } from '@/ui/formato';
 import './telas.css';
@@ -75,6 +76,7 @@ function alternar<T>(lista: T[], item: T): T[] {
 
 export function Perfil() {
   const salvo = usePerfil();
+  const { carregando, semPerfil } = useContexto();
   const navigate = useNavigate();
   const [form, setForm] = useState<Form>(FORM_VAZIO);
   const [carregado, setCarregado] = useState(false);
@@ -88,13 +90,16 @@ export function Perfil() {
     }
   }, [salvo, carregado]);
 
-  // A Guarda em App.tsx só libera a rota "/" quando `usePerfil()` (via useContexto)
-  // enxerga o perfil salvo — navegar logo após `await salvarPerfil` é cedo demais,
-  // a consulta ainda não recarregou. Esperar `salvo` (o próprio hook) refletir a
-  // gravação garante que a Guarda já deixa passar quando o navigate acontece.
+  // A Guarda em App.tsx e esta tela agora leem o MESMO useContexto() (fix wave
+  // round 2, item 1): usePerfil() é uma useLiveQuery independente, e com
+  // latência assíncrona do IndexedDB ela podia resolver antes da consulta que
+  // a Guarda usa, navegando cedo demais — a Guarda ainda via semPerfil e
+  // devolvia para /perfil. Esperar !semPerfil && !carregando do contexto
+  // compartilhado garante que a Guarda já deixou de redirecionar no mesmo
+  // render em que Perfil decide navegar.
   useEffect(() => {
-    if (pediuSalvar && salvo) navigate('/');
-  }, [pediuSalvar, salvo, navigate]);
+    if (pediuSalvar && !carregando && !semPerfil) navigate('/');
+  }, [pediuSalvar, carregando, semPerfil, navigate]);
 
   const parcial = paraPerfil(form);
   const perfilTmp: PerfilTipo = parcial ? { ...parcial, atualizadoEm: '' } : PERFIL_BASE;
@@ -130,7 +135,7 @@ export function Perfil() {
         <p className="eyebrow">uma vez · editável depois</p>
         <h1>Seu perfil</h1>
         <p className="sub">Só o que as fórmulas precisam. Fica neste aparelho; nada sai daqui.</p>
-        {!salvo && (
+        {!carregando && semPerfil && (
           <p className="sub">Tenho um backup? <Link to="/ajustes">Importar</Link></p>
         )}
       </header>

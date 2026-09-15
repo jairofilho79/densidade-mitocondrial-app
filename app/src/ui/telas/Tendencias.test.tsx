@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { screen, waitFor } from '@testing-library/react';
 import { Tendencias } from './Tendencias';
+import { renderComContexto } from '@/test/render';
 import { salvarPerfil } from '@/dados/repositorios/perfil';
 import { salvarDia } from '@/dados/repositorios/dia';
 import { apagarTudo } from '@/dados/exportImport';
@@ -13,7 +13,7 @@ beforeEach(async () => {
 });
 
 function renderizar() {
-  return render(<MemoryRouter><Tendencias /></MemoryRouter>);
+  return renderComContexto(<Tendencias />);
 }
 
 /**

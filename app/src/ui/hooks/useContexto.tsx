@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { Contexto } from '@/dominio/metas/tipos';
 import { montarContexto } from '@/dados/contexto';
@@ -23,7 +23,7 @@ export interface EstadoContexto {
  * estado; `hoje` entra como dependência do `useLiveQuery` para que a consulta
  * seja refeita com a nova data.
  */
-export function useContexto(): EstadoContexto {
+function useContextoInterno(): EstadoContexto {
   const [hoje, setHoje] = useState(hojeISO());
 
   useEffect(() => {
@@ -40,4 +40,26 @@ export function useContexto(): EstadoContexto {
   if (r === undefined) return { ctx: undefined, carregando: true, semPerfil: false };
   if ('semPerfil' in r) return { ctx: undefined, carregando: false, semPerfil: true };
   return { ctx: r, carregando: false, semPerfil: false };
+}
+
+const ContextoCtx = createContext<EstadoContexto | null>(null);
+
+/**
+ * Fonte única do Contexto para toda a árvore (fix wave round 2, item 1): antes,
+ * a Guarda (App.tsx) e a tela Perfil liam duas useLiveQuery independentes —
+ * com latência assíncrona do IndexedDB, elas podiam resolver em ticks
+ * diferentes, e a Guarda via `semPerfil` um instante depois de Perfil já ter
+ * decidido navegar, devolvendo para /perfil. Com um único provider, Guarda e
+ * Perfil leem exatamente o mesmo valor no mesmo render — a virada para "tem
+ * perfil" chega às duas ao mesmo tempo.
+ */
+export function ContextoProvider({ children }: { children: ReactNode }) {
+  const estado = useContextoInterno();
+  return <ContextoCtx.Provider value={estado}>{children}</ContextoCtx.Provider>;
+}
+
+export function useContexto(): EstadoContexto {
+  const estado = useContext(ContextoCtx);
+  if (estado === null) throw new Error('useContexto precisa ser usado dentro de <ContextoProvider>.');
+  return estado;
 }

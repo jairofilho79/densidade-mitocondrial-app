@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { Hoje } from './Hoje';
+import { renderComContexto } from '@/test/render';
 import { camposDe } from '@/dominio/campos';
 import { salvarPerfil } from '@/dados/repositorios/perfil';
 import { lerDia } from '@/dados/repositorios/dia';
@@ -15,7 +15,7 @@ beforeEach(async () => {
 });
 
 function renderizar() {
-  return render(<MemoryRouter><Hoje /></MemoryRouter>);
+  return renderComContexto(<Hoje />);
 }
 
 async function esperarCheckin() {

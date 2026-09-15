@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { Perfil } from './Perfil';
 import { lerPerfil } from '@/dados/repositorios/perfil';
 import { apagarTudo } from '@/dados/exportImport';
+import { renderComContexto } from '@/test/render';
 
 beforeEach(async () => {
   await apagarTudo();
@@ -11,7 +11,7 @@ beforeEach(async () => {
 
 describe('Perfil', () => {
   test('preencher e salvar grava o perfil', async () => {
-    const { container } = render(<MemoryRouter><Perfil /></MemoryRouter>);
+    const { container } = renderComContexto(<Perfil />);
     expect(screen.getByRole('heading', { name: 'Seu perfil' })).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '90' } });
@@ -42,21 +42,21 @@ describe('Perfil', () => {
   });
 
   test('não salva sem peso, altura e idade', () => {
-    render(<MemoryRouter><Perfil /></MemoryRouter>);
+    renderComContexto(<Perfil />);
     expect(screen.getByRole('button', { name: 'Salvar perfil' })).toBeDisabled();
   });
 
   // fix wave, item 12: rótulo visível do grupo de sexo, dica só enquanto o botão
   // está desabilitado, e Medidas ao vivo restritas às que dependem só do perfil.
   test('grupo de sexo tem rótulo visível "Sexo"', () => {
-    render(<MemoryRouter><Perfil /></MemoryRouter>);
+    renderComContexto(<Perfil />);
     const grupo = screen.getByRole('radiogroup', { name: 'Sexo' });
     expect(grupo).toHaveAttribute('aria-labelledby', 'sexo-rotulo');
     expect(document.getElementById('sexo-rotulo')).toHaveTextContent('Sexo');
   });
 
   test('dica "Preencha peso, altura e idade para salvar" some quando o botão habilita', () => {
-    render(<MemoryRouter><Perfil /></MemoryRouter>);
+    renderComContexto(<Perfil />);
     expect(screen.getByText('Preencha peso, altura e idade para salvar.')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '90' } });
     fireEvent.change(screen.getByLabelText('Altura (cm)'), { target: { value: '175' } });
@@ -66,7 +66,7 @@ describe('Perfil', () => {
   });
 
   test('Medidas ao vivo mostra só imc, fc_max, rmr e agua', async () => {
-    const { container } = render(<MemoryRouter><Perfil /></MemoryRouter>);
+    const { container } = renderComContexto(<Perfil />);
     fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '90' } });
     fireEvent.change(screen.getByLabelText('Altura (cm)'), { target: { value: '175' } });
     fireEvent.change(screen.getByLabelText('Idade (anos)'), { target: { value: '40' } });
