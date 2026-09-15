@@ -15,6 +15,7 @@ export function Ajustes() {
   const [entendi, setEntendi] = useState(false);
   const [apagado, setApagado] = useState(false);
   const [erroExportar, setErroExportar] = useState<string | null>(null);
+  const [erroApagar, setErroApagar] = useState<string | null>(null);
 
   async function gerar() {
     try {
@@ -71,9 +72,14 @@ export function Ajustes() {
 
   async function apagar() {
     if (!entendi) return;
-    await apagarTudo();
-    setEntendi(false);
-    setApagado(true);
+    try {
+      await apagarTudo();
+      setEntendi(false);
+      setApagado(true);
+      setErroApagar(null);
+    } catch {
+      setErroApagar('Não foi possível apagar os dados neste navegador.');
+    }
   }
 
   return (
@@ -122,7 +128,8 @@ export function Ajustes() {
         <div className="botoes">
           <button type="button" className="botao perigo" disabled={!entendi} onClick={apagar}>Apagar tudo</button>
         </div>
-        {apagado && <p className="sucesso" role="status">Tudo apagado. <Link to="/perfil">Começar de novo</Link>.</p>}
+        {apagado && <p className="sucesso" role="status">Dados apagados. <Link to="/perfil">Começar de novo</Link>.</p>}
+        {erroApagar && <p className="erro" role="alert">{erroApagar}</p>}
       </section>
 
       <section className="secao">
