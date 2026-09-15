@@ -17,6 +17,7 @@ describe('panturrilha-preensao (só registro)', () => {
       posicao: null,
       texto: 'panturrilha 38 cm registrada (2026-09)',
       proximoPasso: 'medir de novo na primeira segunda do próximo mês',
+      vals: { pant_corte: 34, pant_grave: 32, preensao_corte: 27 },
     });
   });
 
@@ -25,11 +26,12 @@ describe('panturrilha-preensao (só registro)', () => {
     expect(m.texto).toBe('panturrilha 38 cm e preensão 40 kg registradas (2026-09)');
   });
 
-  it('sem-dado: mês só com preensão', () => {
+  it('sem-dado: mês só com preensão; vals traz o que depende só do perfil', () => {
     const m = panturrilhaPreensao.meta(ctxBase({ mes: mesBase({ preensao: 40 }) }));
     expect(m.zona).toBe('sem-dado');
     expect(m.precisaDe).toEqual(['mes.panturrilha']);
     expect(m.texto).toBe('sem medida este mês');
+    expect(m.vals).toEqual({ pant_corte: 34, pant_grave: 32, preensao_corte: 27 });
   });
 
   it('sem-dado: sem mês', () => {
