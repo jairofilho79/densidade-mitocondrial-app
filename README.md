@@ -12,4 +12,4 @@ Um diário local de hábitos ligados à densidade mitocondrial — movimento, so
 
 ## Status
 
-Design da v1 aprovado em 2026-09-14. Implementação começando.
+Design da v1 aprovado em 2026-09-14. Plano 01 (scaffold + base do domínio) implementado; veja `app/README.md` para rodar.

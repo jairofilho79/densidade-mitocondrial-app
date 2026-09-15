@@ -13,7 +13,8 @@
     "build": "tsc --noEmit -p tsconfig.json && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "sync-catalogo": "node scripts/sync-catalogo.mjs"
   },
   "dependencies": {
     "react": "^19.3.0",
