@@ -46,7 +46,7 @@ export interface Dia {
   levantou?: Hora;
   comoAcordei?: 1 | 2 | 3 | 4 | 5;
   fome?: number;               // 1–10, do dia anterior
-  comiSemFome?: boolean;
+  comiSemFome?: boolean;   // do dia anterior
   ultimoCafe?: Hora | null;    // undefined = não registrou; null = não tomou
   jantarFim?: Hora;
   passos?: number;
@@ -123,6 +123,29 @@ export interface Exame {
 }
 ```
 
+## Atribuição de dia (convenção)
+
+Atribuição de campo a registro segue a **convenção de dia-calendário**: `dia[D]`
+descreve o dia D, exceto `fome` e `comiSemFome` (sobre o dia D−1) e
+`deitou`/`levantou` (a noite D−1→D). Por isso o check-in da manhã grava os
+campos que falam do dia anterior em `dia[ontem]`, e os demais em `dia[hoje]`.
+
+Campos que o check-in da manhã grava em `dia[ontem]` (12, seguem a convenção
+normal — descrevem o dia anterior, então vão para o registro do dia anterior):
+`dia.ultimoCafe, dia.jantarFim, dia.passos, dia.moveu, dia.maiorBloco,
+dia.minPosJantar, dia.copos, dia.proteinaG, dia.fibraG,
+dia.refeicoesCozinhadas, dia.bebidaDoce, dia.alcoolDoses`.
+
+Campos que o check-in da manhã grava em `dia[hoje]` (as exceções da convenção,
+mais os campos que já descrevem o dia de hoje): `deitou, levantou,
+comoAcordei, fome, comiSemFome, primeiraRefeicao, levantadas, peso,
+fcRepouso, notas`.
+
+Ou seja, o check-in da manhã grava esses campos em `dia[ontem]` e os demais em
+`dia[hoje]`. Uma v2 com Health Connect grava `passos` no próprio dia (a
+integração lê o contador do aparelho no fim do dia D e grava em `dia[D]`,
+sem passar pelo check-in da manhã do dia seguinte).
+
 ## `src/dominio/catalogo/tipos.ts`
 
 Espelha `acoes.json` (22 ações, 9 medidas, 28 variáveis). Ids:
@@ -143,7 +166,7 @@ export interface AcaoCatalogo {
   descricao: string;
   faixa: { variaveis: string[]; pouco: string; ideal: string; demais: string; regra?: string };
   afeta: { input: string; processo: string; output: string };
-  registro: [string, string, string];
+  registro: string[];   // sempre 3 na prática; resolveJsonModule infere array
   sinal: { output: string; prazo: string };
   seguranca?: string;
   evidencia: { grau: string; fontes: string };   // texto único separado por ";"
@@ -181,6 +204,7 @@ export interface Campo {
 }
 
 export const CAMPOS: readonly Campo[];
+export const CAMPOS_SOBRE_ONTEM: readonly CampoId[];  // os 12 dia.* que o check-in da manhã grava em dia[ontem] (ver "Atribuição de dia")
 export function campo(id: CampoId): Campo;
 export function camposDe(tabela: 'dia' | 'semana' | 'mes' | 'exame', perfil: Perfil, nivel?: 1 | 2 | 3): Campo[];  // filtra por condicao e nivel (≤ nivel)
 export function validar(c: Campo, valor: unknown): string | null;  // null = ok; string = mensagem ao usuário
@@ -217,6 +241,7 @@ export function horaParaMin(h: Hora): number;            // "23:30" → 1410
 export function minParaHora(m: number): Hora;            // 1410 → "23:30"; normaliza módulo 1440
 export function horasEntre(inicio: Hora, fim: Hora): number;  // ((fim − inicio + 1440) % 1440) / 60
 export function r1(n: number): number;                   // 1 casa decimal
+export function somarDias(data: DataISO, n: number): DataISO;   // atravessa mês/ano/bissexto
 export function mediana(xs: number[]): number | null;
 export function media(xs: number[]): number | null;
 export function pos(v: number, lo: number, hi: number): number;   // posição 0–1 na barra: lo→0.5, hi→0.75 (mesma função da PoC: clamp((v−lo)/(hi−lo)·0.25+0.5, 0.02, 0.98))

@@ -250,11 +250,10 @@ git commit -m "feat: tipos do motor de metas e avisoSeguranca"
 - Test: `app/src/dominio/metas/_util.test.ts`
 
 **Interfaces:**
-- Consumes: `avisoSeguranca` (`../seguranca`), `derivar`, `Derivados` (`../derivados`), tipos do plano 01.
+- Consumes: `avisoSeguranca` (`../seguranca`), `derivar`, `Derivados`, `somarDias` (`../derivados`), tipos do plano 01.
 - Produces (`_util.ts`):
   - `export function dataISO(d: Date): DataISO` — hora local → `YYYY-MM-DD`
   - `export function hojeISO(ctx: Contexto): DataISO`
-  - `export function somarDias(data: DataISO, n: number): DataISO`
   - `export function semanaISO(data: DataISO): SemanaISO` — `'2026-09-17' → '2026-W38'`
   - `export function inicioSemana(data: DataISO): DataISO` — segunda-feira da semana ISO
   - `export function semDado(precisaDe: CampoId[], texto?: string): Meta`
@@ -292,7 +291,6 @@ import {
   semDado,
   semanaAtual,
   semanaISO,
-  somarDias,
   ultimoDiaCom,
   deDiaSeNaoHoje,
 } from './_util';
@@ -308,12 +306,6 @@ describe('datas', () => {
   it('hojeISO vem de ctx.agora', () => {
     expect(hojeISO(ctxBase())).toBe(HOJE);
     expect(AGORA.getDay()).toBe(4); // quinta-feira
-  });
-
-  it('somarDias cruza mês e ano', () => {
-    expect(somarDias('2026-09-17', -6)).toBe('2026-09-11');
-    expect(somarDias('2026-09-30', 1)).toBe('2026-10-01');
-    expect(somarDias('2026-01-01', -1)).toBe('2025-12-31');
   });
 
   it('semanaISO e inicioSemana', () => {
@@ -456,6 +448,7 @@ Saída esperada: `FAIL … Failed to load url ./_util`.
 ```ts
 import type { CampoId } from '../campos';
 import type { AcaoId } from '../catalogo/tipos';
+import { somarDias } from '../derivados';
 import { avisoSeguranca } from '../seguranca';
 import type { DataISO, Dia, EventoTreino, Perfil, Semana, SemanaISO } from '../tipos';
 import type { Contexto, Meta } from './tipos';
@@ -478,12 +471,6 @@ export function hojeISO(ctx: Contexto): DataISO {
 function utc(data: DataISO): Date {
   const [a, m, d] = data.split('-').map(Number);
   return new Date(Date.UTC(a, m - 1, d));
-}
-
-export function somarDias(data: DataISO, n: number): DataISO {
-  const t = utc(data);
-  t.setUTCDate(t.getUTCDate() + n);
-  return t.toISOString().slice(0, 10);
 }
 
 /** Semana ISO 8601: `'2026-09-17' → '2026-W38'`. */
@@ -662,7 +649,7 @@ export function ctxBase(parcial: CtxParcial = {}): Contexto {
 ```
 cd app && pnpm vitest run src/dominio/metas/_util.test.ts
 ```
-Saída esperada: `✓ src/dominio/metas/_util.test.ts (18 tests)`. Se o teste `ctxBase().derivados.coposMeta` falhar, o problema é em `derivar()` do plano 01 (H sem treino hoje deve dar `aguaMetaL = 2.0`, `coposMeta = 8`) — corrija lá, não aqui.
+Saída esperada: `✓ src/dominio/metas/_util.test.ts (17 tests)`. Se o teste `ctxBase().derivados.coposMeta` falhar, o problema é em `derivar()` do plano 01 (H sem treino hoje deve dar `aguaMetaL = 2.0`, `coposMeta = 8`) — corrija lá, não aqui.
 
 - [ ] **Step 6: Commit**
 

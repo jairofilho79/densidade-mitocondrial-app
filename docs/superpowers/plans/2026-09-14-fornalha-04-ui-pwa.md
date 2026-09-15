@@ -1698,11 +1698,11 @@ git -C .. commit -m "feat: tela Perfil com medidas ao vivo"
 - Test: `app/src/ui/telas/Hoje.test.tsx`
 
 **Interfaces:**
-- Consumes: `camposDe`, `Campo` (`@/dominio/campos`); `METAS`, `acoesEmFoco`, `metasAplicaveis` (`@/dominio/metas`); `Dia`, `EventoTreino`, `EventoRefeicao` (`@/dominio/tipos`); `AcaoId` (`@/dominio/catalogo/tipos`); `salvarDia` (`@/dados/repositorios/dia`); `registrarTreino`, `registrarRefeicao`, `refeicoesEntre` (`@/dados/repositorios/eventos`); `hojeISO`, `ontem` (`@/dados/datas`); `useContexto`, `useDia`; `CampoRegistro`, `ConviteRegistro`, `CardAcao`; `chaveDe`, `horaAgora`, `formatarData`; `Link` (`react-router`).
+- Consumes: `camposDe`, `Campo`, `CAMPOS_SOBRE_ONTEM` (`@/dominio/campos`); `METAS`, `acoesEmFoco`, `metasAplicaveis` (`@/dominio/metas`); `Dia`, `EventoTreino`, `EventoRefeicao` (`@/dominio/tipos`); `AcaoId` (`@/dominio/catalogo/tipos`); `salvarDia` (`@/dados/repositorios/dia`); `registrarTreino`, `registrarRefeicao`, `refeicoesEntre` (`@/dados/repositorios/eventos`); `hojeISO`, `ontem` (`@/dados/datas`); `useContexto`, `useDia`; `CampoRegistro`, `ConviteRegistro`, `CardAcao`; `chaveDe`, `horaAgora`, `formatarData`; `Link` (`react-router`).
 - Produces: `export function Hoje(): JSX.Element` (rota `/`, heading "Hoje").
 
 Comportamento:
-- **Check-in da manhã** = `camposDe('dia', perfil, 1)`. Os campos falam de ontem / da noite passada (`deitou`, `levantou`, `fome`, `comiSemFome`, `ultimoCafe`, `jantarFim`, `passos`) mas são gravados no `dia` de **hoje** (`hojeISO()`): o cabeçalho da seção diz isso. `dia.moveu` sai da lista se há `EventoTreino` com `data === ontem(hoje)` (única exceção por id na UI; ver Global Constraints). Cada mudança chama `salvarDia(hoje, { [chave]: valor })` na hora — sem botão salvar.
+- **Check-in da manhã** = `camposDe('dia', perfil, 1)` (mais o nível 2 quando expandido). Os campos falam de ontem / da noite passada (`deitou`, `levantou`, `fome`, `comiSemFome`, `ultimoCafe`, `jantarFim`, `passos`, …) mas seguem a convenção de dia-calendário dos contratos (seção "Atribuição de dia"): os 12 campos de `CAMPOS_SOBRE_ONTEM` são gravados no `dia` de **ontem** (`ontem(hoje)`) e os demais no `dia` de **hoje** (`hojeISO()`) — o cabeçalho da seção diz isso. A tela lê o valor atual de cada campo do registro correspondente (`useDia(hoje)` para os campos de hoje, `useDia(ontem(hoje))` para os de `CAMPOS_SOBRE_ONTEM`). `dia.moveu` sai da lista se há `EventoTreino` com `data === ontem(hoje)` (única exceção por id na UI; ver Global Constraints). Cada mudança chama `salvarDia(CAMPOS_SOBRE_ONTEM.includes(c.id) ? ontem(hoje) : hoje, { [chave]: valor })` na hora — sem botão salvar.
 - **Quero registrar mais** expande `camposDe('dia', perfil, 2).filter(c => c.nivel === 2)` precedido por `<ConviteRegistro campos={nivel2} />`.
 - **Treinei / Comi / Levantei**: mini-forms inline. Depois de `registrarRefeicao`, recalcula `dia.proteinaG`/`dia.fibraG` como soma das refeições do dia (`refeicoesEntre(hoje, hoje)`) e grava com `salvarDia`. **Levantei** grava `levantadas + 1`.
 - **Dias parado**: `ctx.derivados.diasParado` com `METAS['nunca-dois-dias'].meta(ctx)` (`texto` + `proximoPasso`).
@@ -1782,6 +1782,20 @@ describe('Hoje — check-in', () => {
     await waitFor(async () => expect((await lerDia(hojeISO()))?.comiSemFome).toBe(true));
   });
 
+  test('preencher passos grava no dia de ontem, não no de hoje', async () => {
+    await salvarPerfil(PERFIL);
+    const { container } = renderizar();
+    await esperarCheckin();
+    const el = await waitFor(() => {
+      const x = container.querySelector('[data-campo="dia.passos"]');
+      expect(x).not.toBeNull();
+      return x as HTMLElement;
+    });
+    fireEvent.change(within(el).getByLabelText(/Passos de ontem/), { target: { value: '6200' } });
+    await waitFor(async () => expect((await lerDia(ontem(hojeISO())))?.passos).toBe(6200));
+    expect((await lerDia(hojeISO()))?.passos).toBeUndefined();
+  });
+
   test('Quero registrar mais abre o nível 2 com o convite', async () => {
     const perfil = await salvarPerfil(PERFIL);
     const { container } = renderizar();
@@ -1838,7 +1852,7 @@ Esperado: `Failed to resolve import "./Hoje"`.
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import type { Campo } from '@/dominio/campos';
-import { camposDe } from '@/dominio/campos';
+import { CAMPOS_SOBRE_ONTEM, camposDe } from '@/dominio/campos';
 import { METAS, acoesEmFoco, metasAplicaveis } from '@/dominio/metas';
 import type { Dia, EventoTreino, EventoRefeicao } from '@/dominio/tipos';
 import type { AcaoId } from '@/dominio/catalogo/tipos';
@@ -2001,6 +2015,7 @@ export function Hoje() {
   const { ctx, carregando } = useContexto();
   const hoje = hojeISO();
   const dia = useDia(hoje);
+  const diaOntem = useDia(ontem(hoje));
   const [mais, setMais] = useState(false);
   const [formAberto, setFormAberto] = useState<'treino' | 'refeicao' | null>(null);
 
@@ -2023,12 +2038,20 @@ export function Hoje() {
     : [];
   const emFoco = [...foco, ...semDado];
 
+  // Convenção de dia-calendário (contratos): os 12 campos de CAMPOS_SOBRE_ONTEM
+  // falam do dia anterior e vivem em dia[ontem]; os demais vivem em dia[hoje].
+  function registroDe(c: Campo): Dia | undefined {
+    return CAMPOS_SOBRE_ONTEM.includes(c.id) ? diaOntem : dia;
+  }
+
   function valorDe(c: Campo): unknown {
-    return dia ? (dia as unknown as Record<string, unknown>)[chaveDe(c)] : undefined;
+    const registro = registroDe(c);
+    return registro ? (registro as unknown as Record<string, unknown>)[chaveDe(c)] : undefined;
   }
 
   function gravar(c: Campo, v: unknown) {
-    void salvarDia(hoje, { [chaveDe(c)]: v } as ParcialDia);
+    const data = CAMPOS_SOBRE_ONTEM.includes(c.id) ? ontem(hoje) : hoje;
+    void salvarDia(data, { [chaveDe(c)]: v } as ParcialDia);
   }
 
   async function levantei() {
@@ -2045,7 +2068,7 @@ export function Hoje() {
       <section className="painel">
         <div className="ph">
           <h2>Check-in da manhã</h2>
-          <span className="sub">Sobre a noite passada e o dia de ontem. Fica no registro de hoje.</span>
+          <span className="sub">Sobre a noite passada e o dia de ontem. O que é de ontem fica no registro de ontem; o resto, no de hoje.</span>
         </div>
         <div className="grid">
           {nivel1.map((c) => (
@@ -2111,7 +2134,7 @@ export function Hoje() {
 pnpm vitest run src/ui/telas/Hoje.test.tsx
 ```
 
-Esperado: `✓ src/ui/telas/Hoje.test.tsx (8 tests)`.
+Esperado: `✓ src/ui/telas/Hoje.test.tsx (9 tests)`.
 
 Se o teste "três ações em foco" falhar por vir menos de 3 cards: com perfil recém-criado e nenhum dia, `acoesEmFoco` devolve 0 e o complemento `sem-dado` precisa fornecer 3 — confira se `metasAplicaveis(ctx)` do plano 02 retorna `zona: 'sem-dado'` para ações sem dado (regra do spec §6).
 

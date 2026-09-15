@@ -688,7 +688,7 @@ git commit -m "feat: tendência sono × fome × café com fixtures de 7, 14 e 28
   export function semanaISO(d: DataISO): SemanaISO;        // ISO 8601, segunda inicia, "YYYY-Www"
   export function mesISO(d: DataISO): MesISO;              // "YYYY-MM"
   export function ontem(d: DataISO): DataISO;
-  export function somarDias(d: DataISO, n: number): DataISO;
+  export function somarDias(d: DataISO, n: number): DataISO;  // reexportado de @/dominio/derivados (mesma função)
   export function segundaDaSemana(s: SemanaISO): DataISO;  // ADIÇÃO deste plano; usada por preencherSemana
   ```
 
@@ -699,10 +699,7 @@ Crie `app/src/dados/datas.test.ts`:
 ```ts
 import { describe, expect, it } from 'vitest';
 import { hojeISO, mesISO, ontem, segundaDaSemana, semanaISO, somarDias } from './datas';
-import {
-  semanaISO as semanaISODominio,
-  somarDias as somarDiasDominio,
-} from '@/dominio/metas/_util';
+import { semanaISO as semanaISODominio } from '@/dominio/metas/_util';
 
 describe('hojeISO', () => {
   it('usa a data local, não UTC', () => {
@@ -752,12 +749,10 @@ describe('semanaISO (ISO 8601, segunda como início)', () => {
   });
 });
 
-describe('concordância com o domínio (plano 02 tem cópia própria em metas/_util.ts)', () => {
-  it('semanaISO e somarDias do domínio dão o mesmo resultado nas datas de borda', () => {
+describe('concordância com o domínio (plano 02 tem cópia própria de semanaISO em metas/_util.ts; somarDias já é o mesmo reexport)', () => {
+  it('semanaISO do domínio dá o mesmo resultado nas datas de borda', () => {
     for (const d of ['2026-09-14', '2026-09-20', '2026-12-31', '2027-01-01', '2027-01-04', '2025-12-29', '2025-12-28', '2024-12-30', '2021-01-03']) {
       expect(semanaISODominio(d)).toBe(semanaISO(d));
-      expect(somarDiasDominio(d, -27)).toBe(somarDias(d, -27));
-      expect(somarDiasDominio(d, 1)).toBe(somarDias(d, 1));
     }
   });
 });
@@ -792,7 +787,10 @@ Esperado: falha de import (`Failed to resolve import "./datas"`).
 Crie `app/src/dados/datas.ts`:
 
 ```ts
+import { somarDias } from '@/dominio/derivados';
 import type { DataISO, MesISO, SemanaISO } from '@/dominio/tipos';
+
+export { somarDias } from '@/dominio/derivados';
 
 const DIA_MS = 86_400_000;
 
@@ -813,10 +811,6 @@ function isoDe(utcMs: number): DataISO {
 /** Data local do aparelho (o dia que a pessoa vive), não UTC. */
 export function hojeISO(agora: Date = new Date()): DataISO {
   return `${agora.getFullYear()}-${pad2(agora.getMonth() + 1)}-${pad2(agora.getDate())}`;
-}
-
-export function somarDias(d: DataISO, n: number): DataISO {
-  return isoDe(utcDe(d) + n * DIA_MS);
 }
 
 export function ontem(d: DataISO): DataISO {
@@ -856,7 +850,7 @@ export function segundaDaSemana(s: SemanaISO): DataISO {
 pnpm vitest run src/dados/datas.test.ts
 ```
 
-Esperado: `8 passed` (se o teste de concordância falhar, corrija `semanaISO`/`somarDias` em `app/src/dominio/metas/_util.ts` — o domínio é a fonte; não ajuste o teste).
+Esperado: `8 passed` (se o teste de concordância falhar, corrija `semanaISO` em `app/src/dominio/metas/_util.ts` — o domínio é a fonte; não ajuste o teste).
 
 - [ ] **Step 5: Commit**
 
