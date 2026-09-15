@@ -12,9 +12,26 @@ pnpm dev          # servidor de desenvolvimento
 pnpm test         # Vitest (uma vez); pnpm test:watch para ficar observando
 pnpm lint         # ESLint
 pnpm build        # tsc --noEmit + vite build → dist/
+pnpm preview      # serve o build de dist/ localmente (vite preview) — para conferir o PWA como em produção
+pnpm icones       # gera os ícones do PWA (src/../icones/) a partir de icone.svg
+node scripts/marcar-brain.mjs  # marca `vira-feature-em: v1` nas ações do brain já implementadas na UI
 ```
 
 A CI (`.github/workflows/ci.yml`) roda `pnpm install --frozen-lockfile && pnpm lint && pnpm test && pnpm build`.
+
+## Instalar como PWA
+
+Depois de abrir a app pelo menos uma vez (o service worker faz o cache do essencial), ela funciona offline e pode ser instalada como um app:
+
+- **Chrome/Android:** menu (⋮) → "Adicionar à tela inicial".
+- **Safari/iOS:** botão Compartilhar → "Adicionar à Tela de Início".
+
+## Deploy
+
+O `start_url`/`scope` do manifest (`vite.config.ts`) são `/`: a app precisa ser servida na **raiz do domínio**. Se o deploy for numa subpasta (ex.: GitHub Pages, `usuario.github.io/fornalha/`), é preciso:
+
+1. Definir `base: '/fornalha/'` (ou o caminho correspondente) em `vite.config.ts`.
+2. Ajustar `start_url` e `scope` do manifest do PWA para o mesmo caminho relativo.
 
 ## Dependências
 
