@@ -1,0 +1,615 @@
+<title>Fornalha Metabólica</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #F5F6F3; --surface: #FFFFFF; --ink: #1C2421; --muted: #5C6763; --line: #D7DCD8;
+    --in: #2F6B9A;   --in-tint: #E6EFF6;
+    --proc: #B8690F; --proc-tint: #F8EEDF;
+    --out: #35845A;  --out-tint: #E4F1E9;
+    --bad: #B23F38;  --bad-tint: #F6E4E2;
+    --none-tint: #ECEEEB;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151A18; --surface: #1E2522; --ink: #E7ECE9; --muted: #9AA6A0; --line: #2F3935;
+      --in: #7FB3DE; --in-tint: #1B2732; --proc: #E5A253; --proc-tint: #2F2519;
+      --out: #7CC49A; --out-tint: #1A2B21; --bad: #E07A72; --bad-tint: #30201E; --none-tint: #262D2A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #151A18; --surface: #1E2522; --ink: #E7ECE9; --muted: #9AA6A0; --line: #2F3935;
+    --in: #7FB3DE; --in-tint: #1B2732; --proc: #E5A253; --proc-tint: #2F2519;
+    --out: #7CC49A; --out-tint: #1A2B21; --bad: #E07A72; --bad-tint: #30201E; --none-tint: #262D2A;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.5; padding-inline: clamp(16px, 4vw, 48px); padding-block: 40px 64px; }
+  .wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 52px; }
+  header { max-width: 70ch; display: grid; gap: 10px; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(30px, 4vw, 42px); line-height: 1.1; margin: 0; text-wrap: balance; }
+  .lede { font-size: 17px; color: var(--muted); margin: 0; text-wrap: pretty; }
+  .thesis { font-family: var(--mono); font-size: 13px; background: var(--surface); border: 1px solid var(--line); padding: 10px 14px; border-radius: 4px; display: inline-block; }
+  h2 { font-family: var(--serif); font-weight: 600; font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 18px; max-width: 74ch; }
+
+  .ev { font-family: var(--mono); font-size: 10px; border: 1px solid currentColor; border-radius: 3px; padding: 0 5px; margin-left: 5px; vertical-align: 1px; white-space: nowrap; }
+  .ev.f { color: var(--out); background: var(--out-tint); }
+  .ev.m { color: var(--out); }
+  .ev.x { color: var(--bad); background: var(--bad-tint); }
+  .ev.fx { color: var(--muted); border-style: dashed; }
+  .ev.fl { color: var(--in); }
+
+  /* pipeline */
+  .pipeline { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 12px; align-items: stretch; }
+  .stage { display: grid; grid-template-rows: auto 1fr; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); overflow: hidden; }
+  .stage-head { padding: 14px 18px 12px; border-bottom: 1px solid var(--line); display: grid; gap: 2px; }
+  .stage-head .k { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+  .stage-head .t { font-family: var(--serif); font-size: 21px; font-weight: 600; line-height: 1.15; }
+  .stage-head .d { font-size: 13px; color: var(--muted); }
+  .stage.in .stage-head { background: var(--in-tint); } .stage.in .k { color: var(--in); }
+  .stage.proc .stage-head { background: var(--proc-tint); } .stage.proc .k { color: var(--proc); }
+  .stage.out .stage-head { background: var(--out-tint); } .stage.out .k { color: var(--out); }
+  .stage-body { padding: 16px 18px 18px; display: grid; gap: 18px; align-content: start; }
+  .group { display: grid; gap: 6px; }
+  .group > .g { font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .group > .g::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .group li { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: baseline; font-size: 14px; }
+  .group li::before { content: "·"; color: var(--muted); font-family: var(--mono); }
+  .group li b { font-weight: 600; }
+  .group li .why { color: var(--muted); }
+  .group li .why::before { content: " → "; font-family: var(--mono); }
+  .group.bad > .g { color: var(--bad); }
+  .group.bad li::before { content: "×"; color: var(--bad); }
+  .group.faixa li::before { content: "▭"; color: var(--in); font-size: 10px; }
+  .between { display: grid; place-items: center; padding-block: 60px 0; }
+  .between svg { width: 34px; height: 34px; color: var(--muted); }
+
+  /* diagram */
+  figure { margin: 0; display: grid; gap: 12px; }
+  .diagram-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+  .diagram-scroll svg { display: block; min-width: 1000px; width: 100%; height: auto; font-family: var(--sans); color: var(--ink); }
+  .diagram-scroll svg .node { fill: var(--surface); stroke: currentColor; stroke-width: 1.2; }
+  .diagram-scroll svg .node.in { fill: var(--in-tint); stroke: var(--in); }
+  .diagram-scroll svg .node.proc { fill: var(--proc-tint); stroke: var(--proc); }
+  .diagram-scroll svg .node.out { fill: var(--out-tint); stroke: var(--out); }
+  .diagram-scroll svg .node.bad { fill: var(--bad-tint); stroke: var(--bad); }
+  .diagram-scroll svg .node.big { stroke-width: 2; }
+  .diagram-scroll svg text { fill: currentColor; font-size: 12.5px; }
+  .diagram-scroll svg text.small { font-size: 11px; }
+  .diagram-scroll svg text.lbl { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
+  .diagram-scroll svg text.lbl.bad { fill: var(--bad); }
+  .diagram-scroll svg text.lbl.ok { fill: var(--out); }
+  .diagram-scroll svg text.head { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; fill: var(--muted); }
+  .diagram-scroll svg text.head.bad { fill: var(--bad); }
+  .diagram-scroll svg .edge { stroke: currentColor; stroke-width: 1.4; fill: none; }
+  .diagram-scroll svg .edge.strong { stroke-width: 2.2; }
+  .diagram-scroll svg .edge.bad { stroke: var(--bad); }
+  .diagram-scroll svg .divider { stroke: var(--line); stroke-dasharray: 6 6; }
+  figcaption { font-size: 13.5px; color: var(--muted); max-width: 82ch; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px 18px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .sw { width: 24px; height: 0; border-top: 2px solid currentColor; }
+  .legend .sw.strong { border-top-width: 3px; }
+  .legend .sw.bad { color: var(--bad); }
+
+  /* moldura */
+  .frame { display: flex; flex-wrap: wrap; gap: 8px; }
+  .frame span { font-family: var(--mono); font-size: 12px; border: 1px solid var(--in); color: var(--in); background: var(--in-tint); border-radius: 4px; padding: 4px 10px; }
+
+  /* coins */
+  .coins { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .coin { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 14px 16px 16px; display: grid; gap: 8px; align-content: start; }
+  .coin .t { font-family: var(--serif); font-weight: 600; font-size: 17px; line-height: 1.2; }
+  .coin .ax { font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; color: var(--muted); }
+  .coin svg { width: 100%; height: auto; display: block; }
+  .coin .zones { display: grid; gap: 3px; font-size: 12.5px; }
+  .coin .zones div { display: grid; grid-template-columns: 10px 1fr; gap: 7px; align-items: baseline; }
+  .coin .zones i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; transform: translateY(1px); }
+  .coin .zones i.ok { background: var(--out); } .coin .zones i.bad { background: var(--bad); } .coin .zones i.weak { background: var(--proc); } .coin .zones i.none { background: var(--muted); }
+  .coin .says { font-size: 12.5px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 8px; }
+  .coin .says::before { content: "o app diz · "; font-family: var(--mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; }
+
+  /* loops */
+  .loops { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .loop { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 16px 18px; display: grid; gap: 10px; align-content: start; }
+  .loop.wait { border-style: dashed; }
+  .loop .n { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--out); }
+  .loop.wait .n { color: var(--muted); }
+  .loop .chain { display: grid; gap: 4px; font-size: 14px; }
+  .loop .chain span { display: grid; grid-template-columns: 24px 1fr; gap: 6px; align-items: baseline; }
+  .loop .chain span i { font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .loop .chain span.o i { color: var(--out); } .loop .chain span.o { font-weight: 600; }
+  .loop .chain span.i i { color: var(--in); } .loop .chain span.p i { color: var(--proc); } .loop .chain span.x i { color: var(--bad); }
+  .loop .back { font-size: 13px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 8px; }
+
+  /* fronteira */
+  .frontier { border: 1px dashed var(--line); border-radius: 6px; padding: 18px 20px; display: grid; gap: 16px; background: transparent; }
+  .frontier .fh { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .frontier ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 24px; font-size: 13.5px; }
+  .frontier li { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: baseline; }
+  .frontier li::before { content: "?"; font-family: var(--mono); color: var(--muted); }
+  .frontier li.myth::before { content: "✕"; color: var(--bad); }
+  .frontier li b { font-weight: 600; }
+  .frontier li .lack { color: var(--muted); }
+  .frontier li .lack::before { content: " — "; }
+
+  /* placar */
+  .placar-wrap { overflow-x: auto; }
+  table.placar { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 13.5px; }
+  table.placar th { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  table.placar td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.placar td:first-child { font-weight: 600; white-space: nowrap; }
+  table.placar tr.gone td:first-child { text-decoration: line-through; text-decoration-color: var(--bad); font-weight: 500; color: var(--muted); }
+  .v { font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+  .v.keep { color: var(--out); } .v.re { color: var(--proc); } .v.fall { color: var(--bad); } .v.fr { color: var(--muted); }
+
+  .notes { display: grid; gap: 8px; max-width: 80ch; font-size: 14px; color: var(--muted); }
+  .notes p { margin: 0; }
+
+  @media (max-width: 1000px) { .coins { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 900px) { .pipeline { grid-template-columns: 1fr; } .between { padding-block: 0; } .between svg { transform: rotate(90deg); } .loops { grid-template-columns: 1fr; } .frontier ul { grid-template-columns: 1fr; } }
+  @media (max-width: 520px) { .coins { grid-template-columns: 1fr; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Mapa de entendimento · rodada 3 · só o consolidado no fluxo · não é tela do app</div>
+    <h1>Fornalha Metabólica</h1>
+    <p class="lede">O que entra, o que o corpo faz, o que sai — desenhado só com o que está consolidado. O que constrói em cima; o que desfaz embaixo, com seus três alvos. O resto vive numa seção própria, como curiosidade honesta, sem seta.</p>
+    <div class="thesis">13 setas · 7 faixas · 3 alvos de dano · 100+ curiosidades fora do fluxo</div>
+  </header>
+
+  <!-- ================= PIPELINE ================= -->
+  <section>
+    <h2>As três camadas</h2>
+    <p class="sub">Só Núcleo aqui: forte, ou moderada com dois estudos independentes, sem meta-análise contrária, efeito que dá para perceber ou medir, população parecida com a sua. <span class="ev f">forte</span> <span class="ev m">moderada</span> <span class="ev fl">faixa</span> <span class="ev x">dano</span></p>
+
+    <div class="pipeline">
+      <div class="stage in">
+        <div class="stage-head"><div class="k">Input</div><div class="t">O que entra</div><div class="d">Matéria-prima, faixas de referência, e a regra de quando.</div></div>
+        <div class="stage-body">
+          <div class="group faixa">
+            <div class="g">Faixas de referência · sem seta</div>
+            <ul>
+              <li><span><b>Proteína</b> 1,2–1,6 g/kg/dia<span class="why">em déficit, poupa músculo e ~142 kcal/dia de gasto</span></span></li>
+              <li><span><b>Fibra</b> 25–29 g/dia</span></li>
+              <li><span><b>Café</b> conta como líquido até ~300–400 mg</span></li>
+              <li><span><b>Álcool</b> 0 / ≤7 doses·sem / acima</span></li>
+            </ul>
+          </div>
+          <div class="group">
+            <div class="g">Regra de tempo · setas</div>
+            <ul>
+              <li><span><b>Jejum 14–16 h</b> de duração real<span class="why">peso, cintura, HOMA-IR modestos em 8–12 semanas</span><span class="ev m">moderada</span></span></li>
+              <li><span><b>Última refeição</b> longe de dormir<span class="why">perto: tolerância à glicose pior, fome de manhã</span><span class="ev m">moderada</span></span></li>
+            </ul>
+          </div>
+          <div class="group bad">
+            <div class="g">O que desfaz · setas</div>
+            <ul>
+              <li><span><b>Cafeína tarde</b>, <b>álcool à noite</b><span class="why">sono pior — 400 mg a 6 h de deitar tiram 1 h sem você notar</span><span class="ev x">forte</span></span></li>
+              <li><span><b>Bebida açucarada, suco</b><span class="why">cintura e glicemia</span><span class="ev x">forte</span></span></li>
+              <li><span><b>Ultraprocessado</b><span class="why">+~500 kcal/dia sem perceber</span><span class="ev x">forte</span></span></li>
+              <li><span><b>Excesso calórico</b><span class="why">insulina pior e ROS — <em>não</em> "mitocôndria danificada": 8 semanas de +7,7 kg não reduziram conteúdo nem respiração</span><span class="ev x">forte</span></span></li>
+              <li><span><b>Déficit severo</b>, pouca proteína em dieta<span class="why">músculo cai mais rápido que gordura; T3 em 4 dias</span><span class="ev x">forte</span></span></li>
+            </ul>
+          </div>
+          <div class="group">
+            <div class="g">Flags de perfil · o app só sabe que existem</div>
+            <ul>
+              <li><span><b>Tabaco</b>, fumo passivo, tempo desde que parou</span></li>
+              <li><span><b>Gordura trans</b> no rótulo</span></li>
+              <li><span><b>Estatina, metformina</b><span class="why">reduzem função ou atenuam a adaptação; o médico decide</span></span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="between" aria-hidden="true"><svg viewBox="0 0 34 34"><path d="M4 17h24M20 9l8 8-8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+      <div class="stage proc">
+        <div class="stage-head"><div class="k">Processo</div><div class="t">O que o corpo faz</div><div class="d">Estímulos que você aciona, estados que você mantém, mecanismos que a célula executa.</div></div>
+        <div class="stage-body">
+          <div class="group">
+            <div class="g">Estímulos · setas</div>
+            <ul>
+              <li><span><b>HIIT</b> tiros <em>all-out</em>, 3×/sem<span class="why">sensibilidade à insulina +53%, VO2 +19% em sedentários</span><span class="ev f">forte</span></span></li>
+              <li><span><b>Força</b> 2–3×/sem<span class="why">HbA1c ↓, força ↑, gasto de repouso +96 kcal/dia</span><span class="ev f">forte</span></span></li>
+              <li><span><b>Treino regular</b>, qualquer aeróbio<span class="why">FC de repouso ↓, cintura ↓ mesmo com peso igual</span><span class="ev f">forte</span></span></li>
+              <li><span><b>Quebrar o sentar</b> a cada 20–30 min<span class="why">glicose pós-refeição, SMD −0,55 — de graça</span><span class="ev f">forte</span></span></li>
+              <li><span><b>Andar 10–30 min após comer</b><span class="why">pico glicêmico, maior no jantar</span><span class="ev m">moderada</span></span></li>
+            </ul>
+          </div>
+          <div class="group faixa">
+            <div class="g">Faixas · sem seta</div>
+            <ul>
+              <li><span><b>Atividade moderada</b> 150–300 min/sem<span class="why">retorno satura em 300–600; o LISS do protocolo dá 60–120</span></span></li>
+              <li><span><b>Passos</b> inflexão em 5–7 mil/dia</span></li>
+              <li><span><b>Sono</b> 7–8 h</span></li>
+            </ul>
+          </div>
+          <div class="group">
+            <div class="g">Mecanismos · explicação, nunca registro</div>
+            <ul>
+              <li><span><b>AMPK → PGC-1α</b><span class="why">o gatilho do HIIT: novas mitocôndrias</span></span></li>
+              <li><span><b>mTOR → síntese proteica</b><span class="why">força + proteína: mais músculo</span></span></li>
+              <li><span><b>GLUT4 pós-prandial</b><span class="why">movimento leve depois de comer</span></span></li>
+              <li><span><b>Insulina basal ↓</b><span class="why">jejum</span></span></li>
+            </ul>
+          </div>
+          <div class="group bad">
+            <div class="g">O que desfaz · estados e processos</div>
+            <ul>
+              <li><span><b>Desuso</b> — parar, cama, poucos passos<span class="why">ausência de sinal, não estresse oxidativo: enzimas caem com meia-vida de 12 dias</span><span class="ev x">forte</span></span></li>
+              <li><span><b>Sentar horas</b> sem pausa<span class="why">glicose pós-refeição ↑</span><span class="ev x">forte</span></span></li>
+              <li><span><b>Sono &lt; 6 h</b><span class="why">sensibilidade à insulina −11 a −20%; fome ↑; em dieta, perde mais músculo</span><span class="ev x">forte</span></span></li>
+              <li><span><b>Termogênese adaptativa</b><span class="why">50–120 kcal/dia em déficit moderado, real e modesta; some em 1–2 anos de peso estável</span><span class="ev x">forte</span></span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="between" aria-hidden="true"><svg viewBox="0 0 34 34"><path d="M4 17h24M20 9l8 8-8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+      <div class="stage out">
+        <div class="stage-head"><div class="k">Output</div><div class="t">O que sai</div><div class="d">Três alvos, e o que dá para observar em cada faixa de custo.</div></div>
+        <div class="stage-body">
+          <div class="group">
+            <div class="g">Os três alvos · invisíveis</div>
+            <ul>
+              <li><span><b>Densidade mitocondrial</b> e massa muscular<span class="why">sobe em 2–6 semanas; cai com meia-vida de 12 dias parado</span></span></li>
+              <li><span><b>Resistência à insulina</b><span class="why">o único com exame</span></span></li>
+              <li><span><b>Metabolismo basal</b><span class="why">o que a balança esconde: perder 5 kg com 2 de músculo ≠ com 0,5</span></span></li>
+              <li><span><b>Emagrecimento</b><span class="why">consequência; visceral cai 6% mesmo sem perder peso</span></span></li>
+            </ul>
+          </div>
+          <div class="group">
+            <div class="g">Faixa A · sem nada</div>
+            <ul>
+              <li><span><b>RPE da sessão</b> (CR-10), <b>como acordei</b> 1–5, <b>fome</b> 1–10, <b>sonolência</b> de dia<span class="why">escalas validadas</span></span></li>
+              <li><span><b>Tiros até travar</b><span class="why">registro contra o próprio baseline — <em>não validado como medida</em> (Q24)</span><span class="ev fx">fronteira</span></span></li>
+            </ul>
+          </div>
+          <div class="group">
+            <div class="g">Faixa B · fita e relógio</div>
+            <ul>
+              <li><span><b>Cintura</b>, cintura/estatura &lt; 0,5<span class="why">cortes BR: 88 cm H / 84 cm M</span></span></li>
+              <li><span><b>Panturrilha</b> e <b>força de preensão</b><span class="why">massa magra, r ≈ 0,85</span></span></li>
+              <li><span><b>FC de repouso</b> matinal, média de 7 dias<span class="why">do relógio vale; HRV só tendência</span></span></li>
+              <li><span><b>Passos/dia</b>, <b>Rockport</b> 1,6 km a cada 4–6 sem</span></li>
+            </ul>
+          </div>
+          <div class="group">
+            <div class="g">Faixa C · exame a cada 12 sem</div>
+            <ul>
+              <li><span><b>HOMA-IR</b> &gt; 2,7 · <b>TG/HDL</b> &gt; 2,6 H / 1,7 M · <b>HbA1c</b> (bloqueio de 12 sem) · <b>PA</b></span></li>
+              <li><span><b>Ferritina, B12, vitamina D</b><span class="why">só para corrigir deficiência</span></span></li>
+            </ul>
+          </div>
+          <div class="group bad">
+            <div class="g">Avisos de segurança</div>
+            <ul>
+              <li><span>Dor no peito, tontura ou falta de ar desproporcional no HIIT → parar e avaliar</span></li>
+              <li><span>Beber pela sede; sauna sem álcool</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DIAGRAM ================= -->
+  <section>
+    <h2>A via — só as setas em que dá para investir</h2>
+    <p class="sub">Em cima, o que constrói. Embaixo, o que desfaz — e o dano não é um só: tem três alvos, com causas parcialmente diferentes. O mais bem documentado nem passa por "veneno": é <em>parar</em>.</p>
+
+    <figure>
+      <div class="diagram-scroll">
+        <svg viewBox="0 0 1300 870" role="img" aria-label="Diagrama de causa e efeito consolidado. Em cima: HIIT all-out cria mitocôndrias; força e proteína criam músculo; treino regular baixa FC de repouso e cintura; quebrar o sentar e andar após comer baixam a glicose pós-refeição; jejum baixa a insulina basal; tudo soma em mais densidade e músculo e menos resistência à insulina, e emagrecimento como consequência. Embaixo: desuso reduz densidade mitocondrial em dias; sentar sem pausa, sono curto, açúcar líquido e ultraprocessado pioram a resistência à insulina; sono curto também aumenta a fome; déficit severo e pouca proteína, agravados por sono curto, reduzem massa magra e metabolismo basal.">
+          <defs>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+            <marker id="arr-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--bad)"/></marker>
+          </defs>
+
+          <!-- ======== TOP: CONSTRÓI ======== -->
+          <text class="head" x="20" y="16">VOCÊ FAZ</text>
+          <text class="head" x="400" y="16">O CORPO FAZ</text>
+          <text class="head" x="840" y="16">RESULTADO</text>
+          <text class="head" x="1130" y="16">SAÍDA</text>
+
+          <rect class="node proc" x="20" y="30" width="230" height="44" rx="4"/><text x="135" y="57" text-anchor="middle">HIIT all-out · 3×/sem</text>
+          <rect class="node proc" x="20" y="98" width="230" height="44" rx="4"/><text x="135" y="119" text-anchor="middle" class="small">Força 2–3×/sem</text><text x="135" y="134" text-anchor="middle" class="small">+ proteína 1,2–1,6 g/kg</text>
+          <rect class="node proc" x="20" y="166" width="230" height="44" rx="4"/><text x="135" y="187" text-anchor="middle" class="small">Treino regular</text><text x="135" y="202" text-anchor="middle" class="small">150–300 min/sem</text>
+          <rect class="node proc" x="20" y="234" width="230" height="44" rx="4"/><text x="135" y="261" text-anchor="middle">Quebrar o sentar · 20–30 min</text>
+          <rect class="node proc" x="20" y="302" width="230" height="44" rx="4"/><text x="135" y="329" text-anchor="middle">Andar 10–30 min após comer</text>
+          <rect class="node in" x="20" y="370" width="230" height="44" rx="4"/><text x="135" y="397" text-anchor="middle">Jejum 14–16 h reais</text>
+
+          <rect class="node proc" x="400" y="30" width="290" height="44" rx="4"/><text x="545" y="57" text-anchor="middle">AMPK → PGC-1α</text>
+          <rect class="node proc" x="400" y="98" width="290" height="44" rx="4"/><text x="545" y="125" text-anchor="middle">mTOR → síntese proteica</text>
+          <rect class="node proc" x="400" y="166" width="290" height="44" rx="4"/><text x="545" y="193" text-anchor="middle">Gasto, capilares, coração</text>
+          <rect class="node proc" x="400" y="246" width="290" height="56" rx="4"/><text x="545" y="270" text-anchor="middle">GLUT4 pós-refeição</text><text x="545" y="288" text-anchor="middle" class="small">glicose e insulina depois de comer ↓</text>
+          <rect class="node proc" x="400" y="370" width="290" height="44" rx="4"/><text x="545" y="397" text-anchor="middle">Insulina basal ↓</text>
+
+          <rect class="node out" x="840" y="30" width="230" height="44" rx="4"/><text x="955" y="57" text-anchor="middle">Mitocôndrias novas</text>
+          <rect class="node out" x="840" y="98" width="230" height="44" rx="4"/><text x="955" y="119" text-anchor="middle" class="small">Mais músculo</text><text x="955" y="134" text-anchor="middle" class="small">gasto de repouso +96 kcal/dia</text>
+          <rect class="node out" x="840" y="166" width="230" height="44" rx="4"/><text x="955" y="187" text-anchor="middle" class="small">FC de repouso ↓</text><text x="955" y="202" text-anchor="middle" class="small">cintura ↓ mesmo com peso igual</text>
+
+          <rect class="node out big" x="1130" y="30" width="150" height="112" rx="4"/><text x="1205" y="78" text-anchor="middle" font-weight="600">↑ Densidade</text><text x="1205" y="96" text-anchor="middle" font-weight="600">e músculo</text>
+          <rect class="node out" x="1130" y="250" width="150" height="44" rx="4"/><text x="1205" y="268" text-anchor="middle">↓ Resistência</text><text x="1205" y="284" text-anchor="middle">à insulina</text>
+          <rect class="node out" x="1130" y="330" width="150" height="44" rx="4"/><text x="1205" y="357" text-anchor="middle">Emagrecimento</text>
+
+          <line class="edge strong" x1="250" y1="52" x2="398" y2="52" marker-end="url(#arr)"/><text class="lbl ok" x="324" y="46" text-anchor="middle">esforço máximo · forte</text>
+          <line class="edge strong" x1="250" y1="120" x2="398" y2="120" marker-end="url(#arr)"/><text class="lbl ok" x="324" y="114" text-anchor="middle">forte</text>
+          <line class="edge strong" x1="250" y1="188" x2="398" y2="188" marker-end="url(#arr)"/><text class="lbl ok" x="324" y="182" text-anchor="middle">forte</text>
+          <line class="edge strong" x1="250" y1="256" x2="398" y2="268" marker-end="url(#arr)"/><text class="lbl ok" x="324" y="250" text-anchor="middle">SMD −0,55 · forte</text>
+          <line class="edge" x1="250" y1="324" x2="398" y2="282" marker-end="url(#arr)"/><text class="lbl" x="324" y="320" text-anchor="middle">maior no jantar · moderada</text>
+          <line class="edge" x1="250" y1="392" x2="398" y2="392" marker-end="url(#arr)"/><text class="lbl" x="324" y="386" text-anchor="middle">moderada · 8–12 semanas</text>
+
+          <line class="edge strong" x1="690" y1="52" x2="838" y2="52" marker-end="url(#arr)"/><text class="lbl ok" x="764" y="46" text-anchor="middle">biogênese</text>
+          <line class="edge strong" x1="690" y1="120" x2="838" y2="120" marker-end="url(#arr)"/><text class="lbl ok" x="764" y="114" text-anchor="middle">8–12 semanas</text>
+          <line class="edge strong" x1="690" y1="188" x2="838" y2="188" marker-end="url(#arr)"/><text class="lbl ok" x="764" y="182" text-anchor="middle">4–8 semanas</text>
+
+          <line class="edge" x1="1070" y1="52" x2="1128" y2="60" marker-end="url(#arr)"/>
+          <line class="edge" x1="1070" y1="120" x2="1128" y2="112" marker-end="url(#arr)"/>
+          <line class="edge" x1="1070" y1="188" x2="1128" y2="262" marker-end="url(#arr)"/><text class="lbl" x="1096" y="238" text-anchor="middle">visceral ↓</text>
+          <line class="edge strong" x1="690" y1="274" x2="1128" y2="268" marker-end="url(#arr)"/><text class="lbl ok" x="910" y="262" text-anchor="middle">direto, sem passar pela mitocôndria — o efeito que aparece primeiro</text>
+          <line class="edge" x1="690" y1="392" x2="1128" y2="280" marker-end="url(#arr)"/><text class="lbl" x="930" y="352" text-anchor="middle">direto</text>
+          <line class="edge" x1="1205" y1="142" x2="1205" y2="248" marker-end="url(#arr)"/><text class="lbl" x="1213" y="200" text-anchor="start">sensibilidade +53%</text>
+          <line class="edge" x1="1205" y1="294" x2="1205" y2="328" marker-end="url(#arr)"/><text class="lbl" x="1213" y="316" text-anchor="start">consequência</text>
+
+          <!-- ======== DIVIDER ======== -->
+          <line class="divider" x1="20" y1="430" x2="1280" y2="430"/>
+          <text class="head bad" x="20" y="456">O QUE DESFAZ</text>
+          <text class="head bad" x="840" y="456">OS TRÊS ALVOS</text>
+
+          <!-- ======== BOTTOM: DESFAZ ======== -->
+          <rect class="node bad" x="20" y="470" width="230" height="44" rx="4"/><text x="135" y="491" text-anchor="middle" class="small">Parar de treinar · cama ·</text><text x="135" y="506" text-anchor="middle" class="small">&lt; 2 mil passos/dia</text>
+          <rect class="node bad" x="20" y="538" width="230" height="44" rx="4"/><text x="135" y="565" text-anchor="middle">Sentar horas sem pausa</text>
+          <rect class="node bad" x="20" y="606" width="230" height="44" rx="4"/><text x="135" y="633" text-anchor="middle">Dormir &lt; 6 h</text>
+          <rect class="node bad" x="20" y="674" width="230" height="44" rx="4"/><text x="135" y="695" text-anchor="middle" class="small">Cafeína tarde · álcool à noite ·</text><text x="135" y="710" text-anchor="middle" class="small">comer perto de dormir</text>
+          <rect class="node bad" x="20" y="742" width="230" height="44" rx="4"/><text x="135" y="763" text-anchor="middle" class="small">Açúcar líquido · ultraprocessado ·</text><text x="135" y="778" text-anchor="middle" class="small">excesso calórico</text>
+          <rect class="node bad" x="20" y="810" width="230" height="44" rx="4"/><text x="135" y="831" text-anchor="middle" class="small">Déficit severo · pouca proteína ·</text><text x="135" y="846" text-anchor="middle" class="small">treinar muito comendo pouco</text>
+
+          <rect class="node bad" x="400" y="470" width="290" height="44" rx="4"/><text x="545" y="491" text-anchor="middle" class="small">Ausência de sinal (desuso)</text><text x="545" y="506" text-anchor="middle" class="small">não é estresse oxidativo</text>
+          <rect class="node bad" x="400" y="538" width="290" height="44" rx="4"/><text x="545" y="565" text-anchor="middle">Glicose pós-refeição ↑</text>
+          <rect class="node bad" x="400" y="626" width="290" height="56" rx="4"/><text x="545" y="650" text-anchor="middle">Sono curto ou pior</text><text x="545" y="668" text-anchor="middle" class="small">cortisol, grelina, menos reparo</text>
+          <rect class="node bad" x="400" y="742" width="290" height="44" rx="4"/><text x="545" y="763" text-anchor="middle" class="small">+500 kcal/dia · picos de glicose · ROS</text><text x="545" y="778" text-anchor="middle" class="small">conteúdo mitocondrial não cai</text>
+          <rect class="node bad" x="400" y="810" width="290" height="44" rx="4"/><text x="545" y="831" text-anchor="middle" class="small">Massa magra ↓ ·</text><text x="545" y="846" text-anchor="middle" class="small">termogênese adaptativa 50–120 kcal</text>
+
+          <rect class="node bad big" x="840" y="470" width="230" height="56" rx="4"/><text x="955" y="491" text-anchor="middle" font-weight="600">Densidade mitocondrial ↓</text><text x="955" y="509" text-anchor="middle" class="small">−18% em 4 dias · −25% em 14 dias</text>
+          <rect class="node bad big" x="840" y="592" width="230" height="56" rx="4"/><text x="955" y="613" text-anchor="middle" font-weight="600">Resistência à insulina ↑</text><text x="955" y="631" text-anchor="middle" class="small">em RI não reverte sozinho</text>
+          <rect class="node bad" x="840" y="674" width="230" height="44" rx="4"/><text x="955" y="695" text-anchor="middle" class="small">Fome ↑ · "comi sem fome"</text><text x="955" y="710" text-anchor="middle" class="small">→ laço 2</text>
+          <rect class="node bad big" x="840" y="810" width="230" height="56" rx="4"/><text x="955" y="831" text-anchor="middle" font-weight="600">Metabolismo basal ↓</text><text x="955" y="849" text-anchor="middle" class="small">o que a balança esconde</text>
+
+          <line class="edge bad strong" x1="250" y1="492" x2="398" y2="492" marker-end="url(#arr-bad)"/><text class="lbl bad" x="324" y="486" text-anchor="middle">em 48 h · forte</text>
+          <line class="edge bad strong" x1="250" y1="560" x2="398" y2="560" marker-end="url(#arr-bad)"/><text class="lbl bad" x="324" y="554" text-anchor="middle">forte</text>
+          <line class="edge bad strong" x1="250" y1="628" x2="398" y2="646" marker-end="url(#arr-bad)"/><text class="lbl bad" x="324" y="626" text-anchor="middle">forte</text>
+          <line class="edge bad strong" x1="250" y1="696" x2="398" y2="662" marker-end="url(#arr-bad)"/><text class="lbl bad" x="324" y="694" text-anchor="middle">forte · sem você notar</text>
+          <line class="edge bad strong" x1="250" y1="764" x2="398" y2="764" marker-end="url(#arr-bad)"/><text class="lbl bad" x="324" y="758" text-anchor="middle">forte</text>
+          <line class="edge bad strong" x1="250" y1="832" x2="398" y2="832" marker-end="url(#arr-bad)"/><text class="lbl bad" x="324" y="826" text-anchor="middle">em 3–5 dias · forte</text>
+
+          <line class="edge bad strong" x1="690" y1="492" x2="838" y2="498" marker-end="url(#arr-bad)"/><text class="lbl bad" x="764" y="486" text-anchor="middle">meia-vida 12 dias</text>
+          <line class="edge bad" x1="690" y1="500" x2="838" y2="606" marker-end="url(#arr-bad)"/><text class="lbl bad" x="740" y="546" text-anchor="middle">−17% em 2 sem</text>
+          <line class="edge bad strong" x1="690" y1="560" x2="838" y2="614" marker-end="url(#arr-bad)"/>
+          <line class="edge bad strong" x1="690" y1="646" x2="838" y2="622" marker-end="url(#arr-bad)"/><text class="lbl bad" x="764" y="628" text-anchor="middle">−11 a −20%</text>
+          <line class="edge bad strong" x1="690" y1="662" x2="838" y2="696" marker-end="url(#arr-bad)"/><text class="lbl bad" x="764" y="692" text-anchor="middle">grelina ↑</text>
+          <line class="edge bad strong" x1="690" y1="764" x2="838" y2="632" marker-end="url(#arr-bad)"/><text class="lbl bad" x="800" y="748" text-anchor="middle">insulina + ROS</text>
+          <line class="edge bad strong" x1="690" y1="832" x2="838" y2="838" marker-end="url(#arr-bad)"/><text class="lbl bad" x="764" y="826" text-anchor="middle">−142 kcal/dia sem proteína</text>
+          <line class="edge bad" x1="545" y1="682" x2="545" y2="808" marker-end="url(#arr-bad)"/><text class="lbl bad" x="553" y="750" text-anchor="start">em dieta: 60% mais músculo perdido</text>
+
+          <text class="lbl bad" x="1130" y="492" text-anchor="start">o que o lado de cima</text>
+          <text class="lbl bad" x="1130" y="506" text-anchor="start">construiu em 6 semanas,</text>
+          <text class="lbl bad" x="1130" y="520" text-anchor="start">o desuso desfaz em 2.</text>
+        </svg>
+      </div>
+      <figcaption>
+        Leitura de cima: HIIT com esforço máximo é o único que <em>cria</em> mitocôndrias; força e proteína criam o músculo onde elas moram; quebrar o sentar e andar após comer agem <em>direto</em> na insulina — é o efeito que a pessoa vê primeiro. Leitura de baixo: o dano mais frequente e mais bem medido é a <em>ausência de sinal</em> — parar, cama, poucos passos — e ele não passa por estresse oxidativo. Excesso calórico piora insulina e ROS, mas <em>não</em> reduz o conteúdo mitocondrial (duas semanas e oito semanas de overfeeding medidos). Sono curto acerta os três alvos: insulina, fome, e — em dieta — músculo.
+      </figcaption>
+      <div class="legend">
+        <span><span class="sw strong"></span>forte</span>
+        <span><span class="sw"></span>moderada, ≥2 estudos</span>
+        <span><span class="sw bad"></span>caminho de dano</span>
+        <span>· fraca, contestada e não verificada não aparecem — estão na Fronteira</span>
+      </div>
+    </figure>
+
+    <div style="margin-top:18px" class="frame" aria-label="Faixas de referência">
+      <span>sono 7–8 h</span><span>150–300 min/sem</span><span>5–7 mil passos</span><span>proteína 1,2–1,6 g/kg</span><span>fibra 25–29 g</span><span>álcool 0 / ≤7 / acima</span><span>café até ~300 mg conta como líquido</span>
+    </div>
+  </section>
+
+  <!-- ================= FACES ================= -->
+  <section>
+    <h2>Faces da mesma moeda</h2>
+    <p class="sub">A curva de cada input, no formato que a evidência tem. Só Núcleo — e onde uma face é Fronteira, está dito.</p>
+    <div class="coins" id="coins"></div>
+  </section>
+
+  <!-- ================= LOOPS ================= -->
+  <section>
+    <h2>Onde a saída vira entrada</h2>
+    <p class="sub">Dois laços consolidados e um em espera.</p>
+    <div class="loops">
+      <div class="loop">
+        <div class="n">Laço A · sono → fome → prato</div>
+        <div class="chain">
+          <span class="x"><i>IN</i>cafeína tarde, álcool, refeição perto de dormir</span>
+          <span class="p"><i>PROC</i>sono curto ou pior</span>
+          <span class="o"><i>OUT</i>fome ↑, "comi sem fome"</span>
+          <span class="x"><i>IN</i>mais ultraprocessado e açúcar líquido entram</span>
+          <span class="o"><i>OUT</i>insulina pior, cintura</span>
+        </div>
+        <div class="back">O cruzamento principal da fome emocional é com o sono da véspera — não com o treino. Dormir mais → come menos, medido.</div>
+      </div>
+      <div class="loop">
+        <div class="n">Laço B · continuidade</div>
+        <div class="chain">
+          <span class="x"><i>IN</i>2 semanas parado (viagem, gripe, "depois eu volto")</span>
+          <span class="o"><i>OUT</i>sensibilidade −17%, citrato sintase −25%</span>
+          <span class="p"><i>PROC</i>treino rende menos, cansa mais</span>
+          <span class="x"><i>IN</i>mais fácil não voltar</span>
+        </div>
+        <div class="back">Meia-vida de 12 dias. Em quem tem resistência à insulina, não reverte sozinho em 2 semanas de rotina. Passos contam — não precisa ser o treino completo.</div>
+      </div>
+      <div class="loop wait">
+        <div class="n">Laço C · performance (em espera)</div>
+        <div class="chain">
+          <span class="o"><i>OUT</i>tiros até travar ↑</span>
+          <span class="p"><i>PROC</i>tiros mais intensos → mais estímulo</span>
+          <span class="o"><i>OUT</i>mais biogênese</span>
+        </div>
+        <div class="back">"Tiros até travar" não é medida validada. Fica como registro contra o próprio baseline até a PoC validar contra Rockport e FC de recuperação (Q24). Sem isso, o laço não é afirmado.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FRONTEIRA ================= -->
+  <section>
+    <h2>Fronteira — curiosidades honestas</h2>
+    <p class="sub">Tudo aqui tem algum sinal e nenhuma seta. Cada item diz o que faltaria para subir. O app pode registrar, e pode contar como curiosidade — nunca como coisa em que investir.</p>
+    <div class="frontier">
+      <div>
+        <div class="fh">Sinal real, evidência insuficiente</div>
+        <ul>
+          <li><b>HIIT protege a mitocôndria no sono curto</b><span class="lack">RCT único, 24 jovens; falta replicação em sedentários</span></li>
+          <li><b>Regularidade do horário de sono</b><span class="lack">duas coortes; o app mostra a variação, não afirma</span></li>
+          <li><b>Janela de jejum cedo &gt; tardia</b><span class="lack">n=8; dois RCTs não veem diferença de peso</span></li>
+          <li><b>Proteína distribuída em 3–4 refeições</b><span class="lack">n=8; meta-análise diz que o total importa, o timing não</span></li>
+          <li><b>Frio com tremor → insulina</b><span class="lack">mesmo grupo, n=8 e 15; dose de 1 h/dia tremendo</span></li>
+          <li><b>Calor passivo → glicemia</b><span class="lack">meta em DM2: ns; sobra pressão −4 mmHg</span></li>
+          <li><b>Cacau ≥70%</b><span class="lack">31 RCTs: glicose −5 mg/dL — real e pequeno demais</span></li>
+          <li><b>Chá verde</b><span class="lack">duas metas sem efeito</span></li>
+          <li><b>Nitrato</b><span class="lack">SMD 0,2–0,37 em endurance; não se percebe</span></li>
+          <li><b>Creatina</b><span class="lack">+0,8–1,1 kg em 12 sem com força; metas em jovens e idosos, não em 30–60 sedentários</span></li>
+          <li><b>Ômega-3 → triglicerídeos</b><span class="lack">seria Núcleo, mas fibrilação atrial em &gt;1 g/dia (35 RCTs) — registro com aviso</span></li>
+          <li><b>Azeite extra-virgem</b><span class="lack">PREDIMED é um RCT; alimento-chave registrável</span></li>
+          <li><b>Qual adoçante</b><span class="lack">Suez 2022 é único; registrar o rótulo</span></li>
+          <li><b>Hidratação crônica × glicemia</b><span class="lack">coortes divergem</span></li>
+          <li><b>Antioxidantes em megadose anulam o treino</b><span class="lack">2 RCTs em jovens</span></li>
+          <li><b>Carga excessiva → mitocôndria</b><span class="lack">RCT único; sinais de excesso ficam como registro</span></li>
+          <li><b>Ferro heme → diabetes</b><span class="lack">coortes; vira flag para ferritina no exame</span></li>
+          <li><b>Sono fragmentado → insulina</b><span class="lack">n=11 e 9; despertares registrados</span></li>
+          <li><b>NR/NMN, urolitina A, resveratrol</b><span class="lack">respiração não muda em obesos; desfechos não atingidos</span></li>
+          <li><b>Autofagia por jejum, gordura marrom por frio</b><span class="lack">mecanismo animal; em humanos, sinal pequeno ou ausente</span></li>
+        </ul>
+      </div>
+      <div>
+        <div class="fh">Mitos — derrubados com fonte, não mostrar como claim</div>
+        <ul>
+          <li class="myth"><b>Dopamina do treino reduz fome emocional</b><span class="lack">48 estudos, efeito pequeno; o caminho é sono</span></li>
+          <li class="myth"><b>CoQ10 e ferro da carne "lubrificam" a mitocôndria</b><span class="lack">3–6 mg/dia; ferro em excesso aumenta risco</span></li>
+          <li class="myth"><b>Comer de 3 em 3 h acelera o metabolismo</b><span class="lack">não</span></li>
+          <li class="myth"><b>Jejum desacelera o metabolismo</b><span class="lack">gasto de repouso sobe ~14% até o 3º dia</span></li>
+          <li class="myth"><b>Músculo queima muito parado</b><span class="lack">13 kcal/kg/dia</span></li>
+          <li class="myth"><b>Metabolismo cai depois dos 40</b><span class="lack">estável dos 20 aos 60 ajustado por massa magra</span></li>
+          <li class="myth"><b>Chá verde / pimenta / café "aceleram"</b><span class="lack">+50 a +100 kcal, imperceptível</span></li>
+          <li class="myth"><b>Comer demais danifica a mitocôndria</b><span class="lack">8 semanas de +7,7 kg: conteúdo e respiração iguais — o dano é insulina e ROS</span></li>
+          <li class="myth"><b>Mitocôndria "acelera o metabolismo"</b><span class="lack">proton leak é mecanismo animal</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PLACAR ================= -->
+  <section>
+    <h2>O que a pesquisa fez com o protocolo</h2>
+    <p class="sub">Doze afirmações do documento original, verificadas fonte a fonte, depois passadas pelo filtro do Núcleo.</p>
+    <div class="placar-wrap">
+      <table class="placar">
+        <thead><tr><th>Afirmação original</th><th>Veredito</th><th>O que sobrou</th></tr></thead>
+        <tbody>
+          <tr><td>HIIT 5–7 min basta</td><td><span class="v keep">núcleo</span></td><td>Com tiros <em>all-out</em>. Descanso de 1min30 é curto para a referência. "Demais" (carga diária) é fronteira.</td></tr>
+          <tr><td>Sono ruim aborta o ganho</td><td><span class="v re">reescrito</span></td><td>Sono curto derruba insulina, fome e — em dieta — músculo (núcleo). "HIIT protege" caiu para fronteira: RCT único.</td></tr>
+          <tr><td>LISS expande as mitocôndrias</td><td><span class="v re">vira faixa</span></td><td>Zona 2 não é estímulo mitocondrial. Sobra a faixa 150–300 min/sem e "treino regular → FC repouso e cintura ↓".</td></tr>
+          <tr><td>Nitrato → mitocôndria eficiente</td><td><span class="v fr">fronteira</span></td><td>Efeito em fôlego existe e é pequeno demais para perceber; mitocôndria em disputa.</td></tr>
+          <tr><td>Ômega-3 → membrana e insulina</td><td><span class="v fr">fronteira</span></td><td>Insulina zero em 83 RCTs; triglicerídeos sim, mas com fibrilação atrial na dose de efeito.</td></tr>
+          <tr><td>Refrigerante zero liberado</td><td><span class="v fr">fronteira</span></td><td>Depende do adoçante; o estudo é único. Registrar o rótulo.</td></tr>
+          <tr class="gone"><td>Jejum 14–16 h ativa mitofagia</td><td><span class="v fall">mecanismo cai</span></td><td>Sobra: jejum 14–16 h reais → peso/cintura/HOMA-IR modestos em 8–12 sem (núcleo). A conta era 18 h.</td></tr>
+          <tr class="gone"><td>Chocolate 80% estimula biogênese</td><td><span class="v fall">cai</span></td><td>Nada em VO2max; insulina −5 mg/dL — fronteira.</td></tr>
+          <tr class="gone"><td>Frio 30–60 s ativa gordura marrom</td><td><span class="v fall">cai</span></td><td>Sem estudo nessa dose; frio com tremor é fronteira. Hábito.</td></tr>
+          <tr class="gone"><td>Carne e ovos pelo CoQ10 e ferro</td><td><span class="v fall">cai</span></td><td>Ficam pela proteína (faixa). Ferro em excesso vira flag de ferritina.</td></tr>
+          <tr class="gone"><td>Dopamina do treino reduz fome emocional</td><td><span class="v fall">cai</span></td><td>O caminho é sono → fome (núcleo).</td></tr>
+          <tr class="gone"><td>Hidratação → densidade mitocondrial</td><td><span class="v fall">sem seta</span></td><td>Café conta como líquido; beber pela sede. O resto é fronteira.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="notes">
+    <h2>O que a rodada do dano mudou</h2>
+    <p><b>O dano tem três alvos.</b> Densidade mitocondrial, resistência à insulina e metabolismo basal — com causas parcialmente diferentes. O protocolo original só via o segundo, e só via "veneno".</p>
+    <p><b>O dano mais importante é parar.</b> Não é estresse oxidativo, é ausência de sinal. Transcritos mudam em 48 h, citrato sintase cai 18% em 4 dias de cama, meia-vida de 12 dias ao parar de treinar. E em quem tem resistência à insulina, não reverte sozinho.</p>
+    <p><b>Comer demais não danifica a mitocôndria.</b> Duas medições diretas (28 dias e 8 semanas de overfeeding) não acharam queda de conteúdo nem de respiração. O que piora é insulina e ROS. A seta que eu tinha desenhado estava errada.</p>
+    <p><b>O metabolismo basal é o que a balança esconde.</b> Termogênese adaptativa é real e modesta (50–120 kcal/dia). O que derruba de verdade é perder músculo — e o que evita é proteína, força e sono. Panturrilha e força de preensão medem isso por R$ 0.</p>
+    <p><b>"Tiros até travar" não passou.</b> É o indicador central e não é medida validada. Fica como registro pessoal até a PoC testar.</p>
+  </section>
+</div>
+
+<script>
+(function () {
+  var coins = [
+    { t: "Parar", ax: "eixo: dias sem estímulo",
+      curve: [[0,.95],[.15,.9],[.35,.7],[.5,.5],[.75,.25],[1,.1]],
+      zones: [{k:"ok",w:.2,l:"1–3 dias — mensurável, reversível"},{k:"weak",w:.3,l:"1–2 semanas — metade da adaptação enzimática; sensibilidade −17%"},{k:"bad",w:.5,l:"8 semanas — o ganho de 8 semanas zerou; em RI não reverte sozinho"}],
+      says: "12 dias sem treinar. Nos estudos, é o tempo em que metade da adaptação já se foi. Passos contam — não precisa ser o treino completo." },
+    { t: "Sono", ax: "eixo: horas por noite",
+      curve: [[0,.1],[.25,.5],[.45,.95],[.6,.95],[.8,.6],[1,.35]],
+      zones: [{k:"bad",w:.35,l:"< 6 h — sensibilidade −11 a −20%; fome ↑; em dieta, mais músculo perdido"},{k:"ok",w:.35,l:"7–8 h — mínimo de risco (faixa)"},{k:"none",w:.3,l:"> 9 h — curva em U; fronteira"}],
+      says: "Semana com 5 h de média. Foi a semana com mais 'comi sem fome' — e nos estudos é a ordem esperada: sono, depois fome, depois prato." },
+    { t: "Déficit calórico", ax: "eixo: tamanho do déficit",
+      curve: [[0,.5],[.2,.75],[.4,.9],[.55,.8],[.75,.4],[1,.1]],
+      zones: [{k:"none",w:.2,l:"sem déficit — peso estável; adaptação some em 1–2 anos"},{k:"ok",w:.35,l:"moderado, 15–25% — ~0,5 kg/sem; adaptação de 50–120 kcal/dia"},{k:"bad",w:.45,l:"severo, ≥40% — músculo cai mais que gordura; T3 em 3–5 dias"}],
+      says: "Perdeu 3 kg em 2 semanas e a panturrilha caiu 1 cm. Nesse ritmo, parte do que sai é músculo — proteína e força mudam essa proporção." },
+    { t: "Passos", ax: "eixo: passos por dia",
+      curve: [[0,.1],[.3,.45],[.5,.8],[.7,.92],[1,.97]],
+      zones: [{k:"bad",w:.25,l:"< 2 mil por 2 semanas — sensibilidade −17%, VO₂ −7%"},{k:"ok",w:.35,l:"5–7 mil — a inflexão do risco"},{k:"none",w:.4,l:"> 10 mil — o retorno achata"}],
+      says: "Média de 1,8 mil passos nos últimos 10 dias. É a faixa que os estudos usaram para *provocar* resistência à insulina em duas semanas." },
+    { t: "Jejum", ax: "eixo: horas reais sem comer",
+      curve: [[0,.2],[.35,.3],[.55,.8],[.75,.8],[.9,.5],[1,.2]],
+      zones: [{k:"none",w:.3,l:"< 12 h — sem sinal"},{k:"ok",w:.45,l:"14–16 h reais — peso, cintura, HOMA-IR modestos em 8–12 sem"},{k:"bad",w:.25,l:"sem proteína, ou ≥ 24 h repetido — massa magra"}],
+      says: "Seu jejum é de 18 h, não 16. O que a evidência mede é modesto e leva 8–12 semanas — e só vale se a proteína entrar na janela." },
+    { t: "HIIT", ax: "eixo: frequência × esforço",
+      curve: [[0,.1],[.3,.45],[.55,.95],[.7,.9],[.85,.5],[1,.15]],
+      zones: [{k:"weak",w:.3,l:"1×/sem, submáximo — estímulo insuficiente"},{k:"ok",w:.4,l:"3×/sem, tiros all-out — sensibilidade +53%"},{k:"none",w:.3,l:"carga progressiva diária — fronteira (RCT único)"}],
+      says: "3 sessões esta semana, RPE 8–9. É a dose que nos estudos deu +48% de citrato sintase em 12 semanas — em sedentários." },
+    { t: "Cafeína", ax: "eixo: quando, não quanto",
+      curve: [[0,.9],[.4,.9],[.55,.7],[.75,.35],[1,.1]],
+      zones: [{k:"ok",w:.4,l:"manhã, até ~300 mg — conta como líquido"},{k:"bad",w:.35,l:"< 9 h antes de deitar — 400 mg a 6 h tira 1 h de sono sem você perceber"},{k:"bad",w:.25,l:"noite — latência e sono profundo ↓"}],
+      says: "Último café às 17h, deitou às 23h. Nos dias assim, 'acordei mal' em 4 de 5. Com café até 14h, 1 de 6." },
+    { t: "Álcool", ax: "eixo: doses por semana (e hora)",
+      curve: [[0,.9],[.3,.85],[.5,.6],[.75,.3],[1,.05]],
+      zones: [{k:"ok",w:.3,l:"zero — mínimo de risco"},{k:"weak",w:.35,l:"≤ 7 doses/sem — faixa; a curva em J é fronteira"},{k:"bad",w:.35,l:"à noite, ou bebedeira — sono/REM pior; síntese proteica −24 a −37%"}],
+      says: "'Ajuda a dormir' é meia verdade: adianta o sono e fragmenta a segunda metade da noite." }
+  ];
+  function svgFor(c) {
+    var W = 300, H = 110, padB = 10;
+    var x = function (v) { return v * W; }, y = function (v) { return (1 - v) * (H - padB) + 4; };
+    var s = '<svg viewBox="0 0 ' + W + ' ' + (H + 6) + '" role="img" aria-label="Curva de dose: ' + c.t + '">';
+    var x0 = 0;
+    c.zones.forEach(function (z) {
+      var w = z.w * W;
+      s += '<rect x="' + x0 + '" y="0" width="' + w + '" height="' + H + '" style="fill:var(--' + (z.k === 'ok' ? 'out' : z.k === 'bad' ? 'bad' : z.k === 'weak' ? 'proc' : 'none') + '-tint)"/>';
+      x0 += w;
+    });
+    var pts = c.curve.map(function (p) { return [x(p[0]), y(p[1])]; });
+    var d = 'M' + pts.map(function (p) { return p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' L');
+    s += '<path d="' + d + ' L' + W + ' ' + H + ' L0 ' + H + ' Z" style="fill:currentColor;opacity:.06"/>';
+    s += '<path d="' + d + '" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round"/>';
+    s += '<line x1="0" y1="' + H + '" x2="' + W + '" y2="' + H + '" style="stroke:var(--line)"/>';
+    s += '<text x="2" y="' + (H + 5) + '" style="font:10px var(--mono);fill:var(--muted)" dominant-baseline="hanging">pouco</text>';
+    s += '<text x="' + (W - 2) + '" y="' + (H + 5) + '" text-anchor="end" style="font:10px var(--mono);fill:var(--muted)" dominant-baseline="hanging">demais</text>';
+    s += '<text x="4" y="12" style="font:10px var(--mono);fill:var(--muted)">↑ benefício</text>';
+    return s + '</svg>';
+  }
+  document.getElementById('coins').innerHTML = coins.map(function (c) {
+    return '<div class="coin"><div class="t">' + c.t + '</div><div class="ax">' + c.ax + '</div>' + svgFor(c) +
+      '<div class="zones">' + c.zones.map(function (z) { return '<div><i class="' + z.k + '"></i><span>' + z.l + '</span></div>'; }).join('') + '</div>' +
+      '<div class="says">' + c.says + '</div></div>';
+  }).join('');
+})();
+</script>

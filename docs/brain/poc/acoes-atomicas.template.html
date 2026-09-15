@@ -1,0 +1,328 @@
+<title>Ações Atômicas da Fornalha</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #F5F6F3; --surface: #FFFFFF; --ink: #1C2421; --muted: #5C6763; --line: #D7DCD8;
+    --in: #2F6B9A;   --in-tint: #E6EFF6;
+    --proc: #B8690F; --proc-tint: #F8EEDF;
+    --out: #35845A;  --out-tint: #E4F1E9;
+    --bad: #B23F38;  --bad-tint: #F6E4E2;
+    --none-tint: #ECEEEB;
+    --serif: "IBM Plex Serif", Georgia, serif;
+    --sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151A18; --surface: #1E2522; --ink: #E7ECE9; --muted: #9AA6A0; --line: #2F3935;
+      --in: #7FB3DE; --in-tint: #1B2732; --proc: #E5A253; --proc-tint: #2F2519;
+      --out: #7CC49A; --out-tint: #1A2B21; --bad: #E07A72; --bad-tint: #30201E; --none-tint: #262D2A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #151A18; --surface: #1E2522; --ink: #E7ECE9; --muted: #9AA6A0; --line: #2F3935;
+    --in: #7FB3DE; --in-tint: #1B2732; --proc: #E5A253; --proc-tint: #2F2519;
+    --out: #7CC49A; --out-tint: #1A2B21; --bad: #E07A72; --bad-tint: #30201E; --none-tint: #262D2A;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.5; padding-inline: clamp(16px, 4vw, 48px); padding-block: 40px 64px; }
+  .wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 44px; }
+  header { max-width: 70ch; display: grid; gap: 10px; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(30px, 4vw, 42px); line-height: 1.1; margin: 0; text-wrap: balance; }
+  .lede { font-size: 17px; color: var(--muted); margin: 0; text-wrap: pretty; }
+  h2 { font-family: var(--serif); font-weight: 600; font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 16px; max-width: 74ch; }
+
+  /* painéis de entrada */
+  .painel { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 18px 20px; display: grid; gap: 14px; }
+  .painel .ph { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .painel .ph .k { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--in); }
+  .painel.dia .ph .k { color: var(--proc); }
+  .painel .ph .ex { font-size: 12.5px; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px 14px; }
+  .field { display: grid; gap: 3px; align-content: start; }
+  .field label { font-size: 12px; color: var(--muted); line-height: 1.25; }
+  .field input, .field select { font: 14px var(--mono); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; width: 100%; }
+  .field input:focus, .field select:focus { outline: 2px solid var(--in); outline-offset: 1px; }
+  .field .u { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+  .resumo { display: flex; flex-wrap: wrap; gap: 8px 16px; font-family: var(--mono); font-size: 12px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 12px; }
+  .resumo b { font-weight: 500; }
+  .resumo .ideal { color: var(--out); } .resumo .atencao { color: var(--proc); } .resumo .pouco { color: var(--bad); }
+
+  /* medidas */
+  .medidas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .med { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 14px 16px; display: grid; gap: 8px; align-content: start; }
+  .med .t { font-family: var(--serif); font-weight: 600; font-size: 17px; line-height: 1.2; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .med .big { font-family: var(--mono); font-size: 26px; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; }
+  .med .big small { font-size: 12px; color: var(--muted); font-weight: 400; margin-left: 4px; }
+  .med .st { font-family: var(--mono); font-size: 11px; }
+  .med .st.ideal { color: var(--out); } .med .st.atencao { color: var(--proc); } .med .st.pouco, .med .st.demais { color: var(--bad); } .med .st.none { color: var(--muted); }
+  .med .meta-l { font-size: 13px; }
+  .med .meta-l b { font-family: var(--mono); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--in); font-weight: 500; }
+  .med .zonas-m { display: grid; gap: 2px; font-size: 12.5px; }
+  .med .zonas-m div { display: grid; grid-template-columns: 8px 1fr; gap: 8px; align-items: baseline; }
+  .med .zonas-m i { width: 8px; height: 8px; border-radius: 2px; transform: translateY(1px); }
+  .med .zonas-m i.ok { background: var(--out); } .med .zonas-m i.bad { background: var(--bad); } .med .zonas-m i.weak { background: var(--proc); } .med .zonas-m i.none { background: var(--muted); }
+  .med .how { font-size: 12.5px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 8px; }
+  .med .how b { font-family: var(--mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; font-weight: 500; }
+  .med .ev { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+
+  /* grupos / cards */
+  .grupo { display: grid; gap: 12px; }
+  .grupo-h { display: flex; align-items: baseline; gap: 12px; }
+  .grupo-h h2 { margin: 0; }
+  .grupo-h .n { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .card { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); display: grid; grid-template-rows: auto auto auto 1fr; }
+  .card-top { padding: 14px 18px 10px; display: grid; gap: 4px; }
+  .card-top .t { font-family: var(--serif); font-weight: 600; font-size: 19px; line-height: 1.2; text-wrap: balance; }
+  .card-top .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+  .chip { border: 1px solid currentColor; border-radius: 3px; padding: 0 6px; white-space: nowrap; }
+  .chip.ev { color: var(--out); }
+  .chip.st.ideal { color: var(--out); background: var(--out-tint); }
+  .chip.st.atencao { color: var(--proc); background: var(--proc-tint); }
+  .chip.st.pouco, .chip.st.demais { color: var(--bad); background: var(--bad-tint); }
+  .chip.st.none { color: var(--muted); border-style: dashed; }
+  .faixa { padding: 10px 18px 12px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+  .bar { display: grid; grid-template-columns: 1fr 1fr 1fr; height: 8px; border-radius: 4px; overflow: visible; position: relative; }
+  .bar i { display: block; }
+  .bar i:first-child { border-radius: 4px 0 0 4px; } .bar i:last-child { border-radius: 0 4px 4px 0; }
+  .bar i.p { background: var(--bad-tint); } .bar i.i { background: var(--out); opacity: .55; } .bar i.d { background: var(--bad-tint); } .bar i.nd { background: var(--none-tint); }
+  .bar .you { position: absolute; top: -4px; width: 2px; height: 16px; background: var(--ink); border-radius: 1px; }
+  .bar .you::after { content: "você"; position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font: 9.5px var(--mono); color: var(--muted); white-space: nowrap; }
+  .zonas { display: grid; gap: 4px; font-size: 13px; margin-top: 12px; }
+  .zonas div { display: grid; grid-template-columns: 58px 1fr; gap: 8px; align-items: baseline; }
+  .zonas div span:first-child { font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; }
+  .zonas .p span:first-child, .zonas .d span:first-child { color: var(--bad); }
+  .zonas .i span:first-child { color: var(--out); }
+  .zonas .i { font-weight: 500; }
+  .prox { font-size: 13px; background: var(--in-tint); border-radius: 4px; padding: 7px 10px; }
+  .prox::before { content: "próximo passo · "; font-family: var(--mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: var(--in); }
+  .regra { font-size: 12.5px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 8px; }
+  .regra::before { content: "regra de bolso · "; font-family: var(--mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; }
+  .gat { padding: 10px 18px; border-top: 1px solid var(--line); font-size: 13.5px; display: grid; gap: 4px; }
+  .gat b { font-family: var(--mono); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--proc); font-weight: 500; }
+  details { border-top: 1px solid var(--line); }
+  summary { cursor: pointer; padding: 10px 18px; font-family: var(--mono); font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); list-style: none; display: flex; justify-content: space-between; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; }
+  details[open] summary::after { content: "−"; }
+  summary:focus-visible { outline: 2px solid var(--in); }
+  .det { padding: 0 18px 16px; display: grid; gap: 12px; font-size: 13.5px; }
+  .det h4 { margin: 0 0 4px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+  .det p { margin: 0; }
+  .ipo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .ipo div { border-radius: 4px; padding: 8px 10px; font-size: 12.5px; }
+  .ipo .a { background: var(--in-tint); } .ipo .b { background: var(--proc-tint); } .ipo .c { background: var(--out-tint); }
+  .ipo div b { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; font-weight: 500; margin-bottom: 2px; }
+  .ipo .a b { color: var(--in); } .ipo .b b { color: var(--proc); } .ipo .c b { color: var(--out); }
+  .niveis { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+  .seg { color: var(--bad); }
+
+  /* hábitos de registro */
+  .habitos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .hab { border: 1px dashed var(--line); border-radius: 6px; padding: 14px 18px; display: grid; gap: 6px; font-size: 13.5px; }
+  .hab .t { font-family: var(--serif); font-weight: 600; font-size: 17px; }
+  .hab b { font-family: var(--mono); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--proc); font-weight: 500; }
+  .hab p { margin: 0; color: var(--muted); }
+
+  .notes { display: grid; gap: 8px; max-width: 80ch; font-size: 14px; color: var(--muted); }
+  .notes p { margin: 0; }
+  @media (max-width: 900px) { .medidas { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 820px) { .cards, .habitos { grid-template-columns: 1fr; } .ipo { grid-template-columns: 1fr; } }
+  @media (max-width: 560px) { .medidas { grid-template-columns: 1fr; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">PoC · rodada 5 · metas pessoais com próximo passo · não é tela do app, mas já calcula como ele calcularia</div>
+    <h1>Ações Atômicas da Fornalha</h1>
+    <p class="lede">Vinte ações e nove medidas, só do que está consolidado. Cada ação tem um gatilho, uma versão de dois minutos, o porquê, e uma <b>meta pessoal</b> — pouco, meta, demais — calculada com os seus números, com o próximo passo a partir de onde você está.</p>
+  </header>
+
+  <section class="painel" id="perfil">
+    <div class="ph"><span class="k">Seu perfil · uma vez</span><span class="ex">Os valores iniciais são exemplo. Fica salvo só neste navegador.</span></div>
+    <div class="grid" id="campos_perfil"></div>
+  </section>
+
+  <section class="painel dia" id="dia">
+    <div class="ph"><span class="k">Um dia típico · o que você registraria</span><span class="ex">É o protótipo do registro diário: cada campo alimenta uma ação.</span></div>
+    <div class="grid" id="campos_dia"></div>
+    <div class="resumo" id="resumo"></div>
+  </section>
+
+  <section>
+    <h2>Medidas</h2>
+    <p class="sub">Instrumentos, não ações: o que você mede para saber se as ações estão funcionando — e o que calibra o resto. Tudo contra o seu próprio baseline.</p>
+    <div class="medidas" id="medidas"></div>
+  </section>
+
+  <div id="grupos"></div>
+
+  <section>
+    <h2>Hábitos de registro</h2>
+    <p class="sub">Sem número e sem meta — são o que faz os outros números existirem.</p>
+    <div class="habitos" id="habitos"></div>
+  </section>
+
+  <section class="notes">
+    <h2>Como ler</h2>
+    <p><b>É meta mesmo.</b> Calculada com os seus números, com fonte, e com o próximo passo a partir de onde você está. O que evita virar prescrição é a fonte visível e o baseline próprio — não chamar de outro nome.</p>
+    <p><b>O IMC não é alvo — é calibrador.</b> Ele ajusta o ponto de partida dos tiros (a 70% do esforço a mitocôndria ainda responde), os cortes da panturrilha e a estimativa de gasto. Cintura ÷ estatura é a medida de risco; o IMC é o contexto para não se cobrar o que o corpo ainda não dá.</p>
+    <p><b>Quase tudo aqui é de graça.</b> Água, proteína, fibra, sono, levantar da cadeira, jantar cedo, café até uma certa hora, não parar. O que custa dinheiro ficou na Fronteira.</p>
+    <p><b>O que ainda é regra de bolso:</b> proteína "por palma" (≈25–30 g), a frase da fome, "tiros até travar" como medida, e a FC máxima por fórmula (±10 bpm). A PoC com você testa isso primeiro.</p>
+  </section>
+</div>
+
+<script>
+var DATA = __ACOES_JSON__;
+
+(function () {
+  var V = DATA.variaveis, A = DATA.acoes, M = DATA.medidas;
+  var KEY = 'fornalha.perfil.v2';
+  var P = {};
+  Object.keys(V).forEach(function (k) { P[k] = V[k].padrao; });
+  try { var s0 = localStorage.getItem(KEY); if (s0) Object.assign(P, JSON.parse(s0)); } catch (e) {}
+
+  // ---------- helpers ----------
+  function tmin(s) { if (!s || String(s).indexOf(':') < 0) return null; var p = s.split(':'); return (+p[0]) * 60 + (+p[1]); }
+  function tfmt(m) { m = ((m % 1440) + 1440) % 1440; var h = Math.floor(m / 60), mi = m % 60; return (h < 10 ? '0' : '') + h + ':' + (mi < 10 ? '0' : '') + mi; }
+  function num(x) { if (x === '' || x == null) return null; var n = parseFloat(String(x).replace(',', '.')); return isNaN(n) ? null : n; }
+  function r1(x) { return Math.round(x * 10) / 10; }
+  function pos(v, lo, hi) { if (v == null) return null; if (v < lo) return Math.max(0.02, (v / lo) * 0.33); if (v <= hi) return 0.33 + ((v - lo) / (hi - lo)) * 0.34; return Math.min(0.98, 0.67 + Math.min(1, (v - hi) / hi) * 0.31); }
+  var ZL = { pouco: 'pouco', ideal: 'na meta', demais: 'demais', atencao: 'perto', none: 'sem dado' };
+
+  // ---------- derived (shared) ----------
+  function D() {
+    var w = num(P.peso), h = num(P.altura), age = num(P.idade), H = P.sexo !== 'M';
+    var d = { w: w, h: h, age: age, H: H };
+    if (w && h) d.imc = r1(w / Math.pow(h / 100, 2));
+    if (age) { d.fcmax = Math.round(208 - 0.7 * age); d.fc85 = Math.round(d.fcmax * 0.85); d.fc60 = Math.round(d.fcmax * 0.6); d.fc70 = Math.round(d.fcmax * 0.7); }
+    if (w && h && age) { d.rmr = Math.round(10 * w + 6.25 * h - 5 * age + (H ? 5 : -161)); var ativ = (num(P.min_ativ) || 0) + (num(P.hiit) || 0) * 20; d.pal = ativ < 150 ? 1.4 : ativ <= 300 ? 1.5 : 1.6; d.tdee = Math.round(d.rmr * d.pal); d.def_lo = Math.round(d.tdee * 0.15); d.def_hi = Math.round(d.tdee * 0.25); }
+    var mt = num(P.min_treino_dia) || 0; d.agua_meta = r1((H ? 2.0 : 1.6) + Math.min(2, mt / 30 * 0.4)); d.copos_meta = Math.round(d.agua_meta / 0.25);
+    d.pant_corte = H ? 34 : 33; d.pant_grave = H ? 32 : 31; d.preensao_corte = H ? 27 : 16; d.corte_cintura = H ? 88 : 84;
+    return d;
+  }
+
+  // ---------- per-action ----------
+  var CALC = {
+    'tres-tiros': function (p, d) { var n = num(p.hiit); var vals = { fc85: d.fc85 }; if (n == null) return { vals: vals }; var z = n < 2 ? 'pouco' : n <= 3 ? 'ideal' : n <= 4 ? 'atencao' : 'demais'; var prox = n < 2 ? 'mais 1 sessão esta semana; se o máximo não dá, tiros a 70% já contam' : n <= 3 ? 'manter o protocolo fixo e registrar o RPE' : 'tirar 1 sessão e ver se o RPE cai'; return { vals: vals, zona: z, texto: n + ' sessões/sem', p: pos(n, 2, 3), prox: prox }; },
+    'levante-peso': function (p) { var n = num(p.forca); if (n == null) return {}; var z = n < 1 ? 'pouco' : n < 2 ? 'atencao' : n <= 3 ? 'ideal' : 'demais'; var prox = n < 2 ? 'uma sessão de 20 min em casa nesta semana: agachamento, flexão, remada' : n <= 3 ? 'anotar repetições até falhar num exercício fixo' : 'garantir 48 h entre sessões do mesmo grupo'; return { zona: z, texto: n + ' sessões/sem', p: pos(n, 2, 3), prox: prox }; },
+    'some-150': function (p, d) { var m = num(p.min_ativ), h = num(p.hiit) || 0; var vals = { fc60: d.fc60, fc70: d.fc70 }; if (m == null) return { vals: vals }; var t = m + h * 20; var z = t < 150 ? 'pouco' : t <= 300 ? 'ideal' : t <= 600 ? 'atencao' : 'demais'; var prox = t < 150 ? 'faltam ' + (150 - t) + ' min: a caminhada pós-jantar de 10 min × 5 dias fecha ' + Math.min(50, 150 - t) : t <= 300 ? 'manter; se quiser mais, até 300 ainda rende' : 'acima de 300 o retorno para de crescer — ok, sem ganho extra'; return { vals: vals, zona: z, texto: t + ' min/sem (tiros contam em dobro)', p: pos(t, 150, 300), prox: prox }; },
+    'levante-a-cada-30': function (p) { var b = num(p.maior_bloco); if (b == null) return {}; var z = b <= 30 ? 'ideal' : b <= 60 ? 'atencao' : 'pouco'; var prox = b <= 30 ? 'manter' : 'um alarme em ' + Math.max(30, b - 30) + ' min esta semana; depois em 30'; return { zona: z, texto: 'maior bloco: ' + b + ' min', p: b <= 30 ? 0.5 : b <= 60 ? 0.25 : 0.08, prox: prox }; },
+    'ande-depois-do-jantar': function (p) { var m = num(p.min_pos_jantar); if (m == null) return {}; var z = m >= 10 ? 'ideal' : m > 0 ? 'atencao' : 'pouco'; var prox = m >= 10 ? 'manter; se quiser, até 30 min' : m > 0 ? 'chegar a 10 min' : '5 minutos de pé andando na sala, hoje'; return { zona: z, texto: m + ' min depois do jantar', p: m >= 10 ? 0.5 : m > 0 ? 0.25 : 0.06, prox: prox }; },
+    'nunca-dois-dias': function (p) { var n = num(p.dias_parado); if (n == null) return {}; var z = n <= 1 ? 'ideal' : n <= 2 ? 'atencao' : 'pouco'; var prox = n <= 1 ? 'contador zerado' : '10 minutos de caminhada hoje zeram o contador'; var custo = n >= 4 ? ' — 4+ dias: já mensurável em citrato sintase' : n >= 2 ? ' — 48 h: transcritos já mudam' : ''; return { zona: z, texto: n + ' dia(s) seguido(s) parado' + custo, p: n <= 1 ? 0.45 : n <= 2 ? 0.25 : 0.06, prox: prox }; },
+    'seis-mil-passos': function (p) { var n = num(p.passos); if (n == null) return {}; var z = n < 2000 ? 'pouco' : n < 5000 ? 'atencao' : 'ideal'; var prox_n = Math.round((n + 1000) / 100) * 100; var prox = n < 5000 ? 'meta desta semana: ' + prox_n + ' passos/dia (+1 mil)' : n <= 7000 ? 'na meta; 7–10 mil ainda soma' : 'acima da inflexão — manter'; return { vals: { prox_passos: prox_n }, zona: z, texto: n + ' passos/dia', p: pos(n, 5000, 7000), prox: prox }; },
+    'durma-7': function (p) { var d = tmin(p.deitar), l = tmin(p.levantar); if (d == null || l == null) return {}; var h = ((l - d + 1440) % 1440) / 60; var hs = h - 0.33; var z = hs < 6 ? 'pouco' : hs < 7 ? 'atencao' : hs <= 8.5 ? 'ideal' : 'atencao'; var ideal = tfmt(l - 450); var prox = hs < 7 ? 'deitar 15 min antes por uma semana, até chegar às ' + ideal : 'manter o horário; anotar a variação'; return { vals: { levantar: p.levantar, deitar_ideal: ideal }, zona: z, texto: r1(h) + ' h na cama (≈ ' + r1(hs) + ' h de sono)', p: pos(hs, 7, 8), prox: prox }; },
+    'ultimo-cafe': function (p) { var d = tmin(p.deitar), c = tmin(p.ultimo_cafe); if (d == null) return {}; var corte = d - 540, lim6 = d - 360; var vals = { deitar: p.deitar, corte_cafe: tfmt(corte) }; if (c == null) return { vals: vals, zona: 'ideal', texto: 'sem cafeína', p: 0.5, prox: 'não se aplica — se um dia tomar, o corte é ' + tfmt(corte) }; var z = c <= corte ? 'ideal' : c <= lim6 ? 'atencao' : 'demais'; var dh = (d - c) / 60; var prox = z === 'ideal' ? 'manter' : 'mover o último café para antes das ' + tfmt(corte) + '; se for difícil, primeiro para antes das ' + tfmt(lim6); return { vals: vals, zona: z, texto: 'último café ' + r1(dh) + ' h antes de deitar', p: dh >= 9 ? 0.5 : dh >= 6 ? 0.72 : 0.9, prox: prox }; },
+    'jante-cedo': function (p) { var d = tmin(p.deitar), j = tmin(p.jantar); if (d == null) return {}; var ideal = tfmt(d - 180); var vals = { deitar: p.deitar, jantar_ideal: ideal }; if (j == null) return { vals: vals }; var dh = ((d - j + 1440) % 1440) / 60; var z = dh >= 3 ? 'ideal' : dh >= 1 ? 'atencao' : 'demais'; var prox = z === 'ideal' ? 'manter' : 'terminar o jantar 30 min mais cedo esta semana, até ' + ideal; return { vals: vals, zona: z, texto: 'jantar termina ' + r1(dh) + ' h antes de deitar', p: dh >= 3 ? 0.5 : dh >= 1 ? 0.72 : 0.9, prox: prox }; },
+    'proteina-no-prato': function (p, d) { var w = d.w; if (!w) return {}; var lo = Math.round(1.2 * w), hi = Math.round(1.6 * w); var palmas_meta = Math.round(lo / 27) + '–' + Math.round(hi / 27); var vals = { peso: w, prot_pouco: Math.round(0.8 * w), prot_min: lo, prot_max: hi, prot_max2: Math.round(2.2 * w), palmas_meta: palmas_meta }; var g = num(p.proteina_g); if (g == null) return { vals: vals }; var z = g < 0.8 * w ? 'pouco' : g < lo ? 'atencao' : g <= 2.2 * w ? 'ideal' : 'demais'; var prox = g < lo ? 'faltam ' + (lo - g) + ' g/dia — uma dose de whey (~25 g) ou 100 g de frango (~30 g) fecha boa parte' : g > 2.2 * w ? 'acima do que traz benefício; pode reduzir' : 'na meta'; return { vals: vals, zona: z, texto: g + ' g/dia (' + r1(g / w) + ' g/kg)', p: pos(g, lo, hi), prox: prox }; },
+    'fibra-no-prato': function (p) { var g = num(p.fibra_g); if (g == null) return {}; var z = g < 15 ? 'pouco' : g < 25 ? 'atencao' : g <= 40 ? 'ideal' : 'demais'; var prox = g < 25 ? 'faltam ' + (25 - g) + ' g/dia — uma concha de feijão ≈ 7 g, aveia 40 g ≈ 4 g, psyllium 1 colher ≈ 5 g; suba devagar' : g > 40 ? 'acima de 40 g não há ganho extra' : 'na meta'; return { zona: z, texto: g + ' g/dia', p: pos(g, 25, 29), prox: prox }; },
+    'feche-a-cozinha': function (p) { var j = tmin(p.jantar), f = tmin(p.primeira); if (j == null || f == null) return {}; var h = ((f - j + 1440) % 1440) / 60; var z = h < 12 ? 'pouco' : h < 14 ? 'atencao' : h <= 16 ? 'ideal' : h < 20 ? 'atencao' : 'demais'; var prox = h < 14 ? 'fechar a cozinha ' + Math.ceil((14 - h) * 60) + ' min mais cedo, ou abrir mais tarde' : h <= 16 ? 'manter; bater a proteína na janela' : h < 20 ? 'você está em ' + r1(h) + ' h — mais que o testado; se a proteína não fecha, encurte para 16' : 'reduzir: acima de 24 h repetido perde músculo'; return { vals: { jantar: p.jantar, primeira: p.primeira, jejum_h: r1(h) }, zona: z, texto: r1(h) + ' h de jejum', p: pos(h, 14, 16), prox: prox }; },
+    'troque-o-doce': function (p) { var n = num(p.doces_semana); if (n == null) return {}; var z = n === 0 ? 'ideal' : n < 1 ? 'ideal' : n <= 3 ? 'atencao' : 'demais'; var prox = n === 0 ? 'manter' : 'trocar ' + Math.min(n, 2) + ' por semana por água com gás ou fruta inteira'; return { zona: z, texto: n + ' bebidas doces/sem', p: n === 0 ? 0.1 : n <= 3 ? 0.5 : 0.9, prox: prox }; },
+    'comida-de-verdade': function (p) { var n = num(p.refeicoes_cozinhadas); if (n == null) return {}; var z = n >= 2 ? 'ideal' : n === 1 ? 'atencao' : 'pouco'; var prox = n >= 2 ? 'manter' : 'uma refeição a mais de ingredientes: a mais fácil é o café da manhã'; return { zona: z, texto: n + ' de 3 refeições de ingredientes', p: n >= 2 ? 0.55 : n === 1 ? 0.25 : 0.06, prox: prox }; },
+    'beba-pela-sede': function (p, d) { var vals = { copos_meta: d.copos_meta, agua_meta: d.agua_meta, min_treino_dia: num(p.min_treino_dia) || 0 }; var n = num(p.copos_agua); if (n == null) return { vals: vals }; var z = n < d.copos_meta * 0.6 ? 'pouco' : n < d.copos_meta ? 'atencao' : n <= d.copos_meta * 1.8 ? 'ideal' : 'atencao'; var prox = n < d.copos_meta ? 'mais ' + (d.copos_meta - n) + ' copo(s): um ao acordar e um a cada pausa de 30 min' : 'na referência — a urina clara confirma'; return { vals: vals, zona: z, texto: n + ' copos ≈ ' + r1(n * 0.25) + ' L · referência ' + d.copos_meta + ' copos', p: pos(n, d.copos_meta, d.copos_meta * 1.5), prox: prox }; },
+    'se-beber': function (p) { var n = num(p.alcool); var vals = { alcool_g: 98 }; if (n == null) return { vals: vals }; var z = n === 0 ? 'ideal' : n <= 7 ? 'atencao' : 'demais'; var prox = n === 0 ? 'zero — manter' : n <= 7 ? 'dentro da faixa; nunca nas horas antes de deitar' : 'reduzir para até 7/semana, começando pelas doses da noite'; return { vals: vals, zona: z, texto: n + ' doses/sem', p: n === 0 ? 0.12 : n <= 7 ? 0.5 : 0.9, prox: prox }; },
+    'emagreca-devagar': function (p, d) { var w = d.w, w0 = num(p.peso_anterior); if (!w) return {}; var ideal = r1(0.005 * w), max = r1(0.01 * w); var vals = { peso: w, perda_ideal: ideal, perda_max: max, delta_peso: '—' }; if (w0 == null) return { vals: vals }; var dl = r1(w0 - w); vals.delta_peso = (dl >= 0 ? '−' : '+') + Math.abs(dl) + ' kg'; var z = dl <= 0 ? 'atencao' : dl <= ideal ? 'ideal' : dl <= max ? 'atencao' : 'demais'; var prox = dl <= 0 ? 'peso estável: não é problema; se quer perder, o déficit moderado está nas Medidas' : dl <= ideal ? 'ritmo certo — panturrilha estável confirma que é gordura' : 'rápido demais: não cortar mais nada; subir proteína e manter força'; return { vals: vals, zona: z, texto: vals.delta_peso + ' esta semana (meta até ' + ideal + ' kg)', p: dl <= 0 ? 0.15 : pos(dl, 0.01, ideal) * 0.9, prox: prox }; }
+  };
+
+  // ---------- medidas ----------
+  function medida(m, d, p) {
+    var out = { valor: '—', un: '', zona: 'none', meta: '', zonas: [] };
+    switch (m.id) {
+      case 'imc': if (d.imc) { out.valor = d.imc; out.zona = d.imc < 25 ? 'ideal' : d.imc < 30 ? 'atencao' : 'pouco'; out.meta = 'Categoria: ' + (d.imc < 18.5 ? 'abaixo' : d.imc < 25 ? 'normal' : d.imc < 30 ? 'sobrepeso' : d.imc < 35 ? 'obesidade I' : d.imc < 40 ? 'obesidade II' : 'obesidade III') + '. ' + (d.imc >= 30 ? 'Ponto de partida dos tiros: 70% do esforço já mantém o ganho enzimático (Boyd 2013). Não é falha, é dose de entrada.' : 'Tiros no máximo são o padrão dos estudos.'); out.zonas = [['weak', '< 18,5 abaixo'], ['ok', '18,5–24,9'], ['weak', '25–29,9 sobrepeso'], ['bad', '≥ 30 obesidade']]; } break;
+      case 'whtr': { var c = num(p.cintura); if (c && d.h) { var r = r1(c / d.h * 100) / 100; out.valor = r; out.zona = r < 0.5 ? 'ideal' : c < d.corte_cintura ? 'atencao' : 'pouco'; out.meta = 'Meta: abaixo de ' + Math.round(d.h / 2) + ' cm (0,5 × ' + d.h + '). Hoje ' + c + ' cm' + (c >= d.corte_cintura ? ' — acima do corte de risco (' + d.corte_cintura + ' cm)' : '') + '. Faltam ' + Math.max(0, c - Math.round(d.h / 2)) + ' cm.'; out.zonas = [['ok', '< 0,50'], ['weak', '0,50–0,59'], ['bad', '≥ 0,60']]; } } break;
+      case 'panturrilha': { var pa = num(p.panturrilha); if (pa) { out.valor = pa; out.un = 'cm'; out.zona = pa >= d.pant_corte ? 'ideal' : pa >= d.pant_grave ? 'atencao' : 'pouco'; out.meta = 'Corte: ' + d.pant_corte + ' cm (baixa) / ' + d.pant_grave + ' cm (grave). Meta: estável ou subindo enquanto a cintura cai.'; out.zonas = [['bad', '< ' + d.pant_grave + ' grave'], ['weak', d.pant_grave + '–' + (d.pant_corte - 0.1) + ' baixa'], ['ok', '≥ ' + d.pant_corte]]; } } break;
+      case 'preensao': { var pr = num(p.preensao); if (pr) { out.valor = pr; out.un = 'kg'; out.zona = pr >= d.preensao_corte ? 'ideal' : 'pouco'; out.meta = 'Corte: ' + d.preensao_corte + ' kg. Meta: subir com o treino de força em 4–8 semanas.'; } else { out.meta = 'Sem dinamômetro: anote repetições até falhar num exercício fixo (flexão ou agachamento) e compare semana a semana.'; } out.zonas = [['bad', '< ' + d.preensao_corte + ' kg'], ['ok', '≥ ' + d.preensao_corte + ' kg']]; } break;
+      case 'fc_repouso': { var f = num(p.fc_repouso); if (f) { out.valor = f; out.un = 'bpm'; out.zona = f < 60 ? 'ideal' : f <= 75 ? 'ideal' : f <= 85 ? 'atencao' : 'pouco'; out.meta = 'Meta: cair 3–10 bpm em 4–8 semanas de treino regular. Subiu 5+ bpm na média de 7 dias? Excesso, infecção, álcool ou sono ruim.'; out.zonas = [['ok', '< 75 (treinado: < 60)'], ['weak', '75–85'], ['bad', '> 85 ou subindo']]; } } break;
+      case 'fc_max': if (d.fcmax) { out.valor = d.fcmax; out.un = 'bpm'; out.zona = 'none'; out.meta = 'Ritmo de conversa ≈ ' + d.fc60 + '–' + d.fc70 + ' bpm (60–70%). Tiros no máximo: acima de ~' + d.fc85 + ' (85%). Recuperação: cair pelo menos 12 bpm no 1º minuto após o último tiro.'; out.zonas = [['ok', 'conversa 60–70%'], ['weak', 'moderado-forte 70–85%'], ['bad', 'máximo > 85%']]; } break;
+      case 'rmr': if (d.rmr) { out.valor = d.rmr; out.un = 'kcal/dia'; out.zona = 'none'; out.meta = 'Com seu nível de atividade (fator ' + d.pal + '): gasto total ≈ ' + d.tdee + ' kcal/dia. Déficit moderado = ' + d.def_lo + '–' + d.def_hi + ' kcal/dia → ~0,5 kg/semana, adaptação de 50–120 kcal/dia. Abaixo de ' + Math.round(d.tdee * 0.5) + ' kcal/dia é severo.'; out.zonas = [['ok', 'déficit 15–25%'], ['weak', '25–40%'], ['bad', '≥ 40–50% ou comer pouco e treinar muito']]; } break;
+      case 'agua': { var n = num(p.copos_agua); out.valor = d.copos_meta; out.un = 'copos (' + d.agua_meta + ' L)'; if (n != null) { out.zona = n < d.copos_meta * 0.6 ? 'pouco' : n < d.copos_meta ? 'atencao' : 'ideal'; } out.meta = 'Base ' + (d.H ? '2,0' : '1,6') + ' L de bebidas + ' + r1(Math.min(2, (num(p.min_treino_dia) || 0) / 30 * 0.4)) + ' L pelos ' + (num(p.min_treino_dia) || 0) + ' min de treino. Hoje: ' + (n != null ? n + ' copos' : '—') + '. Urina cor 1–3 confirma; café conta.'; out.zonas = [['bad', 'urina escura, < 60% da referência'], ['ok', 'referência ± sede'], ['bad', '> 1 L/h além da sede em exercício longo']]; } break;
+      case 'peso': { var w = d.w, w0 = num(p.peso_anterior); if (w) { out.valor = w; out.un = 'kg'; if (w0 != null) { var dl = r1(w0 - w); out.zona = dl <= 0 ? 'none' : dl <= 0.005 * w ? 'ideal' : dl <= 0.01 * w ? 'atencao' : 'pouco'; out.meta = 'Esta semana: ' + (dl >= 0 ? '−' : '+') + Math.abs(dl) + ' kg. Meta de velocidade: até ' + r1(0.005 * w) + ' kg/semana (0,5%); acima de ' + r1(0.01 * w) + ' é rápido demais.'; } out.zonas = [['ok', 'até 0,5%/sem'], ['weak', '0,5–1%/sem'], ['bad', '> 1%/sem sustentado']]; } } break;
+    }
+    return out;
+  }
+
+  function fill(tpl, vals) { return tpl.replace(/\{(\w+)\}/g, function (m, k) { return vals && vals[k] != null ? vals[k] : '<span style="color:var(--muted)">' + m + '</span>'; }); }
+
+  // ---------- render inputs ----------
+  function fieldHtml(k) {
+    var v = V[k], val = P[k];
+    var ctl = k === 'sexo'
+      ? '<select id="v_' + k + '"><option value="H"' + (val === 'H' ? ' selected' : '') + '>Homem</option><option value="M"' + (val === 'M' ? ' selected' : '') + '>Mulher</option></select>'
+      : '<input id="v_' + k + '" type="' + (v.unidade === 'hh:mm' ? 'time' : 'text') + '" inputmode="decimal" value="' + val + '"' + (val === '' ? ' placeholder="opcional"' : '') + '>';
+    return '<div class="field"><label for="v_' + k + '">' + v.rotulo + '</label>' + ctl + '<span class="u">' + v.unidade + '</span></div>';
+  }
+  document.getElementById('campos_perfil').innerHTML = Object.keys(V).filter(function (k) { return V[k].escopo === 'perfil'; }).map(fieldHtml).join('');
+  document.getElementById('campos_dia').innerHTML = Object.keys(V).filter(function (k) { return V[k].escopo === 'dia'; }).map(fieldHtml).join('');
+  document.addEventListener('input', function (e) {
+    var id = (e.target.id || '').replace(/^v_/, ''); if (!(id in V)) return;
+    P[id] = e.target.value;
+    try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (err) {}
+    render();
+  });
+
+  var HABITOS = { 'anote-o-sono': true, 'pergunte-a-fome': true };
+  var MEDIDA_ACOES = { 'meca-a-cintura': true, 'panturrilha-preensao': true };
+
+  function card(a, d) {
+    var c = (CALC[a.id] || function () { return {}; })(P, d) || {};
+    var vals = Object.assign({}, d, c.vals || {});
+    var zona = c.zona || 'none';
+    var f = a.faixa;
+    var noP = /^não há|^—/.test(f.pouco), noD = /^não há|^—/.test(f.demais);
+    var bar = '<div class="bar">' + (noP ? '<i class="nd"></i>' : '<i class="p"></i>') + '<i class="i"></i>' + (noD ? '<i class="nd"></i>' : '<i class="d"></i>') + (c.p != null ? '<span class="you" style="left:' + (c.p * 100) + '%"></span>' : '') + '</div>';
+    return '<article class="card" id="a-' + a.id + '">' +
+      '<div class="card-top"><div class="t">' + a.titulo + '</div>' +
+      '<div class="meta"><span class="chip st ' + zona + '">' + (c.texto ? 'você · ' + c.texto + ' · ' : '') + ZL[zona] + '</span><span class="chip ev">' + a.evidencia.grau + '</span></div></div>' +
+      '<div class="faixa">' + bar +
+      '<div class="zonas"><div class="p"><span>pouco</span><span>' + fill(f.pouco, vals) + '</span></div><div class="i"><span>meta</span><span>' + fill(f.ideal, vals) + '</span></div><div class="d"><span>demais</span><span>' + fill(f.demais, vals) + '</span></div></div>' +
+      (c.prox ? '<div class="prox">' + c.prox + '</div>' : '') +
+      '<div class="regra">' + fill(f.regra, vals) + '</div></div>' +
+      '<div class="gat"><div><b>gatilho</b> · ' + a.gatilho + '</div><div><b>2 minutos</b> · ' + a.acao_minima + '</div></div>' +
+      '<details><summary>por quê · o que afeta · como registra · sinal</summary><div class="det">' +
+      '<div><h4>Por quê</h4><p>' + a.descricao + '</p></div>' +
+      '<div><h4>O que afeta</h4><div class="ipo"><div class="a"><b>input</b>' + a.afeta.input + '</div><div class="b"><b>processo</b>' + a.afeta.processo + '</div><div class="c"><b>output</b>' + a.afeta.output + '</div></div></div>' +
+      '<div><h4>Como o app registra · do mais simples ao mais rico</h4><ol class="niveis">' + a.registro.filter(function (r) { return r !== '—'; }).map(function (r) { return '<li>' + r + '</li>'; }).join('') + '</ol></div>' +
+      '<div><h4>Sinal de progresso</h4><p><b>' + a.sinal.output + '</b><br><span style="color:var(--muted)">quando: ' + a.sinal.prazo + '</span></p></div>' +
+      (a.seguranca ? '<div><h4>Segurança</h4><p class="seg">' + a.seguranca + '</p></div>' : '') +
+      '<div><h4>Evidência</h4><p>' + a.evidencia.grau + ' — ' + a.evidencia.fontes + '</p></div>' +
+      '</div></details></article>';
+  }
+
+  function medCard(m, d) {
+    var r = medida(m, d, P);
+    return '<div class="med"><div class="t"><span>' + m.titulo + '</span><span class="ev">' + m.grau + '</span></div>' +
+      '<div class="big">' + r.valor + '<small>' + r.un + '</small></div>' +
+      '<div class="st ' + r.zona + '">' + (r.zona === 'none' ? (r.valor === '—' ? 'preencha o perfil' : 'referência') : ZL[r.zona]) + '</div>' +
+      (r.meta ? '<div class="meta-l"><b>meta · </b>' + r.meta + '</div>' : '') +
+      (r.zonas.length ? '<div class="zonas-m">' + r.zonas.map(function (z) { return '<div><i class="' + z[0] + '"></i><span>' + z[1] + '</span></div>'; }).join('') + '</div>' : '') +
+      '<div class="how"><b>como · </b>' + m.como + '<br><b>para quê · </b>' + m.para_que + '<br><b>muda em · </b>' + m.muda + '<br><span class="ev">' + m.fontes + '</span></div></div>';
+  }
+
+  function render() {
+    var d = D();
+    var open = {}; document.querySelectorAll('details[open]').forEach(function (x) { open[x.closest('article').id] = true; });
+    document.getElementById('medidas').innerHTML = M.map(function (m) { return medCard(m, d); }).join('');
+    var groups = {};
+    A.filter(function (a) { return !HABITOS[a.id] && !MEDIDA_ACOES[a.id]; }).forEach(function (a) { (groups[a.grupo] = groups[a.grupo] || []).push(a); });
+    document.getElementById('grupos').innerHTML = Object.keys(groups).map(function (g) {
+      return '<section class="grupo"><div class="grupo-h"><h2>' + g + '</h2><span class="n">' + groups[g].length + ' ações</span></div><div class="cards">' + groups[g].map(function (a) { return card(a, d); }).join('') + '</div></section>';
+    }).join('');
+    Object.keys(open).forEach(function (id) { var x = document.querySelector('#' + id + ' details'); if (x) x.open = true; });
+    document.getElementById('habitos').innerHTML = A.filter(function (a) { return HABITOS[a.id]; }).map(function (a) {
+      return '<div class="hab"><div class="t">' + a.titulo + '</div><div><b>gatilho</b> · ' + a.gatilho + '</div><div><b>2 minutos</b> · ' + a.acao_minima + '</div><p>' + a.descricao + '</p><div><b>registra</b> · ' + a.registro.filter(function (r) { return r !== '—'; }).join(' → ') + '</div></div>';
+    }).join('');
+    var cnt = { ideal: 0, atencao: 0, pouco: 0, demais: 0, none: 0 };
+    A.filter(function (a) { return !HABITOS[a.id] && !MEDIDA_ACOES[a.id]; }).forEach(function (a) { var c = (CALC[a.id] || function () { return {}; })(P, d) || {}; cnt[c.zona || 'none']++; });
+    document.getElementById('resumo').innerHTML =
+      '<span>onde você está, pelo perfil e pelo dia típico:</span>' +
+      '<span class="ideal"><b>' + cnt.ideal + '</b> na meta</span>' +
+      '<span class="atencao"><b>' + cnt.atencao + '</b> perto</span>' +
+      '<span class="pouco"><b>' + (cnt.pouco + cnt.demais) + '</b> fora</span>' +
+      (cnt.none ? '<span><b>' + cnt.none + '</b> sem dado</span>' : '');
+  }
+  render();
+})();
+</script>
