@@ -1,5 +1,5 @@
 import { pos } from '../derivados';
-import { aplicarSeguranca, deDiaSeNaoHoje, semDado, ultimoDiaCom } from './_util';
+import { aplicarSeguranca, deDiaSeNaoHoje, fmt, semDado, ultimoDiaCom } from './_util';
 import type { AcaoMeta, Zona } from './tipos';
 
 const META = 5000;
@@ -17,7 +17,7 @@ export const seisMilPassos: AcaoMeta = {
     const proximo = Math.min(META, Math.round((n + 500) / 100) * 100);
     const proximoPasso =
       n < META
-        ? `meta desta semana: ${proximo} passos/dia (+500)`
+        ? `meta desta semana: ${fmt(proximo)} passos/dia (+500)`
         : n <= 7000
           ? 'na meta; 7–10 mil ainda soma'
           : 'acima da inflexão — manter';
@@ -27,8 +27,9 @@ export const seisMilPassos: AcaoMeta = {
       valor: n,
       faixa: { pouco: 2000, meta: META, demais: 10000 },
       posicao: pos(n, 5000, 7000),
-      texto: `${n} passos/dia`,
+      texto: `${fmt(n)} passos/dia`,
       proximoPasso,
+      vals: { prox_passos: proximo },
       ...deDiaSeNaoHoje(ctx, dia),
     });
   },

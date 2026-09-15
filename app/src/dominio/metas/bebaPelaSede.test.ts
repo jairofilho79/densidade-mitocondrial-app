@@ -21,6 +21,7 @@ describe('beba-pela-sede', () => {
     expect(m.proximoPasso).toBe('mais 2 copo(s) hoje: um ao acordar e um a cada pausa de 30 min (referência 8)');
     expect(m.faixa).toEqual({ pouco: 5, meta: 8, demais: 14 });
     expect(m.posicao).toBeCloseTo(0.25, 3);
+    expect(m.vals).toEqual({ copos_meta: 8, agua_meta: 2, min_treino_dia: 0 });
   });
 
   it('atencao: 7 copos → +1', () => {
@@ -32,7 +33,7 @@ describe('beba-pela-sede', () => {
   it('meta: 9 copos', () => {
     const m = bebaPelaSede.meta(ctxCopos(9));
     expect(m.zona).toBe('meta');
-    expect(m.texto).toBe('9 copos ≈ 2.3 L · referência 8 copos');
+    expect(m.texto).toBe('9 copos ≈ 2,3 L · referência 8 copos');
     expect(m.proximoPasso).toBe('na referência — a urina clara confirma');
     expect(m.posicao).toBeCloseTo(0.5625, 3);
   });
@@ -43,10 +44,11 @@ describe('beba-pela-sede', () => {
     expect(m.proximoPasso).toBe('bem acima da referência — beba pela sede');
   });
 
-  it('sem-dado', () => {
+  it('sem-dado: vals traz copos_meta/agua_meta/min_treino_dia (não dependem de dia.copos)', () => {
     const m = bebaPelaSede.meta(ctxCopos(undefined));
     expect(m.zona).toBe('sem-dado');
     expect(m.precisaDe).toEqual(['dia.copos']);
+    expect(m.vals).toEqual({ copos_meta: 8, agua_meta: 2, min_treino_dia: 0 });
   });
 
   it('a referência acompanha derivados.coposMeta', () => {

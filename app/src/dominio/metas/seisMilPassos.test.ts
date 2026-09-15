@@ -17,6 +17,7 @@ describe('seis-mil-passos', () => {
     expect(m.faixa).toEqual({ pouco: 2000, meta: 5000, demais: 10000 });
     expect(m.posicao).toBeCloseTo(0.062, 2);
     expect(m.deDia).toBeUndefined();
+    expect(m.vals).toEqual({ prox_passos: 2000 });
   });
 
   it('atencao: 3540 → próximo passo 4000 (arredonda à centena)', () => {
@@ -44,11 +45,12 @@ describe('seis-mil-passos', () => {
     expect(m.posicao).toBeCloseTo(0.98, 3);
   });
 
-  it('sem-dado: nenhum dia com passos', () => {
+  it('sem-dado: nenhum dia com passos; prox_passos ausente (depende do dado)', () => {
     const m = seisMilPassos.meta(ctxBase({ hoje: diaBase(HOJE) }));
     expect(m.zona).toBe('sem-dado');
     expect(m.valor).toBeNull();
     expect(m.precisaDe).toEqual(['dia.passos']);
+    expect(m.vals).toBeUndefined();
   });
 
   it('usa o último dia com o campo e diz de que dia é', () => {
