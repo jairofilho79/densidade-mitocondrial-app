@@ -32,4 +32,20 @@ describe('Exames', () => {
     });
     expect(await screen.findByText('01/09/2026')).toBeInTheDocument();
   });
+
+  // fix wave, item 8: exames que a pessoa disse que costuma ter (perfil.examesQueTem)
+  // aparecem primeiro; os demais ganham uma pista de que não estão na lista dela.
+  test('examesQueTem: o campo da lista aparece primeiro', async () => {
+    await salvarPerfil({ ...PERFIL, examesQueTem: ['hba1c'] });
+    const { container } = render(<MemoryRouter><Exames /></MemoryRouter>);
+    await screen.findByRole('heading', { name: 'Exames' });
+    const primeiro = await waitFor(() => {
+      const el = container.querySelector('.grid [data-campo]');
+      expect(el).not.toBeNull();
+      return el!;
+    });
+    expect(primeiro).toHaveAttribute('data-campo', 'exame.hba1c');
+    const outro = container.querySelector('[data-campo="exame.glicemia"]');
+    expect(outro?.textContent).toMatch(/não está na sua lista/);
+  });
 });

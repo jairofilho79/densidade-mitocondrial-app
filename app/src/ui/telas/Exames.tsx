@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { camposDe } from '@/dominio/campos';
+import { camposDe, type Campo } from '@/dominio/campos';
 import type { Exame } from '@/dominio/tipos';
 import { listarExames, salvarExame } from '@/dados/repositorios/exame';
 import { hojeISO } from '@/dados/datas';
@@ -11,6 +11,21 @@ import './telas.css';
 
 type Valores = Record<string, unknown>;
 
+/**
+ * Quando a pessoa disse no perfil quais exames costuma ter (`examesQueTem`, ids
+ * sem o prefixo `exame.`), esses vêm primeiro; os demais ganham uma `ajuda`
+ * avisando que não estão na lista — não muda o registro em `dominio/campos.ts`,
+ * só a cópia usada para renderizar esta tela.
+ */
+function ordenarPorExamesQueTem(campos: Campo[], examesQueTem: string[]): Campo[] {
+  if (examesQueTem.length === 0) return campos;
+  const daLista = campos.filter((c) => examesQueTem.includes(chaveDe(c)));
+  const outros = campos
+    .filter((c) => !examesQueTem.includes(chaveDe(c)))
+    .map((c) => ({ ...c, ajuda: 'não está na sua lista' }));
+  return [...daLista, ...outros];
+}
+
 export function Exames() {
   const perfil = usePerfil();
   const exames = useLiveQuery(() => listarExames(), []);
@@ -20,7 +35,7 @@ export function Exames() {
 
   if (!perfil || exames === undefined) return <p className="carregando">Carregando…</p>;
 
-  const campos = camposDe('exame', perfil);
+  const campos = ordenarPorExamesQueTem(camposDe('exame', perfil), perfil.examesQueTem);
   const temAlgo = Object.values(form).some((v) => v !== undefined);
 
   async function salvar(e: FormEvent) {
